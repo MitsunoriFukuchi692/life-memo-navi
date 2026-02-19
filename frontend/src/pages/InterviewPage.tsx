@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import { interviewApi, Interview } from '../api';
+import api from '../api';
 
 const QUESTIONS = [
   "あなたの生まれた時代はどんな時代でしたか？",
@@ -26,6 +27,8 @@ export default function InterviewPage() {
   const [answers, setAnswers] = useState<{ [key: number]: string }>({});
   const [saved, setSaved] = useState<{ [key: number]: boolean }>({});
   const [saving, setSaving] = useState(false);
+  const [aiEditing, setAiEditing] = useState(false);
+  const [aiEditingAll, setAiEditingAll] = useState(false);
   const [interviews, setInterviews] = useState<Interview[]>([]);
 
   useEffect(() => {
@@ -60,12 +63,68 @@ export default function InterviewPage() {
     }
   };
 
+  const handleAiEdit = async () => {
+    const answerText = answers[current + 1];
+    if (!answerText?.trim()) return;
+    setAiEditing(true);
+    try {
+      const res = await api.post('/interviews/ai-edit', {
+        question_text: QUESTIONS[current],
+        answer_text: answerText,
+      });
+      setAnswers(prev => ({ ...prev, [current + 1]: res.data.edited_text }));
+      setSaved(prev => ({ ...prev, [current + 1]: false }));
+    } catch (e) {
+      console.error(e);
+      alert('AI編集に失敗しました。もう一度お試しください。');
+    } finally {
+      setAiEditing(false);
+    }
+  };
+
+  const handleAiEditAll = async () => {
+    const answersToEdit = Object.entries(answers)
+      .filter(([_, text]) => text?.trim())
+      .map(([qId, text]) => ({
+        question_id: Number(qId),
+        question_text: QUESTIONS[Number(qId) - 1],
+        answer_text: text,
+      }));
+
+    if (answersToEdit.length === 0) {
+      alert('回答がありません。先に回答を入力してください。');
+      return;
+    }
+
+    if (!confirm(`${answersToEdit.length}問の回答をまとめてAI編集します。よろしいですか？`)) return;
+
+    setAiEditingAll(true);
+    try {
+      const res = await api.post('/interviews/ai-edit-all', { answers: answersToEdit });
+      const newAnswers = { ...answers };
+      res.data.results.forEach((r: { question_id: number; edited_text: string }) => {
+        newAnswers[r.question_id] = r.edited_text;
+      });
+      setAnswers(newAnswers);
+      const newSaved = { ...saved };
+      answersToEdit.forEach(a => { newSaved[a.question_id] = false; });
+      setSaved(newSaved);
+      alert(`${answersToEdit.length}問のAI編集が完了しました！内容を確認して保存してください。`);
+    } catch (e) {
+      console.error(e);
+      alert('AI編集に失敗しました。もう一度お試しください。');
+    } finally {
+      setAiEditingAll(false);
+    }
+  };
+
   const handleSaveAndNext = async () => {
     await handleSave();
     if (current < 14) setCurrent(current + 1);
   };
 
   const completedCount = Object.values(saved).filter(Boolean).length;
+  const answeredCount = Object.values(answers).filter(t => t?.trim()).length;
   const progress = (completedCount / 15) * 100;
 
   return (
@@ -114,6 +173,33 @@ export default function InterviewPage() {
             </button>
           ))}
         </div>
+
+        {/* 全問まとめてAI編集ボタン */}
+        {answeredCount > 0 && (
+          <div style={{ marginTop: '20px', textAlign: 'center' }}>
+            <button
+              onClick={handleAiEditAll}
+              disabled={aiEditingAll}
+              style={{
+                padding: '12px 32px',
+                background: aiEditingAll ? '#ccc' : 'linear-gradient(135deg, #5B3A8A, #7B5EA7)',
+                border: 'none',
+                borderRadius: 'var(--radius-sm)',
+                color: 'white',
+                fontSize: '1rem',
+                fontWeight: 600,
+                cursor: aiEditingAll ? 'not-allowed' : 'pointer',
+                fontFamily: "'Noto Sans JP', sans-serif",
+                boxShadow: aiEditingAll ? 'none' : '0 4px 12px rgba(91,58,138,0.3)',
+              }}
+            >
+              {aiEditingAll ? '✨ AI編集中... (しばらくお待ちください)' : `✨ 全${answeredCount}問まとめてAI編集`}
+            </button>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: '6px' }}>
+              ※ 回答済みの全問を一括で自然な文章に整えます
+            </p>
+          </div>
+        )}
       </div>
 
       {/* 現在の質問 */}
@@ -181,6 +267,30 @@ export default function InterviewPage() {
           onFocus={e => e.target.style.borderColor = 'var(--brown-light)'}
           onBlur={e => e.target.style.borderColor = 'var(--cream-dark)'}
         />
+
+        {/* 1問AI編集ボタン */}
+        <div style={{ marginTop: '12px', textAlign: 'right' }}>
+          <button
+            onClick={handleAiEdit}
+            disabled={aiEditing || !answers[current + 1]?.trim()}
+            style={{
+              padding: '10px 20px',
+              background: aiEditing ? '#ccc' : 'linear-gradient(135deg, #7B5EA7, #9B7EC8)',
+              border: 'none',
+              borderRadius: 'var(--radius-sm)',
+              color: 'white',
+              fontSize: '0.9rem',
+              fontWeight: 500,
+              cursor: aiEditing ? 'not-allowed' : 'pointer',
+              fontFamily: "'Noto Sans JP', sans-serif",
+            }}
+          >
+            {aiEditing ? '✨ AI編集中...' : '✨ この回答をAIで整える'}
+          </button>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: '4px' }}>
+            ※ 内容はそのままに、読みやすい文章に整えます
+          </p>
+        </div>
 
         <div style={{
           display: 'flex',

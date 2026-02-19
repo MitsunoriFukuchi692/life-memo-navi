@@ -3,7 +3,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
-
+const authRoutes = require('./routes/auth').default; 
 const app = express();
 
 // ミドルウェア
