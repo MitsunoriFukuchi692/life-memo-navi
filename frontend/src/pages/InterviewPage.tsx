@@ -3,7 +3,7 @@ import Layout from '../components/Layout';
 import { interviewApi, Interview } from '../api';
 import api from '../api';
 
-const QUESTIONS = [
+const JIBUNSHI_QUESTIONS = [
   "あなたの生まれた時代はどんな時代でしたか？",
   "生まれた場所と、幼い頃の思い出は？",
   "家族について教えてください",
@@ -21,8 +21,73 @@ const QUESTIONS = [
   "未来へのメッセージは？",
 ];
 
+const KAISHASHI_QUESTIONS = [
+  "創業のきっかけは何でしたか？",
+  "創業当時の社会状況や業界の様子は？",
+  "会社名の由来や理念は？",
+  "創業メンバーや初期の苦労は？",
+  "最初の商品・サービスは？",
+  "事業拡大の転機は何でしたか？",
+  "大きな失敗や危機はありましたか？",
+  "それをどう乗り越えましたか？",
+  "印象に残る顧客や取引先との出来事は？",
+  "社員との思い出や組織づくりで大切にしたことは？",
+  "技術やサービスでこだわった点は？",
+  "社会にどんな価値を提供してきましたか？",
+  "自社の強みは何だと思いますか？",
+  "後継者や次世代へ伝えたい経営の考え方は？",
+  "未来の会社に望むことは？",
+];
+
+const SHUKATSU_QUESTIONS = [
+  "現在の健康状態について",
+  "持病や常用している薬は？",
+  "緊急連絡先は？",
+  "介護が必要になった場合の希望は？",
+  "医療・延命治療についての考えは？",
+  "財産（不動産・預金など）の概要は？",
+  "保険の加入状況は？",
+  "大切にしている品や処分してほしい物は？",
+  "デジタル資産（ID・PWなど）の管理方法は？",
+  "葬儀の形式や希望は？",
+  "お墓や納骨の希望は？",
+  "遺言書の有無や内容は？",
+  "家族へのメッセージは？",
+  "友人・知人へ伝えたいことは？",
+  "最期まで大切にしたい生き方は？",
+];
+
+const OTHER_QUESTIONS = [
+  "人生（経営）で一番影響を受けた出来事は？",
+  "あなたの判断基準になっている信念は？",
+  "苦しい時に支えになった考え方は？",
+  "若い頃の自分にアドバイスするとしたら？",
+  "周囲からどんな人だと言われますか？",
+  "自分の長所と短所は？",
+  "人付き合いで大切にしてきたことは？",
+  "大事にしている習慣や日課は？",
+  "好きな言葉や座右の銘は？",
+  "今でも後悔していることは？",
+  "誇りに思っていることは？",
+  "人生（会社）を通して得た教訓は？",
+  "社会や地域に対する想いは？",
+  "人生の最終章でやりたいことは？",
+  "自分を一言で表すと？",
+];
+
+const getQuestions = (projectType: string): string[] => {
+  switch (projectType) {
+    case 'kaishashi': return KAISHASHI_QUESTIONS;
+    case 'shukatsu': return SHUKATSU_QUESTIONS;
+    case 'other': return OTHER_QUESTIONS;
+    default: return JIBUNSHI_QUESTIONS;
+  }
+};
+
 export default function InterviewPage() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const QUESTIONS = getQuestions(user.project_type || 'jibunshi');
+
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<{ [key: number]: string }>({});
   const [saved, setSaved] = useState<{ [key: number]: boolean }>({});
@@ -129,71 +194,38 @@ export default function InterviewPage() {
 
   return (
     <Layout title="💬 インタビュー">
-      {/* 進捗 */}
-      <div style={{
-        background: 'var(--white)',
-        borderRadius: 'var(--radius)',
-        padding: '24px',
-        marginBottom: '32px',
-        boxShadow: 'var(--shadow)',
-      }}>
+      <div style={{ background: 'var(--white)', borderRadius: 'var(--radius)', padding: '24px', marginBottom: '32px', boxShadow: 'var(--shadow)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-          <span style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>
-            {completedCount} / 15 問完了
-          </span>
+          <span style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>{completedCount} / 15 問完了</span>
           <span style={{ fontWeight: 600, color: 'var(--accent)' }}>{Math.round(progress)}%</span>
         </div>
         <div style={{ background: 'var(--cream-dark)', borderRadius: '20px', height: '8px' }}>
-          <div style={{
-            background: 'linear-gradient(90deg, var(--accent), var(--accent-light))',
-            borderRadius: '20px', height: '100%',
-            width: `${progress}%`, transition: 'width 0.5s ease',
-          }} />
+          <div style={{ background: 'linear-gradient(90deg, var(--accent), var(--accent-light))', borderRadius: '20px', height: '100%', width: `${progress}%`, transition: 'width 0.5s ease' }} />
         </div>
 
-        {/* 問題番号ナビ */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '20px' }}>
           {QUESTIONS.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrent(i)}
-              style={{
-                width: '36px', height: '36px',
-                borderRadius: '50%',
-                border: current === i ? '2px solid var(--accent)' : '2px solid var(--cream-dark)',
-                background: saved[i + 1] ? 'var(--accent)' : (current === i ? 'var(--cream-dark)' : 'var(--white)'),
-                color: saved[i + 1] ? 'white' : (current === i ? 'var(--brown-dark)' : 'var(--text-light)'),
-                fontSize: '0.8rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-            >
-              {i + 1}
-            </button>
+            <button key={i} onClick={() => setCurrent(i)} style={{
+              width: '36px', height: '36px', borderRadius: '50%',
+              border: current === i ? '2px solid var(--accent)' : '2px solid var(--cream-dark)',
+              background: saved[i + 1] ? 'var(--accent)' : (current === i ? 'var(--cream-dark)' : 'var(--white)'),
+              color: saved[i + 1] ? 'white' : (current === i ? 'var(--brown-dark)' : 'var(--text-light)'),
+              fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
+            }}>{i + 1}</button>
           ))}
         </div>
 
-        {/* 全問まとめてAI編集ボタン */}
         {answeredCount > 0 && (
           <div style={{ marginTop: '20px', textAlign: 'center' }}>
-            <button
-              onClick={handleAiEditAll}
-              disabled={aiEditingAll}
-              style={{
-                padding: '12px 32px',
-                background: aiEditingAll ? '#ccc' : 'linear-gradient(135deg, #5B3A8A, #7B5EA7)',
-                border: 'none',
-                borderRadius: 'var(--radius-sm)',
-                color: 'white',
-                fontSize: '1rem',
-                fontWeight: 600,
-                cursor: aiEditingAll ? 'not-allowed' : 'pointer',
-                fontFamily: "'Noto Sans JP', sans-serif",
-                boxShadow: aiEditingAll ? 'none' : '0 4px 12px rgba(91,58,138,0.3)',
-              }}
-            >
-              {aiEditingAll ? '✨ AI編集中... (しばらくお待ちください)' : `✨ 全${answeredCount}問まとめてAI編集`}
+            <button onClick={handleAiEditAll} disabled={aiEditingAll} style={{
+              padding: '12px 32px',
+              background: aiEditingAll ? '#ccc' : 'linear-gradient(135deg, #5B3A8A, #7B5EA7)',
+              border: 'none', borderRadius: 'var(--radius-sm)', color: 'white',
+              fontSize: '1rem', fontWeight: 600, cursor: aiEditingAll ? 'not-allowed' : 'pointer',
+              fontFamily: "'Noto Sans JP', sans-serif",
+              boxShadow: aiEditingAll ? 'none' : '0 4px 12px rgba(91,58,138,0.3)',
+            }}>
+              {aiEditingAll ? '✨ AI編集中...' : `✨ 全${answeredCount}問まとめてAI編集`}
             </button>
             <p style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: '6px' }}>
               ※ 回答済みの全問を一括で自然な文章に整えます
@@ -202,47 +234,19 @@ export default function InterviewPage() {
         )}
       </div>
 
-      {/* 現在の質問 */}
-      <div className="fade-in" style={{
-        background: 'var(--white)',
-        borderRadius: 'var(--radius)',
-        padding: '40px',
-        boxShadow: 'var(--shadow)',
-        border: '1px solid var(--cream-dark)',
-      }}>
+      <div className="fade-in" style={{ background: 'var(--white)', borderRadius: 'var(--radius)', padding: '40px', boxShadow: 'var(--shadow)', border: '1px solid var(--cream-dark)' }}>
         <div style={{ marginBottom: '8px' }}>
-          <span style={{
-            background: 'var(--brown-dark)',
-            color: 'var(--cream)',
-            padding: '4px 14px',
-            borderRadius: '20px',
-            fontSize: '0.8rem',
-            fontWeight: 600,
-          }}>
+          <span style={{ background: 'var(--brown-dark)', color: 'var(--cream)', padding: '4px 14px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600 }}>
             質問 {current + 1} / 15
           </span>
           {saved[current + 1] && (
-            <span style={{
-              background: '#E8F5E9',
-              color: '#388E3C',
-              padding: '4px 14px',
-              borderRadius: '20px',
-              fontSize: '0.8rem',
-              fontWeight: 600,
-              marginLeft: '8px',
-            }}>
+            <span style={{ background: '#E8F5E9', color: '#388E3C', padding: '4px 14px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, marginLeft: '8px' }}>
               ✓ 保存済み
             </span>
           )}
         </div>
 
-        <h3 style={{
-          fontFamily: "'Noto Serif JP', serif",
-          fontSize: '1.4rem',
-          color: 'var(--brown-dark)',
-          margin: '20px 0 24px',
-          lineHeight: 1.6,
-        }}>
+        <h3 style={{ fontFamily: "'Noto Serif JP', serif", fontSize: '1.4rem', color: 'var(--brown-dark)', margin: '20px 0 24px', lineHeight: 1.6 }}>
           {QUESTIONS[current]}
         </h3>
 
@@ -250,41 +254,19 @@ export default function InterviewPage() {
           value={answers[current + 1] || ''}
           onChange={e => setAnswers(prev => ({ ...prev, [current + 1]: e.target.value }))}
           placeholder="ここに自由に書いてください。思い出した順番でも、箇条書きでも大丈夫です。"
-          style={{
-            width: '100%',
-            minHeight: '200px',
-            padding: '20px',
-            border: '2px solid var(--cream-dark)',
-            borderRadius: 'var(--radius-sm)',
-            fontSize: '1.05rem',
-            lineHeight: 1.8,
-            color: 'var(--text)',
-            background: 'var(--cream)',
-            resize: 'vertical',
-            outline: 'none',
-            fontFamily: "'Noto Sans JP', sans-serif",
-          }}
+          style={{ width: '100%', minHeight: '200px', padding: '20px', border: '2px solid var(--cream-dark)', borderRadius: 'var(--radius-sm)', fontSize: '1.05rem', lineHeight: 1.8, color: 'var(--text)', background: 'var(--cream)', resize: 'vertical', outline: 'none', fontFamily: "'Noto Sans JP', sans-serif" }}
           onFocus={e => e.target.style.borderColor = 'var(--brown-light)'}
           onBlur={e => e.target.style.borderColor = 'var(--cream-dark)'}
         />
 
-        {/* 1問AI編集ボタン */}
         <div style={{ marginTop: '12px', textAlign: 'right' }}>
-          <button
-            onClick={handleAiEdit}
-            disabled={aiEditing || !answers[current + 1]?.trim()}
-            style={{
-              padding: '10px 20px',
-              background: aiEditing ? '#ccc' : 'linear-gradient(135deg, #7B5EA7, #9B7EC8)',
-              border: 'none',
-              borderRadius: 'var(--radius-sm)',
-              color: 'white',
-              fontSize: '0.9rem',
-              fontWeight: 500,
-              cursor: aiEditing ? 'not-allowed' : 'pointer',
-              fontFamily: "'Noto Sans JP', sans-serif",
-            }}
-          >
+          <button onClick={handleAiEdit} disabled={aiEditing || !answers[current + 1]?.trim()} style={{
+            padding: '10px 20px',
+            background: aiEditing ? '#ccc' : 'linear-gradient(135deg, #7B5EA7, #9B7EC8)',
+            border: 'none', borderRadius: 'var(--radius-sm)', color: 'white',
+            fontSize: '0.9rem', fontWeight: 500, cursor: aiEditing ? 'not-allowed' : 'pointer',
+            fontFamily: "'Noto Sans JP', sans-serif",
+          }}>
             {aiEditing ? '✨ AI編集中...' : '✨ この回答をAIで整える'}
           </button>
           <p style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: '4px' }}>
@@ -292,46 +274,16 @@ export default function InterviewPage() {
           </p>
         </div>
 
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginTop: '24px',
-          gap: '16px',
-          flexWrap: 'wrap',
-        }}>
-          <button
-            onClick={() => setCurrent(Math.max(0, current - 1))}
-            disabled={current === 0}
-            style={secondaryButtonStyle}
-          >
-            ← 前の質問
-          </button>
-
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', gap: '16px', flexWrap: 'wrap' }}>
+          <button onClick={() => setCurrent(Math.max(0, current - 1))} disabled={current === 0} style={secondaryButtonStyle}>← 前の質問</button>
           <div style={{ display: 'flex', gap: '12px' }}>
-            <button
-              onClick={handleSave}
-              disabled={saving || !answers[current + 1]?.trim()}
-              style={saveButtonStyle}
-            >
+            <button onClick={handleSave} disabled={saving || !answers[current + 1]?.trim()} style={saveButtonStyle}>
               {saving ? '保存中...' : '保存'}
             </button>
             {current < 14 ? (
-              <button
-                onClick={handleSaveAndNext}
-                disabled={saving}
-                style={primaryButtonStyle}
-              >
-                保存して次へ →
-              </button>
+              <button onClick={handleSaveAndNext} disabled={saving} style={primaryButtonStyle}>保存して次へ →</button>
             ) : (
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                style={primaryButtonStyle}
-              >
-                ✓ 完了
-              </button>
+              <button onClick={handleSave} disabled={saving} style={primaryButtonStyle}>✓ 完了</button>
             )}
           </div>
         </div>
@@ -340,36 +292,6 @@ export default function InterviewPage() {
   );
 }
 
-const secondaryButtonStyle: React.CSSProperties = {
-  padding: '12px 24px',
-  background: 'transparent',
-  border: '2px solid var(--cream-dark)',
-  borderRadius: 'var(--radius-sm)',
-  color: 'var(--text-light)',
-  fontSize: '0.95rem',
-  cursor: 'pointer',
-  fontFamily: "'Noto Sans JP', sans-serif",
-};
-
-const saveButtonStyle: React.CSSProperties = {
-  padding: '12px 24px',
-  background: 'transparent',
-  border: '2px solid var(--brown)',
-  borderRadius: 'var(--radius-sm)',
-  color: 'var(--brown)',
-  fontSize: '0.95rem',
-  cursor: 'pointer',
-  fontFamily: "'Noto Sans JP', sans-serif",
-};
-
-const primaryButtonStyle: React.CSSProperties = {
-  padding: '12px 28px',
-  background: 'var(--brown-dark)',
-  border: 'none',
-  borderRadius: 'var(--radius-sm)',
-  color: 'var(--cream)',
-  fontSize: '0.95rem',
-  fontWeight: 500,
-  cursor: 'pointer',
-  fontFamily: "'Noto Sans JP', sans-serif",
-};
+const secondaryButtonStyle: React.CSSProperties = { padding: '12px 24px', background: 'transparent', border: '2px solid var(--cream-dark)', borderRadius: 'var(--radius-sm)', color: 'var(--text-light)', fontSize: '0.95rem', cursor: 'pointer', fontFamily: "'Noto Sans JP', sans-serif" };
+const saveButtonStyle: React.CSSProperties = { padding: '12px 24px', background: 'transparent', border: '2px solid var(--brown)', borderRadius: 'var(--radius-sm)', color: 'var(--brown)', fontSize: '0.95rem', cursor: 'pointer', fontFamily: "'Noto Sans JP', sans-serif" };
+const primaryButtonStyle: React.CSSProperties = { padding: '12px 28px', background: 'var(--brown-dark)', border: 'none', borderRadius: 'var(--radius-sm)', color: 'var(--cream)', fontSize: '0.95rem', fontWeight: 500, cursor: 'pointer', fontFamily: "'Noto Sans JP', sans-serif" };

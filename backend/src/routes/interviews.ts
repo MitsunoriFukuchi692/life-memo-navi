@@ -1,12 +1,9 @@
-import express, { Router, Request, Response } from 'express';
-import pool from '../db/db.js';
-import OpenAI from 'openai';
+import { useState, useEffect } from 'react';
+import Layout from '../components/Layout';
+import { interviewApi, Interview } from '../api';
+import api from '../api';
 
-const router: Router = express.Router();
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-const INTERVIEW_QUESTIONS = [
+const JIBUNSHI_QUESTIONS = [
   "あなたの生まれた時代はどんな時代でしたか？",
   "生まれた場所と、幼い頃の思い出は？",
   "家族について教えてください",
@@ -19,161 +16,282 @@ const INTERVIEW_QUESTIONS = [
   "人生での失敗や試練は？",
   "それらからどう学びましたか？",
   "今、大切にしていることは？",
-  "家族や後世代に伝えたいことは？",
+  "家族や後の世代に伝えたいことは？",
   "人生で一番幸せだった時は？",
-  "未来へのメッセージは？"
+  "未来へのメッセージは？",
 ];
 
-// ユーザーのインタビュー一覧取得
-router.get('/:user_id', async (req: Request, res: Response) => {
-  try {
-    const { user_id } = req.params;
-    const result = await pool.query(
-      'SELECT * FROM interviews WHERE user_id = $1 ORDER BY question_id',
-      [user_id]
-    );
-    res.json(result.rows);
-  } catch (error: any) {
-    console.error('Get interviews error:', error);
-    res.status(500).json({ error: error.message });
+const KAISHASHI_QUESTIONS = [
+  "創業のきっかけは何でしたか？",
+  "創業当時の社会状況や業界の様子は？",
+  "会社名の由来や理念は？",
+  "創業メンバーや初期の苦労は？",
+  "最初の商品・サービスは？",
+  "事業拡大の転機は何でしたか？",
+  "大きな失敗や危機はありましたか？",
+  "それをどう乗り越えましたか？",
+  "印象に残る顧客や取引先との出来事は？",
+  "社員との思い出や組織づくりで大切にしたことは？",
+  "技術やサービスでこだわった点は？",
+  "社会にどんな価値を提供してきましたか？",
+  "自社の強みは何だと思いますか？",
+  "後継者や次世代へ伝えたい経営の考え方は？",
+  "未来の会社に望むことは？",
+];
+
+const SHUKATSU_QUESTIONS = [
+  "現在の健康状態について",
+  "持病や常用している薬は？",
+  "緊急連絡先は？",
+  "介護が必要になった場合の希望は？",
+  "医療・延命治療についての考えは？",
+  "財産（不動産・預金など）の概要は？",
+  "保険の加入状況は？",
+  "大切にしている品や処分してほしい物は？",
+  "デジタル資産（ID・PWなど）の管理方法は？",
+  "葬儀の形式や希望は？",
+  "お墓や納骨の希望は？",
+  "遺言書の有無や内容は？",
+  "家族へのメッセージは？",
+  "友人・知人へ伝えたいことは？",
+  "最期まで大切にしたい生き方は？",
+];
+
+const OTHER_QUESTIONS = [
+  "人生（経営）で一番影響を受けた出来事は？",
+  "あなたの判断基準になっている信念は？",
+  "苦しい時に支えになった考え方は？",
+  "若い頃の自分にアドバイスするとしたら？",
+  "周囲からどんな人だと言われますか？",
+  "自分の長所と短所は？",
+  "人付き合いで大切にしてきたことは？",
+  "大事にしている習慣や日課は？",
+  "好きな言葉や座右の銘は？",
+  "今でも後悔していることは？",
+  "誇りに思っていることは？",
+  "人生（会社）を通して得た教訓は？",
+  "社会や地域に対する想いは？",
+  "人生の最終章でやりたいことは？",
+  "自分を一言で表すと？",
+];
+
+const getQuestions = (projectType: string): string[] => {
+  switch (projectType) {
+    case 'kaishashi': return KAISHASHI_QUESTIONS;
+    case 'shukatsu': return SHUKATSU_QUESTIONS;
+    case 'other': return OTHER_QUESTIONS;
+    default: return JIBUNSHI_QUESTIONS;
   }
-});
+};
 
-// インタビュー回答保存
-router.post('/', async (req: Request, res: Response) => {
-  try {
-    const { user_id, question_id, answer_text } = req.body;
+export default function InterviewPage() {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const QUESTIONS = getQuestions(user.project_type || 'jibunshi');
 
-    if (!user_id || !question_id || question_id < 1 || question_id > 15) {
-      return res.status(400).json({ error: 'Invalid question_id (1-15)' });
-    }
+  const [current, setCurrent] = useState(0);
+  const [answers, setAnswers] = useState<{ [key: number]: string }>({});
+  const [saved, setSaved] = useState<{ [key: number]: boolean }>({});
+  const [saving, setSaving] = useState(false);
+  const [aiEditing, setAiEditing] = useState(false);
+  const [aiEditingAll, setAiEditingAll] = useState(false);
+  const [interviews, setInterviews] = useState<Interview[]>([]);
 
-    const question_text = INTERVIEW_QUESTIONS[question_id - 1];
-
-    const result = await pool.query(
-      'INSERT INTO interviews (user_id, question_id, question_text, answer_text) VALUES ($1, $2, $3, $4) ON CONFLICT (user_id, question_id) DO UPDATE SET answer_text = $4, updated_at = NOW() RETURNING *',
-      [user_id, question_id, question_text, answer_text]
-    );
-
-    res.status(201).json(result.rows[0]);
-  } catch (error: any) {
-    console.error('Save interview error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// AI編集（1問）
-router.post('/ai-edit', async (req: Request, res: Response) => {
-  try {
-    const { question_text, answer_text } = req.body;
-
-    if (!answer_text?.trim()) {
-      return res.status(400).json({ error: '回答が空です' });
-    }
-
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      messages: [
-        {
-          role: 'system',
-          content: `あなたは自分史の文章編集アシスタントです。
-ユーザーが書いた回答を、自然で読みやすい文章に整えてください。
-ルール：
-- 内容は変えず、言葉を整えるだけにする
-- 話し言葉を丁寧な書き言葉に変換する
-- 箇条書きや断片的な文を、つながりのある文章にまとめる
-- 日本語で出力する
-- 整えた文章のみを出力し、説明や前置きは不要`,
-        },
-        {
-          role: 'user',
-          content: `質問：${question_text}\n\n回答：${answer_text}`,
-        },
-      ],
-      max_tokens: 800,
-      temperature: 0.7,
-    });
-
-    const edited = completion.choices[0].message.content || answer_text;
-    res.json({ edited_text: edited });
-  } catch (error: any) {
-    console.error('AI edit error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// AI編集（全問一括）
-router.post('/ai-edit-all', async (req: Request, res: Response) => {
-  try {
-    const { answers } = req.body;
-    // answers: [{ question_id, question_text, answer_text }]
-
-    if (!answers || answers.length === 0) {
-      return res.status(400).json({ error: '回答がありません' });
-    }
-
-    const results: { question_id: number; edited_text: string }[] = [];
-
-    for (const item of answers) {
-      if (!item.answer_text?.trim()) {
-        results.push({ question_id: item.question_id, edited_text: item.answer_text });
-        continue;
-      }
-
-      const completion = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        messages: [
-          {
-            role: 'system',
-            content: `あなたは自分史の文章編集アシスタントです。
-ユーザーが書いた回答を、自然で読みやすい文章に整えてください。
-ルール：
-- 内容は変えず、言葉を整えるだけにする
-- 話し言葉を丁寧な書き言葉に変換する
-- 箇条書きや断片的な文を、つながりのある文章にまとめる
-- 日本語で出力する
-- 整えた文章のみを出力し、説明や前置きは不要`,
-          },
-          {
-            role: 'user',
-            content: `質問：${item.question_text}\n\n回答：${item.answer_text}`,
-          },
-        ],
-        max_tokens: 800,
-        temperature: 0.7,
+  useEffect(() => {
+    interviewApi.getAll(user.id).then(res => {
+      const map: { [key: number]: string } = {};
+      const savedMap: { [key: number]: boolean } = {};
+      res.data.forEach(iv => {
+        map[iv.question_id] = iv.answer_text;
+        savedMap[iv.question_id] = true;
       });
+      setAnswers(map);
+      setSaved(savedMap);
+      setInterviews(res.data);
+    }).catch(console.error);
+  }, [user.id]);
 
-      const edited = completion.choices[0].message.content || item.answer_text;
-      results.push({ question_id: item.question_id, edited_text: edited });
+  const handleSave = async () => {
+    const answerText = answers[current + 1];
+    if (!answerText?.trim()) return;
+    setSaving(true);
+    try {
+      await interviewApi.save({
+        user_id: user.id,
+        question_id: current + 1,
+        answer_text: answerText,
+      });
+      setSaved(prev => ({ ...prev, [current + 1]: true }));
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleAiEdit = async () => {
+    const answerText = answers[current + 1];
+    if (!answerText?.trim()) return;
+    setAiEditing(true);
+    try {
+      const res = await api.post('/interviews/ai-edit', {
+        question_text: QUESTIONS[current],
+        answer_text: answerText,
+      });
+      setAnswers(prev => ({ ...prev, [current + 1]: res.data.edited_text }));
+      setSaved(prev => ({ ...prev, [current + 1]: false }));
+    } catch (e) {
+      console.error(e);
+      alert('AI編集に失敗しました。もう一度お試しください。');
+    } finally {
+      setAiEditing(false);
+    }
+  };
+
+  const handleAiEditAll = async () => {
+    const answersToEdit = Object.entries(answers)
+      .filter(([_, text]) => text?.trim())
+      .map(([qId, text]) => ({
+        question_id: Number(qId),
+        question_text: QUESTIONS[Number(qId) - 1],
+        answer_text: text,
+      }));
+
+    if (answersToEdit.length === 0) {
+      alert('回答がありません。先に回答を入力してください。');
+      return;
     }
 
-    res.json({ results });
-  } catch (error: any) {
-    console.error('AI edit all error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
+    if (!confirm(`${answersToEdit.length}問の回答をまとめてAI編集します。よろしいですか？`)) return;
 
-// インタビュー回答更新
-router.put('/:id', async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const { answer_text } = req.body;
-
-    const result = await pool.query(
-      'UPDATE interviews SET answer_text = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
-      [answer_text, id]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Interview not found' });
+    setAiEditingAll(true);
+    try {
+      const res = await api.post('/interviews/ai-edit-all', { answers: answersToEdit });
+      const newAnswers = { ...answers };
+      res.data.results.forEach((r: { question_id: number; edited_text: string }) => {
+        newAnswers[r.question_id] = r.edited_text;
+      });
+      setAnswers(newAnswers);
+      const newSaved = { ...saved };
+      answersToEdit.forEach(a => { newSaved[a.question_id] = false; });
+      setSaved(newSaved);
+      alert(`${answersToEdit.length}問のAI編集が完了しました！内容を確認して保存してください。`);
+    } catch (e) {
+      console.error(e);
+      alert('AI編集に失敗しました。もう一度お試しください。');
+    } finally {
+      setAiEditingAll(false);
     }
+  };
 
-    res.json(result.rows[0]);
-  } catch (error: any) {
-    console.error('Update interview error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
+  const handleSaveAndNext = async () => {
+    await handleSave();
+    if (current < 14) setCurrent(current + 1);
+  };
 
-export default router;
+  const completedCount = Object.values(saved).filter(Boolean).length;
+  const answeredCount = Object.values(answers).filter(t => t?.trim()).length;
+  const progress = (completedCount / 15) * 100;
+
+  return (
+    <Layout title="💬 インタビュー">
+      <div style={{ background: 'var(--white)', borderRadius: 'var(--radius)', padding: '24px', marginBottom: '32px', boxShadow: 'var(--shadow)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+          <span style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>{completedCount} / 15 問完了</span>
+          <span style={{ fontWeight: 600, color: 'var(--accent)' }}>{Math.round(progress)}%</span>
+        </div>
+        <div style={{ background: 'var(--cream-dark)', borderRadius: '20px', height: '8px' }}>
+          <div style={{ background: 'linear-gradient(90deg, var(--accent), var(--accent-light))', borderRadius: '20px', height: '100%', width: `${progress}%`, transition: 'width 0.5s ease' }} />
+        </div>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '20px' }}>
+          {QUESTIONS.map((_, i) => (
+            <button key={i} onClick={() => setCurrent(i)} style={{
+              width: '36px', height: '36px', borderRadius: '50%',
+              border: current === i ? '2px solid var(--accent)' : '2px solid var(--cream-dark)',
+              background: saved[i + 1] ? 'var(--accent)' : (current === i ? 'var(--cream-dark)' : 'var(--white)'),
+              color: saved[i + 1] ? 'white' : (current === i ? 'var(--brown-dark)' : 'var(--text-light)'),
+              fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s',
+            }}>{i + 1}</button>
+          ))}
+        </div>
+
+        {answeredCount > 0 && (
+          <div style={{ marginTop: '20px', textAlign: 'center' }}>
+            <button onClick={handleAiEditAll} disabled={aiEditingAll} style={{
+              padding: '12px 32px',
+              background: aiEditingAll ? '#ccc' : 'linear-gradient(135deg, #5B3A8A, #7B5EA7)',
+              border: 'none', borderRadius: 'var(--radius-sm)', color: 'white',
+              fontSize: '1rem', fontWeight: 600, cursor: aiEditingAll ? 'not-allowed' : 'pointer',
+              fontFamily: "'Noto Sans JP', sans-serif",
+              boxShadow: aiEditingAll ? 'none' : '0 4px 12px rgba(91,58,138,0.3)',
+            }}>
+              {aiEditingAll ? '✨ AI編集中...' : `✨ 全${answeredCount}問まとめてAI編集`}
+            </button>
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: '6px' }}>
+              ※ 回答済みの全問を一括で自然な文章に整えます
+            </p>
+          </div>
+        )}
+      </div>
+
+      <div className="fade-in" style={{ background: 'var(--white)', borderRadius: 'var(--radius)', padding: '40px', boxShadow: 'var(--shadow)', border: '1px solid var(--cream-dark)' }}>
+        <div style={{ marginBottom: '8px' }}>
+          <span style={{ background: 'var(--brown-dark)', color: 'var(--cream)', padding: '4px 14px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600 }}>
+            質問 {current + 1} / 15
+          </span>
+          {saved[current + 1] && (
+            <span style={{ background: '#E8F5E9', color: '#388E3C', padding: '4px 14px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, marginLeft: '8px' }}>
+              ✓ 保存済み
+            </span>
+          )}
+        </div>
+
+        <h3 style={{ fontFamily: "'Noto Serif JP', serif", fontSize: '1.4rem', color: 'var(--brown-dark)', margin: '20px 0 24px', lineHeight: 1.6 }}>
+          {QUESTIONS[current]}
+        </h3>
+
+        <textarea
+          value={answers[current + 1] || ''}
+          onChange={e => setAnswers(prev => ({ ...prev, [current + 1]: e.target.value }))}
+          placeholder="ここに自由に書いてください。思い出した順番でも、箇条書きでも大丈夫です。"
+          style={{ width: '100%', minHeight: '200px', padding: '20px', border: '2px solid var(--cream-dark)', borderRadius: 'var(--radius-sm)', fontSize: '1.05rem', lineHeight: 1.8, color: 'var(--text)', background: 'var(--cream)', resize: 'vertical', outline: 'none', fontFamily: "'Noto Sans JP', sans-serif" }}
+          onFocus={e => e.target.style.borderColor = 'var(--brown-light)'}
+          onBlur={e => e.target.style.borderColor = 'var(--cream-dark)'}
+        />
+
+        <div style={{ marginTop: '12px', textAlign: 'right' }}>
+          <button onClick={handleAiEdit} disabled={aiEditing || !answers[current + 1]?.trim()} style={{
+            padding: '10px 20px',
+            background: aiEditing ? '#ccc' : 'linear-gradient(135deg, #7B5EA7, #9B7EC8)',
+            border: 'none', borderRadius: 'var(--radius-sm)', color: 'white',
+            fontSize: '0.9rem', fontWeight: 500, cursor: aiEditing ? 'not-allowed' : 'pointer',
+            fontFamily: "'Noto Sans JP', sans-serif",
+          }}>
+            {aiEditing ? '✨ AI編集中...' : '✨ この回答をAIで整える'}
+          </button>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: '4px' }}>
+            ※ 内容はそのままに、読みやすい文章に整えます
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', gap: '16px', flexWrap: 'wrap' }}>
+          <button onClick={() => setCurrent(Math.max(0, current - 1))} disabled={current === 0} style={secondaryButtonStyle}>← 前の質問</button>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button onClick={handleSave} disabled={saving || !answers[current + 1]?.trim()} style={saveButtonStyle}>
+              {saving ? '保存中...' : '保存'}
+            </button>
+            {current < 14 ? (
+              <button onClick={handleSaveAndNext} disabled={saving} style={primaryButtonStyle}>保存して次へ →</button>
+            ) : (
+              <button onClick={handleSave} disabled={saving} style={primaryButtonStyle}>✓ 完了</button>
+            )}
+          </div>
+        </div>
+      </div>
+    </Layout>
+  );
+}
+
+const secondaryButtonStyle: React.CSSProperties = { padding: '12px 24px', background: 'transparent', border: '2px solid var(--cream-dark)', borderRadius: 'var(--radius-sm)', color: 'var(--text-light)', fontSize: '0.95rem', cursor: 'pointer', fontFamily: "'Noto Sans JP', sans-serif" };
+const saveButtonStyle: React.CSSProperties = { padding: '12px 24px', background: 'transparent', border: '2px solid var(--brown)', borderRadius: 'var(--radius-sm)', color: 'var(--brown)', fontSize: '0.95rem', cursor: 'pointer', fontFamily: "'Noto Sans JP', sans-serif" };
+const primaryButtonStyle: React.CSSProperties = { padding: '12px 28px', background: 'var(--brown-dark)', border: 'none', borderRadius: 'var(--radius-sm)', color: 'var(--cream)', fontSize: '0.95rem', fontWeight: 500, cursor: 'pointer', fontFamily: "'Noto Sans JP', sans-serif" };
