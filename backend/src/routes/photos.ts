@@ -3,7 +3,6 @@ import multer, { StorageEngine } from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import pool from '../db/db.js';
-
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const router: Router = express.Router();
 
@@ -16,19 +15,19 @@ const storage: StorageEngine = multer.diskStorage({
     cb(null, uniqueName);
   }
 });
-
 const upload = multer({ storage });
 
+// 写真アップロード（field_type対応）
 router.post('/upload', upload.single('photo'), async (req: Request, res: Response) => {
   try {
-    const { user_id, caption } = req.body;
+    const { user_id, caption, field_type = 'jibunshi' } = req.body;
     if (!user_id || !req.file) {
       return res.status(400).json({ error: 'Missing user_id or photo file' });
     }
     const photo_url = `/uploads/${req.file.filename}`;
     const result = await pool.query(
-      'INSERT INTO photos (user_id, photo_url, caption) VALUES ($1, $2, $3) RETURNING *',
-      [user_id, photo_url, caption || null]
+      'INSERT INTO photos (user_id, photo_url, caption, field_type) VALUES ($1, $2, $3, $4) RETURNING *',
+      [user_id, photo_url, caption || null, field_type]
     );
     res.status(201).json(result.rows[0]);
   } catch (error: any) {
@@ -37,12 +36,14 @@ router.post('/upload', upload.single('photo'), async (req: Request, res: Respons
   }
 });
 
+// 写真一覧取得（field_type対応）
 router.get('/:user_id', async (req: Request, res: Response) => {
   try {
     const { user_id } = req.params;
+    const field_type = (req.query.field_type as string) || 'jibunshi';
     const result = await pool.query(
-      'SELECT * FROM photos WHERE user_id = $1 ORDER BY uploaded_at DESC',
-      [user_id]
+      'SELECT * FROM photos WHERE user_id = $1 AND field_type = $2 ORDER BY uploaded_at DESC',
+      [user_id, field_type]
     );
     res.json(result.rows);
   } catch (error: any) {
@@ -50,13 +51,12 @@ router.get('/:user_id', async (req: Request, res: Response) => {
   }
 });
 
+// 写真削除
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const result = await pool.query('DELETE FROM photos WHERE id = $1 RETURNING id', [id]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Photo not found' });
-    }
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Photo not found' });
     res.status(204).send();
   } catch (error: any) {
     res.status(500).json({ error: error.message });

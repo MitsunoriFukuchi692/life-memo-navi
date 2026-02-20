@@ -1,24 +1,35 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { interviewApi, timelineApi, photoApi, pdfApi } from '../api';
 
+const fieldLabels: Record<string, string> = {
+  jibunshi: '自分史',
+  kaishashi: '会社史',
+  shukatsu: '終活ノート',
+  other: 'その他',
+};
+
+const fieldDescriptions: Record<string, string> = {
+  jibunshi: 'あなたの人生の記録を少しずつ積み重ねていきましょう。',
+  kaishashi: '会社の歩みと大切な出来事を記録していきましょう。',
+  shukatsu: '大切なことを整理して、未来に伝えましょう。',
+  other: '自由に記録・整理していきましょう。',
+};
+
 export default function DashboardPage() {
+  const { fieldType = 'jibunshi' } = useParams<{ fieldType: string }>();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const [stats, setStats] = useState({
-    interviews: 0,
-    timelines: 0,
-    photos: 0,
-  });
+  const [stats, setStats] = useState({ interviews: 0, timelines: 0, photos: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const [iv, tl, ph] = await Promise.all([
-          interviewApi.getAll(user.id),
-          timelineApi.getAll(user.id),
-          photoApi.getAll(user.id),
+          interviewApi.getAll(user.id, fieldType),
+          timelineApi.getAll(user.id, fieldType),
+          photoApi.getAll(user.id, fieldType),
         ]);
         setStats({
           interviews: iv.data.length,
@@ -35,28 +46,30 @@ export default function DashboardPage() {
   }, [user.id]);
 
   const completionPercent = Math.round((stats.interviews / 15) * 100);
+  const fieldLabel = fieldLabels[fieldType] || fieldType;
+  const fieldDesc = fieldDescriptions[fieldType] || '';
 
   const cards = [
     {
-      to: '/interview',
+      to: `/field/${fieldType}/interview`,
       emoji: '💬',
-      title: 'インタビュー',
+      title: '聞き取り',
       desc: '15の質問に答えて、あなたの物語を綴りましょう',
       stat: `${stats.interviews} / 15 問完了`,
       color: '#E8956D',
     },
     {
-      to: '/timeline',
+      to: `/field/${fieldType}/timeline`,
       emoji: '📅',
-      title: '人生年表',
+      title: '出来事',
       desc: '大切な出来事を時系列で整理しましょう',
       stat: `${stats.timelines} 件の記録`,
       color: '#6B9B6B',
     },
     {
-      to: '/photos',
+      to: `/field/${fieldType}/photos`,
       emoji: '🖼',
-      title: '思い出の写真',
+      title: '写真',
       desc: '大切な写真をデジタルで保管しましょう',
       stat: `${stats.photos} 枚の写真`,
       color: '#7B8FBB',
@@ -79,23 +92,25 @@ export default function DashboardPage() {
           position: 'absolute', top: -20, right: -20,
           fontSize: '8rem', opacity: 0.08, lineHeight: 1,
         }}>🌸</div>
-        <p style={{ fontSize: '0.95rem', opacity: 0.8, marginBottom: '8px' }}>こんにちは</p>
+        <p style={{ fontSize: '0.95rem', opacity: 0.8, marginBottom: '8px' }}>
+          {fieldLabel}
+        </p>
         <h2 style={{
           fontFamily: "'Noto Serif JP', serif",
           fontSize: '2rem', color: 'var(--cream)',
           marginBottom: '16px',
         }}>
-          {user.name}さんの物語
+          {user.name}さんの{fieldLabel}
         </h2>
         <p style={{ opacity: 0.85, fontSize: '1rem', lineHeight: 1.8 }}>
-          あなたの人生の記録を少しずつ積み重ねていきましょう。<br />
+          {fieldDesc}<br />
           完成したらPDFとして保存・印刷することができます。
         </p>
 
         {/* 進捗バー */}
         <div style={{ marginTop: '28px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ fontSize: '0.85rem', opacity: 0.8 }}>インタビュー進捗</span>
+            <span style={{ fontSize: '0.85rem', opacity: 0.8 }}>聞き取り進捗</span>
             <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{completionPercent}%</span>
           </div>
           <div style={{
@@ -186,11 +201,11 @@ export default function DashboardPage() {
             📄 PDFとして保存
           </h3>
           <p style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>
-            インタビューと年表をまとめたPDFを生成します。印刷して手元に残せます。
+            聞き取りと出来事をまとめたPDFを生成します。印刷して手元に残せます。
           </p>
         </div>
         <a
-          href={pdfApi.generateUrl(user.id)}
+          href={pdfApi.generateUrl(user.id, fieldType)}
           target="_blank"
           rel="noopener noreferrer"
           style={{

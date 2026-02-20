@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import FieldSelectPage from './pages/FieldSelectPage';
 import DashboardPage from './pages/DashboardPage';
 import InterviewPage from './pages/InterviewPage';
 import TimelinePage from './pages/TimelinePage';
@@ -17,10 +18,13 @@ function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
-        <Route path="/interview" element={<PrivateRoute><InterviewPage /></PrivateRoute>} />
-        <Route path="/timeline" element={<PrivateRoute><TimelinePage /></PrivateRoute>} />
-        <Route path="/photos" element={<PrivateRoute><PhotosPage /></PrivateRoute>} />
+        {/* 分野選択トップ */}
+        <Route path="/" element={<PrivateRoute><FieldSelectPage /></PrivateRoute>} />
+        {/* 分野別ダッシュボード */}
+        <Route path="/field/:fieldType" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
+        <Route path="/field/:fieldType/interview" element={<PrivateRoute><InterviewPage /></PrivateRoute>} />
+        <Route path="/field/:fieldType/timeline" element={<PrivateRoute><TimelinePage /></PrivateRoute>} />
+        <Route path="/field/:fieldType/photos" element={<PrivateRoute><PhotosPage /></PrivateRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

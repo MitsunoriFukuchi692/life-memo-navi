@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { interviewApi, Interview } from '../api';
 import api from '../api';
@@ -75,8 +76,8 @@ const OTHER_QUESTIONS = [
   "自分を一言で表すと？",
 ];
 
-const getQuestions = (projectType: string): string[] => {
-  switch (projectType) {
+const getQuestions = (fieldType: string): string[] => {
+  switch (fieldType) {
     case 'kaishashi': return KAISHASHI_QUESTIONS;
     case 'shukatsu': return SHUKATSU_QUESTIONS;
     case 'other': return OTHER_QUESTIONS;
@@ -85,8 +86,9 @@ const getQuestions = (projectType: string): string[] => {
 };
 
 export default function InterviewPage() {
+  const { fieldType = 'jibunshi' } = useParams<{ fieldType: string }>();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const QUESTIONS = getQuestions(user.project_type || 'jibunshi');
+  const QUESTIONS = getQuestions(fieldType);
 
   const [current, setCurrent] = useState(0);
   const [answers, setAnswers] = useState<{ [key: number]: string }>({});
@@ -96,8 +98,12 @@ export default function InterviewPage() {
   const [aiEditingAll, setAiEditingAll] = useState(false);
   const [interviews, setInterviews] = useState<Interview[]>([]);
 
+  // fieldTypeが変わったら回答をリセットして再取得
   useEffect(() => {
-    interviewApi.getAll(user.id).then(res => {
+    setAnswers({});
+    setSaved({});
+    setCurrent(0);
+    interviewApi.getAll(user.id, fieldType).then(res => {
       const map: { [key: number]: string } = {};
       const savedMap: { [key: number]: boolean } = {};
       res.data.forEach(iv => {
@@ -108,7 +114,7 @@ export default function InterviewPage() {
       setSaved(savedMap);
       setInterviews(res.data);
     }).catch(console.error);
-  }, [user.id]);
+  }, [user.id, fieldType]);
 
   const handleSave = async () => {
     const answerText = answers[current + 1];
@@ -119,6 +125,7 @@ export default function InterviewPage() {
         user_id: user.id,
         question_id: current + 1,
         answer_text: answerText,
+        field_type: fieldType,
       });
       setSaved(prev => ({ ...prev, [current + 1]: true }));
     } catch (e) {
@@ -193,7 +200,7 @@ export default function InterviewPage() {
   const progress = (completedCount / 15) * 100;
 
   return (
-    <Layout title="💬 インタビュー">
+    <Layout title="💬 聞き取り">
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius)', padding: '24px', marginBottom: '32px', boxShadow: 'var(--shadow)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
           <span style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>{completedCount} / 15 問完了</span>

@@ -10,9 +10,46 @@ const router: Router = express.Router();
 
 const FONT_PATH = path.join(__dirname, '../../fonts/NotoSansJP.otf');
 
+const FIELD_LABELS: Record<string, { main: string; story: string; interview: string; timeline: string; photos: string; sub: string }> = {
+  jibunshi: {
+    main: 'の物語',
+    story: 'あなたの物語',
+    interview: 'インタビュー記録',
+    timeline: '人生年表',
+    photos: '思い出の写真',
+    sub: 'さんの人生',
+  },
+  kaishashi: {
+    main: 'の会社史',
+    story: '会社の歩み',
+    interview: '聞き取り記録',
+    timeline: '会社年表',
+    photos: '会社の写真',
+    sub: 'さんの会社史',
+  },
+  shukatsu: {
+    main: 'の終活ノート',
+    story: '大切な記録',
+    interview: '聞き取り記録',
+    timeline: '年表',
+    photos: '大切な写真',
+    sub: 'さんの終活ノート',
+  },
+  other: {
+    main: 'の記録',
+    story: '記録',
+    interview: '聞き取り記録',
+    timeline: '年表',
+    photos: '写真',
+    sub: 'さんの記録',
+  },
+};
+
 router.get('/generate/:user_id', async (req: Request, res: Response) => {
   try {
     const { user_id } = req.params;
+    const field_type = (req.query.field_type as string) || 'jibunshi';
+    const labels = FIELD_LABELS[field_type] || FIELD_LABELS['jibunshi'];
 
     const userResult = await pool.query('SELECT * FROM users WHERE id = $1', [user_id]);
     if (userResult.rows.length === 0) {
@@ -21,21 +58,23 @@ router.get('/generate/:user_id', async (req: Request, res: Response) => {
     const user = userResult.rows[0];
 
     const interviewResult = await pool.query(
-      'SELECT * FROM interviews WHERE user_id = $1 ORDER BY question_id', [user_id]
+      'SELECT * FROM interviews WHERE user_id = $1 AND field_type = $2 ORDER BY question_id',
+      [user_id, field_type]
     );
     const timelineResult = await pool.query(
-      'SELECT * FROM timelines WHERE user_id = $1 ORDER BY year, month', [user_id]
+      'SELECT * FROM timelines WHERE user_id = $1 AND field_type = $2 ORDER BY year, month',
+      [user_id, field_type]
     );
     const photoResult = await pool.query(
-      'SELECT * FROM photos WHERE user_id = $1 ORDER BY uploaded_at', [user_id]
+      'SELECT * FROM photos WHERE user_id = $1 AND field_type = $2 ORDER BY uploaded_at',
+      [user_id, field_type]
     );
 
     const fontExists = fs.existsSync(FONT_PATH);
-
     const doc = new PDFDocument({ size: 'A4', margins: { top: 60, bottom: 60, left: 70, right: 70 } });
 
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="life-memo-${user_id}.pdf"`);
+    res.setHeader('Content-Disposition', `attachment; filename="life-memo-${field_type}-${user_id}.pdf"`);
     doc.pipe(res);
 
     const setFont = (size: number, bold: boolean = false) => {
@@ -49,7 +88,7 @@ router.get('/generate/:user_id', async (req: Request, res: Response) => {
     // ── 表紙 ──
     doc.moveDown(6);
     setFont(28, true);
-    doc.fillColor('#5C4033').text(`${user.name} の物語`, { align: 'center' });
+    doc.fillColor('#5C4033').text(`${user.name}${labels.main}`, { align: 'center' });
     doc.moveDown(0.8);
     setFont(13);
     doc.fillColor('#8B7355').text(`${user.age}歳`, { align: 'center' });
@@ -59,42 +98,36 @@ router.get('/generate/:user_id', async (req: Request, res: Response) => {
     setFont(11);
     doc.fillColor('#AAA').text(`作成日: ${new Date().toLocaleDateString('ja-JP')}`, { align: 'center' });
 
-    // ── あなたの物語ページ（回答のみ、一つの物語として） ──
+    // ── 物語ページ（回答のみ） ──
     if (interviewResult.rows.length > 0) {
       doc.addPage();
       setFont(22, true);
-      doc.fillColor('#5C4033').text('あなたの物語', { align: 'center' });
+      doc.fillColor('#5C4033').text(labels.story, { align: 'center' });
       doc.moveDown(0.4);
       setFont(11);
-      doc.fillColor('#8B7355').text(`〜 ${user.name} さんの人生 〜`, { align: 'center' });
+      doc.fillColor('#8B7355').text(`〜 ${user.name} ${labels.sub} 〜`, { align: 'center' });
       doc.moveDown(0.8);
       doc.moveTo(70, doc.y).lineTo(525, doc.y).strokeColor('#C4A882').lineWidth(1).stroke();
       doc.moveDown(1.5);
 
-      // 回答だけを段落として繋げる
       const storyParagraphs = interviewResult.rows
-        .filter(iv => iv.answer_text?.trim())
-        .map(iv => iv.answer_text.trim());
+        .filter((iv: any) => iv.answer_text?.trim())
+        .map((iv: any) => iv.answer_text.trim());
 
       setFont(12);
       doc.fillColor('#2C2C2C');
-
       for (const paragraph of storyParagraphs) {
-        doc.text(paragraph, {
-          align: 'justify',
-          lineGap: 5,
-          paragraphGap: 0,
-        });
+        doc.text(paragraph, { align: 'justify', lineGap: 5, paragraphGap: 0 });
         doc.moveDown(1.0);
         if (doc.y > 720) doc.addPage();
       }
     }
 
-    // ── インタビュー記録（Q&A形式） ──
+    // ── 聞き取り記録（Q&A形式） ──
     if (interviewResult.rows.length > 0) {
       doc.addPage();
       setFont(18, true);
-      doc.fillColor('#5C4033').text('インタビュー記録');
+      doc.fillColor('#5C4033').text(labels.interview);
       doc.moveDown(0.5);
       doc.moveTo(70, doc.y).lineTo(525, doc.y).strokeColor('#C4A882').stroke();
       doc.moveDown(0.8);
@@ -110,11 +143,11 @@ router.get('/generate/:user_id', async (req: Request, res: Response) => {
       }
     }
 
-    // ── 人生年表 ──
+    // ── 年表 ──
     if (timelineResult.rows.length > 0) {
       doc.addPage();
       setFont(18, true);
-      doc.fillColor('#5C4033').text('人生年表');
+      doc.fillColor('#5C4033').text(labels.timeline);
       doc.moveDown(0.5);
       doc.moveTo(70, doc.y).lineTo(525, doc.y).strokeColor('#C4A882').stroke();
       doc.moveDown(0.8);
@@ -135,11 +168,11 @@ router.get('/generate/:user_id', async (req: Request, res: Response) => {
       }
     }
 
-    // ── 思い出の写真 ──
+    // ── 写真 ──
     if (photoResult.rows.length > 0) {
       doc.addPage();
       setFont(18, true);
-      doc.fillColor('#5C4033').text('思い出の写真');
+      doc.fillColor('#5C4033').text(labels.photos);
       doc.moveDown(0.5);
       doc.moveTo(70, doc.y).lineTo(525, doc.y).strokeColor('#C4A882').stroke();
       doc.moveDown(0.8);
@@ -154,7 +187,6 @@ router.get('/generate/:user_id', async (req: Request, res: Response) => {
 
         const x = 70 + col * (imgW + gap);
         const y = doc.y;
-
         try {
           doc.image(imgPath, x, y, { width: imgW, height: imgH });
           if (photo.caption) {

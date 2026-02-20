@@ -77,8 +77,8 @@ const OTHER_QUESTIONS = [
   "自分を一言で表すと？"
 ];
 
-const getQuestions = (projectType: string): string[] => {
-  switch (projectType) {
+const getQuestions = (fieldType: string): string[] => {
+  switch (fieldType) {
     case 'kaishashi': return KAISHASHI_QUESTIONS;
     case 'shukatsu': return SHUKATSU_QUESTIONS;
     case 'other': return OTHER_QUESTIONS;
@@ -86,27 +86,37 @@ const getQuestions = (projectType: string): string[] => {
   }
 };
 
+// GET: user_id + field_type で取得
 router.get('/:user_id', async (req: Request, res: Response) => {
   try {
     const { user_id } = req.params;
-    const result = await pool.query('SELECT * FROM interviews WHERE user_id = $1 ORDER BY question_id', [user_id]);
+    const field_type = (req.query.field_type as string) || 'jibunshi';
+    const result = await pool.query(
+      'SELECT * FROM interviews WHERE user_id = $1 AND field_type = $2 ORDER BY question_id',
+      [user_id, field_type]
+    );
     res.json(result.rows);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
+// POST: field_type を含めて保存
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { user_id, question_id, answer_text, project_type } = req.body;
+    const { user_id, question_id, answer_text, field_type = 'jibunshi' } = req.body;
     if (!user_id || !question_id || question_id < 1 || question_id > 15) {
       return res.status(400).json({ error: 'Invalid question_id (1-15)' });
     }
-    const questions = getQuestions(project_type || 'jibunshi');
+    const questions = getQuestions(field_type);
     const question_text = questions[question_id - 1];
     const result = await pool.query(
-      'INSERT INTO interviews (user_id, question_id, question_text, answer_text) VALUES ($1, $2, $3, $4) ON CONFLICT (user_id, question_id) DO UPDATE SET answer_text = $4, updated_at = NOW() RETURNING *',
-      [user_id, question_id, question_text, answer_text]
+      `INSERT INTO interviews (user_id, question_id, question_text, answer_text, field_type)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (user_id, question_id, field_type)
+       DO UPDATE SET answer_text = $4, updated_at = NOW()
+       RETURNING *`,
+      [user_id, question_id, question_text, answer_text, field_type]
     );
     res.status(201).json(result.rows[0]);
   } catch (error: any) {
@@ -162,7 +172,10 @@ router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { answer_text } = req.body;
-    const result = await pool.query('UPDATE interviews SET answer_text = $1, updated_at = NOW() WHERE id = $2 RETURNING *', [answer_text, id]);
+    const result = await pool.query(
+      'UPDATE interviews SET answer_text = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+      [answer_text, id]
+    );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Interview not found' });
     res.json(result.rows[0]);
   } catch (error: any) {
