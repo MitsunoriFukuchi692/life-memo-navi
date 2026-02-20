@@ -1,13 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authApi } from '../api';
-
 export default function LoginPage() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -23,7 +21,6 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
-
   return (
     <div style={{
       minHeight: '100vh',
@@ -47,28 +44,40 @@ export default function LoginPage() {
         )}
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--brown)', fontWeight: 500 }}>Email</label>
+            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--brown)', fontWeight: 500 }}>メールアドレス</label>
             <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required
               style={{ width: '100%', padding: '14px 16px', border: '2px solid var(--cream-dark)', borderRadius: '8px', fontSize: '1rem', background: 'var(--cream)', outline: 'none' }}
               placeholder="example@email.com" />
           </div>
           <div style={{ marginBottom: '32px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--brown)', fontWeight: 500 }}>Password</label>
+            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--brown)', fontWeight: 500 }}>パスワード</label>
             <input type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required
               style={{ width: '100%', padding: '14px 16px', border: '2px solid var(--cream-dark)', borderRadius: '8px', fontSize: '1rem', background: 'var(--cream)', outline: 'none' }}
-              placeholder="password" />
+              placeholder="パスワード" />
           </div>
           <button type="submit" disabled={loading} style={{
             width: '100%', padding: '16px', background: 'var(--brown-dark)', color: 'var(--cream)',
             border: 'none', borderRadius: '8px', fontSize: '1.05rem', fontWeight: 500, cursor: 'pointer',
           }}>
-            {loading ? '...' : 'Login'}
+            {loading ? '...' : 'ログイン'}
           </button>
         </form>
         <p style={{ textAlign: 'center', marginTop: '24px', color: 'var(--text-light)', fontSize: '0.9rem' }}>
-          No account?{' '}
-          <Link to="/register" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>Register</Link>
+          アカウントをお持ちでない方は{' '}
+          <Link to="/register" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>新規登録</Link>
         </p>
+        {/* パスワード忘れ案内 */}
+        <div style={{
+          marginTop: '24px', padding: '16px',
+          background: 'var(--cream)', borderRadius: '8px',
+          textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-light)',
+          border: '1px solid var(--cream-dark)',
+        }}>
+          パスワードをお忘れの方は管理者までご連絡ください。<br />
+          <a href="mailto:mitsunorif@robostudy.jp" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>
+            mitsunorif@robostudy.jp
+          </a>
+        </div>
       </div>
     </div>
   );
