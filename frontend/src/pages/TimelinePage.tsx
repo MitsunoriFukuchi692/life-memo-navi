@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { timelineApi, Timeline } from '../api';
@@ -9,6 +9,14 @@ const fieldTitles: Record<string, string> = {
   shukatsu: '終活年表',
   other: '年表',
 };
+
+// Web Speech API の型定義
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
 
 export default function TimelinePage() {
   const { fieldType = 'jibunshi' } = useParams<{ fieldType: string }>();
@@ -24,6 +32,63 @@ export default function TimelinePage() {
     event_description: '',
   });
   const [saving, setSaving] = useState(false);
+
+  // 音声入力
+  const [voiceSupported, setVoiceSupported] = useState(false);
+  const [listeningField, setListeningField] = useState<'event_title' | 'event_description' | null>(null);
+  const recognitionRef = useRef<any>(null);
+  const listeningFieldRef = useRef<'event_title' | 'event_description' | null>(null);
+
+  // listeningFieldの変化をrefに同期
+  useEffect(() => {
+    listeningFieldRef.current = listeningField;
+  }, [listeningField]);
+
+  // Web Speech API の初期化
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      setVoiceSupported(true);
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'ja-JP';
+      recognition.continuous = true;
+      recognition.interimResults = false;
+
+      recognition.onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((result: any) => result[0].transcript)
+          .join('');
+        const field = listeningFieldRef.current;
+        if (field) {
+          setForm(prev => ({ ...prev, [field]: (prev[field] || '') + transcript }));
+        }
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error('音声認識エラー:', event.error);
+        setListeningField(null);
+      };
+
+      recognition.onend = () => {
+        setListeningField(null);
+      };
+
+      recognitionRef.current = recognition;
+    }
+  }, []);
+
+  const handleVoiceStart = (field: 'event_title' | 'event_description') => {
+    if (!recognitionRef.current) return;
+    listeningFieldRef.current = field;
+    setListeningField(field);
+    recognitionRef.current.start();
+  };
+
+  const handleVoiceStop = () => {
+    if (!recognitionRef.current) return;
+    recognitionRef.current.stop();
+    setListeningField(null);
+  };
 
   const fetchTimelines = async () => {
     setLoading(true);
@@ -75,6 +140,7 @@ export default function TimelinePage() {
     setForm({ year: new Date().getFullYear().toString(), month: '', event_title: '', event_description: '' });
     setShowForm(false);
     setEditing(null);
+    if (listeningField) handleVoiceStop();
   };
 
   const handleEdit = (tl: Timeline) => {
@@ -140,17 +206,72 @@ export default function TimelinePage() {
                 </select>
               </div>
             </div>
+
+            {/* 出来事タイトル + 音声入力 */}
             <div style={{ marginBottom: '16px' }}>
               <label style={labelStyle}>出来事のタイトル ＊</label>
               <input type="text" value={form.event_title} onChange={e => setForm({ ...form, event_title: e.target.value })}
                 required style={inputStyle} placeholder="例: 〇〇高校を卒業" />
+              {voiceSupported && (
+                <button
+                  type="button"
+                  onMouseDown={() => handleVoiceStart('event_title')}
+                  onMouseUp={handleVoiceStop}
+                  onTouchStart={() => handleVoiceStart('event_title')}
+                  onTouchEnd={handleVoiceStop}
+                  style={{
+                    marginTop: '8px',
+                    padding: '10px 24px',
+                    background: listeningField === 'event_title'
+                      ? 'linear-gradient(135deg, #e53935, #ef5350)'
+                      : 'linear-gradient(135deg, #1976D2, #42A5F5)',
+                    border: 'none', borderRadius: '50px', color: 'white',
+                    fontSize: '0.95rem', fontWeight: 600, cursor: 'pointer',
+                    fontFamily: "'Noto Sans JP', sans-serif",
+                    boxShadow: listeningField === 'event_title'
+                      ? '0 0 0 5px rgba(229,57,53,0.3)'
+                      : '0 3px 10px rgba(25,118,210,0.4)',
+                    userSelect: 'none',
+                  }}
+                >
+                  {listeningField === 'event_title' ? '🔴 話してください...' : '🎤 押している間だけ録音'}
+                </button>
+              )}
             </div>
+
+            {/* 詳細 + 音声入力 */}
             <div style={{ marginBottom: '24px' }}>
               <label style={labelStyle}>詳細（任意）</label>
               <textarea value={form.event_description} onChange={e => setForm({ ...form, event_description: e.target.value })}
                 rows={3} style={{ ...inputStyle, resize: 'vertical' }}
                 placeholder="その時の気持ちや詳しいエピソードを書いてください" />
+              {voiceSupported && (
+                <button
+                  type="button"
+                  onMouseDown={() => handleVoiceStart('event_description')}
+                  onMouseUp={handleVoiceStop}
+                  onTouchStart={() => handleVoiceStart('event_description')}
+                  onTouchEnd={handleVoiceStop}
+                  style={{
+                    marginTop: '8px',
+                    padding: '10px 24px',
+                    background: listeningField === 'event_description'
+                      ? 'linear-gradient(135deg, #e53935, #ef5350)'
+                      : 'linear-gradient(135deg, #1976D2, #42A5F5)',
+                    border: 'none', borderRadius: '50px', color: 'white',
+                    fontSize: '0.95rem', fontWeight: 600, cursor: 'pointer',
+                    fontFamily: "'Noto Sans JP', sans-serif",
+                    boxShadow: listeningField === 'event_description'
+                      ? '0 0 0 5px rgba(229,57,53,0.3)'
+                      : '0 3px 10px rgba(25,118,210,0.4)',
+                    userSelect: 'none',
+                  }}
+                >
+                  {listeningField === 'event_description' ? '🔴 話してください...' : '🎤 押している間だけ録音'}
+                </button>
+              )}
             </div>
+
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <button type="button" onClick={resetForm} style={secondaryButtonStyle}>キャンセル</button>
               <button type="submit" disabled={saving} style={primaryButtonStyle}>
