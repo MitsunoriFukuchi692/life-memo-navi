@@ -110,6 +110,12 @@ export default function InterviewPage() {
   const [isListening, setIsListening] = useState(false);
   const [voiceSupported, setVoiceSupported] = useState(false);
   const recognitionRef = useRef<any>(null);
+  const currentRef = useRef<number>(0); // stale closure対策
+
+  // currentの変化をrefに同期
+  useEffect(() => {
+    currentRef.current = current;
+  }, [current]);
 
   // Web Speech API の初期化
   useEffect(() => {
@@ -125,11 +131,12 @@ export default function InterviewPage() {
         const transcript = Array.from(event.results)
           .map((result: any) => result[0].transcript)
           .join('');
+        const qId = currentRef.current + 1; // refから最新の値を取得
         setAnswers(prev => ({
           ...prev,
-          [current + 1]: (prev[current + 1] || '') + transcript,
+          [qId]: (prev[qId] || '') + transcript,
         }));
-        setSaved(prev => ({ ...prev, [current + 1]: false }));
+        setSaved(prev => ({ ...prev, [qId]: false }));
       };
 
       recognition.onerror = (event: any) => {
