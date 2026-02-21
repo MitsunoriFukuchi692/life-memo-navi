@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { interviewApi, Interview } from '../api';
@@ -85,6 +85,14 @@ const getQuestions = (fieldType: string): string[] => {
   }
 };
 
+// Web Speech API の型定義
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
+
 export default function InterviewPage() {
   const { fieldType = 'jibunshi' } = useParams<{ fieldType: string }>();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -97,6 +105,66 @@ export default function InterviewPage() {
   const [aiEditing, setAiEditing] = useState(false);
   const [aiEditingAll, setAiEditingAll] = useState(false);
   const [interviews, setInterviews] = useState<Interview[]>([]);
+
+  // 音声入力
+  const [isListening, setIsListening] = useState(false);
+  const [voiceSupported, setVoiceSupported] = useState(false);
+  const recognitionRef = useRef<any>(null);
+
+  // Web Speech API の初期化
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      setVoiceSupported(true);
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'ja-JP';
+      recognition.continuous = true;        // 話し続けても認識
+      recognition.interimResults = false;   // 確定した結果のみ取得
+
+      recognition.onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((result: any) => result[0].transcript)
+          .join('');
+        setAnswers(prev => ({
+          ...prev,
+          [current + 1]: (prev[current + 1] || '') + transcript,
+        }));
+        setSaved(prev => ({ ...prev, [current + 1]: false }));
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error('音声認識エラー:', event.error);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+    }
+  }, []);
+
+  // 質問が変わったら音声入力を停止
+  useEffect(() => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    }
+  }, [current]);
+
+  // ボタンを押している間だけ録音
+  const handleVoiceStart = () => {
+    if (!recognitionRef.current) return;
+    recognitionRef.current.start();
+    setIsListening(true);
+  };
+
+  const handleVoiceStop = () => {
+    if (!recognitionRef.current) return;
+    recognitionRef.current.stop();
+    setIsListening(false);
+  };
 
   // fieldTypeが変わったら回答をリセットして再取得
   useEffect(() => {
@@ -265,6 +333,43 @@ export default function InterviewPage() {
           onFocus={e => e.target.style.borderColor = 'var(--brown-light)'}
           onBlur={e => e.target.style.borderColor = 'var(--cream-dark)'}
         />
+
+        {/* 音声入力ボタン */}
+        {voiceSupported && (
+          <div style={{ marginTop: '16px', textAlign: 'center' }}>
+            <button
+              onMouseDown={handleVoiceStart}
+              onMouseUp={handleVoiceStop}
+              onTouchStart={handleVoiceStart}
+              onTouchEnd={handleVoiceStop}
+              style={{
+                padding: '16px 40px',
+                background: isListening
+                  ? 'linear-gradient(135deg, #e53935, #ef5350)'
+                  : 'linear-gradient(135deg, #1976D2, #42A5F5)',
+                border: 'none',
+                borderRadius: '50px',
+                color: 'white',
+                fontSize: '1.1rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                fontFamily: "'Noto Sans JP', sans-serif",
+                boxShadow: isListening
+                  ? '0 0 0 6px rgba(229,57,53,0.3)'
+                  : '0 4px 12px rgba(25,118,210,0.4)',
+                transition: 'all 0.2s',
+                userSelect: 'none',
+              }}
+            >
+              {isListening ? '🔴 話してください...' : '🎤 押している間だけ録音'}
+            </button>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-light)', marginTop: '8px' }}>
+              {isListening
+                ? '※ ボタンを離すと録音が終わります'
+                : '※ ボタンを押している間、話した内容が自動でテキストになります'}
+            </p>
+          </div>
+        )}
 
         <div style={{ marginTop: '12px', textAlign: 'right' }}>
           <button onClick={handleAiEdit} disabled={aiEditing || !answers[current + 1]?.trim()} style={{
