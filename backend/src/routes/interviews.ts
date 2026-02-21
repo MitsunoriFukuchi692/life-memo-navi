@@ -1,6 +1,7 @@
 import express, { Router, Request, Response } from 'express';
 import pool from '../db/db.js';
 import OpenAI from 'openai';
+import { encrypt, decrypt } from '../utils/encryption.js';
 
 const router: Router = express.Router();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -86,7 +87,7 @@ const getQuestions = (fieldType: string): string[] => {
   }
 };
 
-// GET: user_id + field_type で取得
+// GET: user_id + field_type で取得（復号して返す）
 router.get('/:user_id', async (req: Request, res: Response) => {
   try {
     const { user_id } = req.params;
@@ -95,13 +96,18 @@ router.get('/:user_id', async (req: Request, res: Response) => {
       'SELECT * FROM interviews WHERE user_id = $1 AND field_type = $2 ORDER BY question_id',
       [user_id, field_type]
     );
-    res.json(result.rows);
+    // answer_text を復号して返す
+    const rows = result.rows.map(row => ({
+      ...row,
+      answer_text: row.answer_text ? decrypt(row.answer_text) : row.answer_text,
+    }));
+    res.json(rows);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// POST: field_type を含めて保存
+// POST: field_type を含めて保存（暗号化して保存）
 router.post('/', async (req: Request, res: Response) => {
   try {
     const { user_id, question_id, answer_text, field_type = 'jibunshi' } = req.body;
@@ -110,15 +116,24 @@ router.post('/', async (req: Request, res: Response) => {
     }
     const questions = getQuestions(field_type);
     const question_text = questions[question_id - 1];
+
+    // answer_text を暗号化して保存
+    const encryptedAnswer = answer_text ? encrypt(answer_text) : answer_text;
+
     const result = await pool.query(
       `INSERT INTO interviews (user_id, question_id, question_text, answer_text, field_type)
        VALUES ($1, $2, $3, $4, $5)
        ON CONFLICT (user_id, question_id, field_type)
        DO UPDATE SET answer_text = $4, updated_at = NOW()
        RETURNING *`,
-      [user_id, question_id, question_text, answer_text, field_type]
+      [user_id, question_id, question_text, encryptedAnswer, field_type]
     );
-    res.status(201).json(result.rows[0]);
+    // 返すときは復号して返す
+    const row = result.rows[0];
+    res.status(201).json({
+      ...row,
+      answer_text: row.answer_text ? decrypt(row.answer_text) : row.answer_text,
+    });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -172,12 +187,21 @@ router.put('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { answer_text } = req.body;
+
+    // answer_text を暗号化して保存
+    const encryptedAnswer = answer_text ? encrypt(answer_text) : answer_text;
+
     const result = await pool.query(
       'UPDATE interviews SET answer_text = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
-      [answer_text, id]
+      [encryptedAnswer, id]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Interview not found' });
-    res.json(result.rows[0]);
+    // 返すときは復号して返す
+    const row = result.rows[0];
+    res.json({
+      ...row,
+      answer_text: row.answer_text ? decrypt(row.answer_text) : row.answer_text,
+    });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
