@@ -51,16 +51,21 @@ export default function TimelinePage() {
       setVoiceSupported(true);
       const recognition = new SpeechRecognition();
       recognition.lang = 'ja-JP';
-      recognition.continuous = true;
-      recognition.interimResults = false;
+      recognition.continuous = false;
+      recognition.interimResults = true;
 
       recognition.onresult = (event: any) => {
-        const transcript = Array.from(event.results)
-          .map((result: any) => result[0].transcript)
-          .join('');
-        const field = listeningFieldRef.current;
-        if (field) {
-          setForm(prev => ({ ...prev, [field]: (prev[field] || '') + transcript }));
+        let finalTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          if (event.results[i].isFinal) {
+            finalTranscript += event.results[i][0].transcript;
+          }
+        }
+        if (finalTranscript) {
+          const field = listeningFieldRef.current;
+          if (field) {
+            setForm(prev => ({ ...prev, [field]: (prev[field] || '') + finalTranscript }));
+          }
         }
       };
 
@@ -81,12 +86,20 @@ export default function TimelinePage() {
     if (!recognitionRef.current) return;
     listeningFieldRef.current = field;
     setListeningField(field);
-    recognitionRef.current.start();
+    try {
+      recognitionRef.current.start();
+    } catch (e) {
+      console.error('音声認識開始エラー:', e);
+    }
   };
 
   const handleVoiceStop = () => {
     if (!recognitionRef.current) return;
-    recognitionRef.current.stop();
+    try {
+      recognitionRef.current.stop();
+    } catch (e) {
+      console.error('音声認識停止エラー:', e);
+    }
     setListeningField(null);
   };
 
