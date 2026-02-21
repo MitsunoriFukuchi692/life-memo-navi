@@ -6,6 +6,7 @@ import DashboardPage from './pages/DashboardPage';
 import InterviewPage from './pages/InterviewPage';
 import TimelinePage from './pages/TimelinePage';
 import PhotosPage from './pages/PhotosPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const token = localStorage.getItem('token');
@@ -18,6 +19,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
         {/* 分野選択トップ */}
         <Route path="/" element={<PrivateRoute><FieldSelectPage /></PrivateRoute>} />
         {/* 分野別ダッシュボード */}
