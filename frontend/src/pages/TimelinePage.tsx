@@ -51,10 +51,12 @@ export default function TimelinePage() {
       setVoiceSupported(true);
       const recognition = new SpeechRecognition();
       recognition.lang = 'ja-JP';
-      recognition.continuous = false;
+      recognition.continuous = true;
       recognition.interimResults = true;
 
       recognition.onresult = (event: any) => {
+        const field = listeningFieldRef.current;
+        if (!field) return;
         let finalTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
           if (event.results[i].isFinal) {
@@ -62,10 +64,7 @@ export default function TimelinePage() {
           }
         }
         if (finalTranscript) {
-          const field = listeningFieldRef.current;
-          if (field) {
-            setForm(prev => ({ ...prev, [field]: (prev[field] || '') + finalTranscript }));
-          }
+          setForm(prev => ({ ...prev, [field]: (prev[field] || '') + finalTranscript }));
         }
       };
 
