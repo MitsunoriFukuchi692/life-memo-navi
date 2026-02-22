@@ -18,8 +18,20 @@ const app: Express = express();
 const PORT = process.env.PORT || 5000;
 
 // ミドルウェア
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'https://memo.robostudy.jp',
+  'https://life-memo-navi.onrender.com',
+].filter(Boolean) as string[];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS blocked: ' + origin));
+    }
+  },
   credentials: true
 }));
 app.use(express.json({ limit: '50mb' }));
