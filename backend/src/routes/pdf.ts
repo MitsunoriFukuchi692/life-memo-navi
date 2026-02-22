@@ -4,6 +4,7 @@ import PDFDocument from 'pdfkit';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import { decrypt } from '../utils/encryption.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const router: Router = express.Router();
@@ -57,14 +58,27 @@ router.get('/generate/:user_id', async (req: Request, res: Response) => {
     }
     const user = userResult.rows[0];
 
-    const interviewResult = await pool.query(
+    const interviewResultRaw = await pool.query(
       'SELECT * FROM interviews WHERE user_id = $1 AND field_type = $2 ORDER BY question_id',
       [user_id, field_type]
     );
-    const timelineResult = await pool.query(
+    const interviewResult = {
+      rows: interviewResultRaw.rows.map((row: any) => ({
+        ...row,
+        answer_text: row.answer_text ? decrypt(row.answer_text) : row.answer_text,
+      })),
+    };
+    const timelineResultRaw = await pool.query(
       'SELECT * FROM timelines WHERE user_id = $1 AND field_type = $2 ORDER BY year, month',
       [user_id, field_type]
     );
+    const timelineResult = {
+      rows: timelineResultRaw.rows.map((row: any) => ({
+        ...row,
+        event_title: row.event_title ? decrypt(row.event_title) : row.event_title,
+        event_description: row.event_description ? decrypt(row.event_description) : row.event_description,
+      })),
+    };
     const photoResult = await pool.query(
       'SELECT * FROM photos WHERE user_id = $1 AND field_type = $2 ORDER BY uploaded_at',
       [user_id, field_type]
