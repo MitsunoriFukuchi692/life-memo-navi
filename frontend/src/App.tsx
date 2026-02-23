@@ -7,6 +7,7 @@ import InterviewPage from './pages/InterviewPage';
 import TimelinePage from './pages/TimelinePage';
 import PhotosPage from './pages/PhotosPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import LandingPage from './pages/LandingPage';
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const token = localStorage.getItem('token');
@@ -17,11 +18,13 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* ランディングページ（トップ） */}
+        <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
-        {/* 分野選択トップ */}
-        <Route path="/" element={<PrivateRoute><FieldSelectPage /></PrivateRoute>} />
+        {/* ログイン後のホーム（分野選択） */}
+        <Route path="/home" element={<PrivateRoute><FieldSelectPage /></PrivateRoute>} />
         {/* 分野別ダッシュボード */}
         <Route path="/field/:fieldType" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
         <Route path="/field/:fieldType/interview" element={<PrivateRoute><InterviewPage /></PrivateRoute>} />
