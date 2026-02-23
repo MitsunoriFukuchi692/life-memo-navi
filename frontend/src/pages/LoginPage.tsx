@@ -14,7 +14,7 @@ export default function LoginPage() {
       const res = await authApi.login(form);
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data));
-      navigate('/');
+      navigate('/home');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Login failed');
     } finally {
