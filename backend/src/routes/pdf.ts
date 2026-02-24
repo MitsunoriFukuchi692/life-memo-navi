@@ -185,35 +185,76 @@ router.get('/generate/:user_id', async (req: Request, res: Response) => {
     // ── 写真 ──
     if (photoResult.rows.length > 0) {
       doc.addPage();
+
+      // セクションタイトル
       setFont(18, true);
       doc.fillColor('#5C4033').text(labels.photos);
       doc.moveDown(0.5);
-      doc.moveTo(70, doc.y).lineTo(525, doc.y).strokeColor('#C4A882').stroke();
-      doc.moveDown(0.8);
+      doc.moveTo(70, doc.y).lineTo(525, doc.y).strokeColor('#C4A882').lineWidth(1).stroke();
+      doc.moveDown(1.2);
 
       const uploadsDir = path.join(__dirname, '../../uploads');
+
+      // 1ページに2列レイアウト
+      const colCount = 2;
+      const pageW = 525 - 70;           // 455px
+      const gap = 20;
+      const boxW = (pageW - gap) / colCount;  // 約217px
+      const maxImgH = 180;              // 最大高さ（比率は保持）
+      const captionH = 32;              // キャプション領域
+      const cellH = maxImgH + captionH + 20; // セル全体の高さ
+
       let col = 0;
-      const imgW = 220, imgH = 160, gap = 15;
+      let rowStartY = doc.y;
 
       for (const photo of photoResult.rows) {
         const imgPath = path.join(uploadsDir, path.basename(photo.photo_url));
         if (!fs.existsSync(imgPath)) continue;
 
-        const x = 70 + col * (imgW + gap);
-        const y = doc.y;
+        const x = 70 + col * (boxW + gap);
+        const y = rowStartY;
+
         try {
-          doc.image(imgPath, x, y, { width: imgW, height: imgH });
+          // 背景カード（薄いクリーム色）
+          doc.roundedRect(x, y, boxW, cellH, 6)
+            .fillColor('#FAF6F0')
+            .strokeColor('#C4A882')
+            .lineWidth(0.5)
+            .fillAndStroke();
+
+          // ★ fit を使って比率を保持したまま収める
+          const imgAreaX = x + 8;
+          const imgAreaY = y + 8;
+          const imgAreaW = boxW - 16;
+          const imgAreaH = maxImgH;
+
+          doc.image(imgPath, imgAreaX, imgAreaY, {
+            fit: [imgAreaW, imgAreaH],
+            align: 'center',
+            valign: 'center',
+          });
+
+          // キャプション
           if (photo.caption) {
             setFont(9);
-            doc.fillColor('#666').text(photo.caption, x, y + imgH + 4, { width: imgW, align: 'center' });
+            doc.fillColor('#5C4033')
+              .text(photo.caption, x + 4, y + maxImgH + 14, {
+                width: boxW - 8,
+                align: 'center',
+                ellipsis: true,
+              });
           }
-        } catch (e) { /* skip */ }
+        } catch (e) { /* skip broken image */ }
 
         col++;
-        if (col >= 2) {
+        if (col >= colCount) {
           col = 0;
-          doc.moveDown(12);
-          if (doc.y > 650) doc.addPage();
+          rowStartY += cellH + 16;
+          // ページ末尾チェック
+          if (rowStartY + cellH > 760) {
+            doc.addPage();
+            rowStartY = 60;
+          }
         }
       }
     }
