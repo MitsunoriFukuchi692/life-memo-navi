@@ -148,7 +148,7 @@ export default function PhotosPage() {
             onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-4px)'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow-lg)'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow)'; }}>
               <div style={{ cursor: 'pointer' }} onClick={() => setLightbox(photo)}>
-                <img src={`${API_BASE}${photo.photo_url}`} alt={photo.caption || '写真'}
+                <img src={photo.photo_url.startsWith('http') ? photo.photo_url : `${API_BASE}${photo.photo_url}`} alt={photo.caption || '写真'}
                   style={{ width: '100%', height: '160px', objectFit: 'cover', display: 'block' }}
                   onError={e => { (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns%3D"http://www.w3.org/2000/svg" width%3D"200" height%3D"160" viewBox%3D"0 0 200 160"%3E%3Crect fill%3D"%23f2ebe0" width%3D"200" height%3D"160"/%3E%3Ctext fill%3D"%23c4a882" font-size%3D"40" text-anchor%3D"middle" x%3D"100" y%3D"90"%3E🖼%3C/text%3E%3C/svg%3E'; }} />
               </div>
@@ -171,7 +171,7 @@ export default function PhotosPage() {
           zIndex: 1000, padding: '24px', cursor: 'pointer',
         }}>
           <div onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
-            <img src={`${API_BASE}${lightbox.photo_url}`} alt={lightbox.caption || '写真'}
+            <img src={lightbox.photo_url.startsWith('http') ? lightbox.photo_url : `${API_BASE}${lightbox.photo_url}`} alt={lightbox.caption || '写真'}
               style={{ maxWidth: '90vw', maxHeight: '80vh', borderRadius: 'var(--radius)', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }} />
             {lightbox.caption && <p style={{ color: 'white', marginTop: '16px', fontSize: '1rem' }}>{lightbox.caption}</p>}
             <button onClick={() => setLightbox(null)} style={{
