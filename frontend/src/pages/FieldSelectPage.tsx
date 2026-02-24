@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
 
 const fields = [
   { key: 'jibunshi', label: '自分史', emoji: '📖', desc: 'あなたの人生の物語を記録しましょう', color: '#C8694A' },
@@ -30,8 +29,18 @@ export default function FieldSelectPage() {
         <h1 style={{ fontFamily: "'Noto Serif JP', serif", color: 'var(--cream)', fontSize: '1.2rem', fontWeight: 600 }}>
           Life Memo Navi
         </h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{ color: 'var(--brown-light)', fontSize: '0.9rem' }}>{user.name}</span>
+
+          {/* ⚙️ 設定ボタン */}
+          <button onClick={() => navigate('/settings')} title="設定" style={{
+            background: 'transparent', border: '1px solid var(--brown-light)',
+            color: 'var(--brown-light)', padding: '6px 12px', borderRadius: '20px',
+            fontSize: '1rem', cursor: 'pointer', lineHeight: 1,
+          }}>
+            ⚙️
+          </button>
+
           <button onClick={handleLogout} style={{
             background: 'transparent', border: '1px solid var(--brown-light)',
             color: 'var(--brown-light)', padding: '6px 16px', borderRadius: '20px', fontSize: '0.85rem',
