@@ -34,7 +34,7 @@ export default function SettingsPage() {
     setError('');
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API}/api/auth/delete-account`, {
+      const res = await fetch(`${API}/auth/delete-account`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
