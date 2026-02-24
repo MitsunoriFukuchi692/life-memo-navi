@@ -193,8 +193,6 @@ router.get('/generate/:user_id', async (req: Request, res: Response) => {
       doc.moveTo(70, doc.y).lineTo(525, doc.y).strokeColor('#C4A882').lineWidth(1).stroke();
       doc.moveDown(1.2);
 
-      const uploadsDir = path.join(__dirname, '../../uploads');
-
       // 1ページに2列レイアウト
       const colCount = 2;
       const pageW = 525 - 70;           // 455px
@@ -207,9 +205,23 @@ router.get('/generate/:user_id', async (req: Request, res: Response) => {
       let col = 0;
       let rowStartY = doc.y;
 
+      const uploadsDir = path.join(__dirname, '../../uploads');
+
       for (const photo of photoResult.rows) {
-        const imgPath = path.join(uploadsDir, path.basename(photo.photo_url));
-        if (!fs.existsSync(imgPath)) continue;
+        let imgSource: string | Buffer | null = null;
+        if (photo.photo_url.startsWith('http')) {
+          try {
+            const response = await fetch(photo.photo_url);
+            if (!response.ok) continue;
+            const arrayBuffer = await response.arrayBuffer();
+            imgSource = Buffer.from(arrayBuffer);
+          } catch (e) { continue; }
+        } else {
+          const imgPath = path.join(uploadsDir, path.basename(photo.photo_url));
+          if (!fs.existsSync(imgPath)) continue;
+          imgSource = imgPath;
+        }
+        if (!imgSource) continue;
 
         const x = 70 + col * (boxW + gap);
         const y = rowStartY;
@@ -228,7 +240,7 @@ router.get('/generate/:user_id', async (req: Request, res: Response) => {
           const imgAreaW = boxW - 16;
           const imgAreaH = maxImgH;
 
-          doc.image(imgPath, imgAreaX, imgAreaY, {
+          doc.image(imgSource, imgAreaX, imgAreaY, {
             fit: [imgAreaW, imgAreaH],
             align: 'center',
             valign: 'center',
