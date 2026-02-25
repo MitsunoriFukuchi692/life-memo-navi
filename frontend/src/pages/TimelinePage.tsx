@@ -185,10 +185,50 @@ export default function TimelinePage() {
   const MONTHS = ['', '1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
   const title = fieldTitles[fieldType] || '年表';
 
+  const handlePrintPdf = () => {
+    window.print();
+  };
+
   return (
     <Layout title={`📅 ${title}`}>
-      <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'flex-end' }}>
-        <button onClick={() => { resetForm(); setShowForm(!showForm); }} style={primaryButtonStyle}>
+      {/* PDF印刷用スタイル */}
+      <style>{`
+        @media print {
+          body * { visibility: hidden; }
+          #print-area, #print-area * { visibility: visible; }
+          #print-area { position: absolute; left: 0; top: 0; width: 100%; }
+          .no-print { display: none !important; }
+          @page { margin: 20mm; }
+        }
+      `}</style>
+
+      {/* ページ上部：ボタンエリア */}
+      <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+        {/* 📄 PDFで保存ボタン（左側・目立つ位置） */}
+        <button
+          onClick={handlePrintPdf}
+          className="no-print"
+          style={{
+            padding: '14px 32px',
+            background: 'linear-gradient(135deg, #1565C0, #1976D2)',
+            color: 'white',
+            border: 'none',
+            borderRadius: 'var(--radius-sm)',
+            fontSize: '1.05rem',
+            fontWeight: 700,
+            cursor: 'pointer',
+            fontFamily: "'Noto Sans JP', sans-serif",
+            boxShadow: '0 4px 14px rgba(21,101,192,0.4)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
+          📄 PDFで保存・印刷
+        </button>
+
+        {/* ＋出来事を追加ボタン（右側） */}
+        <button onClick={() => { resetForm(); setShowForm(!showForm); }} style={primaryButtonStyle} className="no-print">
           ＋ 出来事を追加
         </button>
       </div>
@@ -294,6 +334,14 @@ export default function TimelinePage() {
         </div>
       )}
 
+      <div id="print-area">
+        {/* 印刷時のタイトル */}
+        <div style={{ display: 'none' }} className="print-only">
+          <h2 style={{ fontFamily: "'Noto Serif JP', serif", textAlign: 'center', marginBottom: '24px' }}>
+            {user.name || ''} の {title}
+          </h2>
+        </div>
+
       {loading ? (
         <div style={{ textAlign: 'center', padding: '60px' }}><div className="spinner" /></div>
       ) : timelines.length === 0 ? (
@@ -362,6 +410,7 @@ export default function TimelinePage() {
           ))}
         </div>
       )}
+      </div>{/* /print-area */}
     </Layout>
   );
 }
