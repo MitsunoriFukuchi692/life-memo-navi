@@ -9,6 +9,7 @@ import interviewRoutes from './routes/interviews.js';
 import timelinesRoutes from './routes/timelines.js';
 import photosRoutes from './routes/photos.js';
 import pdfRoutes from './routes/pdf.js';
+import adminRoutes from './routes/admin.js';
 
 dotenv.config();
 
@@ -18,20 +19,8 @@ const app: Express = express();
 const PORT = process.env.PORT || 5000;
 
 // ミドルウェア
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  'https://memo.robostudy.jp',
-  'https://life-memo-navi.onrender.com',
-].filter(Boolean) as string[];
-
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('CORS blocked: ' + origin));
-    }
-  },
+  origin: process.env.FRONTEND_URL || '*',
   credentials: true
 }));
 app.use(express.json({ limit: '50mb' }));
@@ -51,6 +40,7 @@ app.use('/api/interviews', interviewRoutes);
 app.use('/api/timelines', timelinesRoutes);
 app.use('/api/photos', photosRoutes);
 app.use('/api/pdf', pdfRoutes);
+app.use('/api/admin', adminRoutes);
 
 // ルートエンドポイント
 app.get('/', (req: Request, res: Response) => {
@@ -64,7 +54,8 @@ app.get('/', (req: Request, res: Response) => {
       interviews: { get: 'GET /api/interviews/:user_id', save: 'POST /api/interviews' },
       timelines: { list: 'GET /api/timelines/user/:user_id', create: 'POST /api/timelines' },
       photos: { upload: 'POST /api/photos/upload', list: 'GET /api/photos/:user_id' },
-      pdf: { generate: 'GET /api/pdf/generate/:user_id' }
+      pdf: { generate: 'GET /api/pdf/generate/:user_id' },
+      admin: { users: 'GET /api/admin/users?key=SECRET' }
     }
   });
 });
