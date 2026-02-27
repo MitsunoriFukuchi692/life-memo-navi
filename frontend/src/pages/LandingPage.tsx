@@ -283,7 +283,7 @@ export default function LandingPage() {
               ))}
               <div className="lp-card-footer">
                 <div className="lp-card-footer-text">📄 PDF出力可能</div>
-                <button className="lp-card-btn">PDFを作成する</button>
+                <button className="lp-card-btn" onClick={() => window.open('/sample.pdf', '_blank')}>PDFを作成する</button>
               </div>
             </div>
           </div>
