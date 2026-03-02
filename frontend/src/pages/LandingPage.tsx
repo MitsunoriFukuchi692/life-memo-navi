@@ -435,12 +435,12 @@ export default function LandingPage() {
             <div className="lp-price-card featured">
               <div className="lp-price-badge">✦ トライアル終了後</div>
               <div className="lp-price-name">継続プラン</div>
-              <div className="lp-price-num">応相談</div>
-              <div className="lp-price-desc">30日後はご連絡ください</div>
+              <div className="lp-price-num">¥990<span style={{fontSize:'1rem',fontWeight:400}}>/3ヶ月</span></div>
+              <div className="lp-price-desc">3ヶ月ごとの自動更新（税込）</div>
               <ul className="lp-price-feats">
                 {['トライアルの全機能を継続','データはそのまま引き継ぎ','個人・法人プランあり','サポート付き','管理者に直接ご相談'].map((f,i)=><li key={i}>{f}</li>)}
               </ul>
-              <a href="mailto:mitsunorif@robostudy.jp" className="lp-btn-primary" style={{width:'100%',justifyContent:'center'}}>お問い合わせ →</a>
+              <a href="https://buy.stripe.com/14A00kg7J7XD0jMd2C4F208" className="lp-btn-primary" style={{width:'100%',justifyContent:'center'}} target="_blank">今すぐ申し込む →</a>
             </div>
           </div>
         </section>
