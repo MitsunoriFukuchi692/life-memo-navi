@@ -182,6 +182,54 @@ export default function LandingPage() {
         .lp-voice-author { color:var(--brown-light); font-size:0.82rem; }
 
         /* 料金 */
+
+/* トップ料金（ヒーロー直下） */
+.lp-top-pricing{
+  margin-top:28px;
+  background:rgba(255,255,255,0.75);
+  border:1px solid var(--cream-dark);
+  border-radius:18px;
+  padding:18px 18px 14px;
+  box-shadow:var(--shadow);
+  backdrop-filter:blur(6px);
+}
+.lp-top-pricing-head{ display:flex; flex-direction:column; gap:4px; margin-bottom:14px; }
+.lp-top-pricing-kicker{ font-size:0.78rem; color:var(--brown); letter-spacing:0.02em; }
+.lp-top-pricing-title{ font-family:'Noto Serif JP',serif; font-size:1.05rem; color:var(--brown-dark); }
+.lp-top-pricing-title strong{ color:var(--accent-warm); }
+.lp-top-pricing-cards{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.lp-top-price-card{
+  text-decoration:none;
+  background:var(--white);
+  border:1px solid var(--cream-dark);
+  border-radius:14px;
+  padding:14px 12px;
+  color:var(--text);
+  transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+  position:relative;
+  min-height:108px;
+}
+.lp-top-price-card:hover{ transform:translateY(-2px); box-shadow:var(--shadow); border-color:var(--brown-light); }
+.lp-top-price-card.featured{ border:2px solid var(--brown-dark); box-shadow:var(--shadow-lg); }
+.lp-top-price-badge{
+  position:absolute; top:-10px; left:14px;
+  background:var(--accent-warm); color:var(--white);
+  font-size:0.72rem; padding:3px 10px; border-radius:999px;
+}
+.lp-top-price-name{ font-size:0.82rem; color:var(--brown); margin-bottom:6px; }
+.lp-top-price-num{ font-family:'Noto Serif JP',serif; font-size:1.35rem; color:var(--brown-dark); font-weight:700; line-height:1.15; }
+.lp-top-price-num span{ font-size:0.85rem; font-weight:500; color:var(--text-light); }
+.lp-top-price-was{ display:block; font-family:'Noto Sans JP',sans-serif; font-size:0.72rem; color:var(--text-light); text-decoration:line-through; margin-bottom:4px; }
+.lp-top-price-note{ font-size:0.74rem; color:var(--text-light); margin-top:8px; }
+.lp-top-pricing-foot{ margin-top:10px; text-align:right; }
+.lp-top-pricing-foot a{ color:var(--brown-dark); font-size:0.84rem; text-decoration:none; border-bottom:1px solid var(--brown-light); }
+.lp-top-pricing-foot a:hover{ border-bottom-color:var(--brown-dark); }
+
+@media (max-width: 820px){
+  .lp-top-pricing-cards{ grid-template-columns:1fr; }
+  .lp-top-price-card{ min-height:auto; }
+}
+
         .lp-pricing { background:var(--cream-dark); }
         .lp-pricing-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:28px; max-width:780px; margin:0 auto; }
         .lp-price-card { background:var(--white); border-radius:20px; padding:36px; border:2px solid var(--cream-dark); text-align:center; transition:all 0.3s; }
@@ -253,14 +301,46 @@ export default function LandingPage() {
         {/* ヒーロー */}
         <section className="lp-hero">
           <div className="lp-hero-content">
-            <div className="lp-badge">🎁 30日間無料トライアル実施中</div>
+            <div className="lp-badge">🎁 1カ月無料トライアル実施中</div>
             <h1>あなたの人生、<br /><em>ちゃんと残しませんか</em></h1>
             <p>インタビュー形式で、あなたの大切な思い出や人生の歩みを<br />AIがやさしくサポートしながら記録。<br />自分史・会社史・終活ノートを美しいPDFで残せます。</p>
             <div className="lp-btns">
               <a href="/register" className="lp-btn-primary">✦ 無料で記録を始める</a>
               <a href="#lp-how" className="lp-btn-secondary">使い方を見る →</a>
             </div>
-          </div>
+          
+
+{/* トップに料金（要望対応） */}
+<div className="lp-top-pricing" aria-label="料金プラン（トップ）">
+  <div className="lp-top-pricing-head">
+    <div className="lp-top-pricing-kicker">ご利用料金</div>
+    <div className="lp-top-pricing-title">まずは <strong>1カ月無料</strong>でお試し</div>
+  </div>
+  <div className="lp-top-pricing-cards">
+    <a className="lp-top-price-card" href="https://bit.ly/4l24WT0" target="_blank" rel="noreferrer">
+      <div className="lp-top-price-name">月払い</div>
+      <div className="lp-top-price-num">380円<span>/月</span></div>
+      <div className="lp-top-price-note">※1カ月無料後に課金開始</div>
+    </a>
+    <a className="lp-top-price-card featured" href="https://bit.ly/4rI0N9n" target="_blank" rel="noreferrer">
+      <div className="lp-top-price-badge">おすすめ</div>
+      <div className="lp-top-price-name">まとめ払い</div>
+      <div className="lp-top-price-num">990円<span>/3ヶ月</span></div>
+      <div className="lp-top-price-note">月あたり330円（50円おトク）</div>
+    </a>
+    <a className="lp-top-price-card" href="mailto:mitsunorif@robostudy.jp?subject=%E3%83%A9%E3%82%A4%E3%83%95%E3%83%A1%E3%83%A2%E3%83%8A%E3%83%93%20%E4%B8%80%E6%8B%AC%E8%B3%BC%E5%85%A5%E5%B8%8C%E6%9C%9B&body=%E3%81%8A%E5%90%8D%E5%89%8D%EF%BC%9A%0D%0A%E3%83%A1%E3%83%BC%E3%83%AB%EF%BC%9A%0D%0A%E9%80%A3%E7%B5%A1%E5%85%88%EF%BC%88%E9%9B%BB%E8%A9%B1%EF%BC%89%EF%BC%9A%0D%0A%E3%80%90%E4%B8%80%E6%8B%AC%E8%B3%BC%E5%85%A5%208%2C800%E5%86%86%E3%80%91%E3%82%92%E5%B8%8C%E6%9C%9B%E3%81%97%E3%81%BE%E3%81%99%E3%80%82%0D%0A">
+      <div className="lp-top-price-name">一括購入（カード不要）</div>
+      <div className="lp-top-price-num">
+        <span className="lp-top-price-was">通常12,000円</span>
+        8,800円
+      </div>
+      <div className="lp-top-price-note">永久利用・サポート込み（銀行振込）</div>
+    </a>
+  </div>
+  <div className="lp-top-pricing-foot">
+    <a href="#lp-pricing">料金の詳細を見る →</a>
+  </div>
+</div></div>
           <div className="lp-hero-visual">
             <div className="lp-card">
               <div className="lp-card-title">📖 自分史の記録 — 進捗</div>
@@ -422,37 +502,48 @@ export default function LandingPage() {
             <h2 className="lp-section-title">シンプルな料金プラン</h2>
             <p className="lp-section-sub" style={{margin:'0 auto'}}>まずは30日間、すべての機能を無料でお試しいただけます。</p>
           </div>
-          <div className="lp-pricing-cards">
-            <div className="lp-price-card">
-              <div className="lp-price-name">トライアル</div>
-              <div className="lp-price-num">無料</div>
-              <div className="lp-price-desc">30日間・全機能利用可</div>
-              <ul className="lp-price-feats">
-                {['インタビュー機能（全15問）','人生年表の作成','写真のアップロード','PDF出力','全4カテゴリ利用可'].map((f,i)=><li key={i}>{f}</li>)}
-              </ul>
-              <a href="/register" className="lp-btn-secondary" style={{width:'100%',justifyContent:'center'}}>無料で始める →</a>
-            </div>
-            <div className="lp-price-card featured">
-              <div className="lp-price-badge">✦ トライアル終了後</div>
-              <div className="lp-price-name">継続プラン</div>
-              <div className="lp-price-num">¥990<span style={{fontSize:'1rem',fontWeight:400}}>/3ヶ月</span></div>
-              <div className="lp-price-desc">3ヶ月ごとの自動更新（税込）</div>
-              <ul className="lp-price-feats">
-                {['トライアルの全機能を継続','データはそのまま引き継ぎ','個人・法人プランあり','サポート付き','管理者に直接ご相談'].map((f,i)=><li key={i}>{f}</li>)}
-              </ul>
-              <a href="https://buy.stripe.com/14A00kg7J7XD0jMd2C4F208" className="lp-btn-primary" style={{width:'100%',justifyContent:'center'}} target="_blank">今すぐ申し込む →</a>
-            </div>
-          </div>
-        </section>
+          
+<div className="lp-pricing-cards">
+  <div className="lp-price-card">
+    <div className="lp-price-name">月払い</div>
+    <div className="lp-price-num">¥380<span style={{fontSize:'1rem',fontWeight:400}}>/月</span></div>
+    <div className="lp-price-desc">※初回1カ月無料（無料期間後に課金開始）</div>
+    <ul className="lp-price-feats">
+      {['全機能が使い放題','自分史・会社史・終活ノート対応','PDF出力','写真アップロード','サポート付き'].map((f,i)=><li key={i}>{f}</li>)}
+    </ul>
+    <a href="https://bit.ly/4l24WT0" className="lp-btn-primary" style={{width:'100%',justifyContent:'center'}} target="_blank" rel="noreferrer">1カ月無料で試す →</a>
+  </div>
+
+  <div className="lp-price-card featured">
+    <div className="lp-price-badge">おすすめ</div>
+    <div className="lp-price-name">まとめ払い</div>
+    <div className="lp-price-num">¥990<span style={{fontSize:'1rem',fontWeight:400}}>/3ヶ月</span></div>
+    <div className="lp-price-desc">月あたり330円（50円おトク）／税込</div>
+    <ul className="lp-price-feats">
+      {['全機能が使い放題','データはそのまま引き継ぎ','PDF出力','写真アップロード','サポート付き'].map((f,i)=><li key={i}>{f}</li>)}
+    </ul>
+    <a href="https://bit.ly/4rI0N9n" className="lp-btn-primary" style={{width:'100%',justifyContent:'center'}} target="_blank" rel="noreferrer">3か月で申し込む →</a>
+  </div>
+
+  <div className="lp-price-card">
+    <div className="lp-price-name">一括購入（カード不要）</div>
+    <div className="lp-price-num" style={{fontSize:'2.2rem'}}>¥8,800</div>
+    <div className="lp-price-desc"><span style={{textDecoration:'line-through',color:'var(--text-light)'}}>通常 ¥12,000</span> → 今だけ</div>
+    <ul className="lp-price-feats">
+      {['永久利用','サポート込み','銀行振込（カード不要）','ご家族への記録にもおすすめ','不明点はメールで相談OK'].map((f,i)=><li key={i}>{f}</li>)}
+    </ul>
+    <a href="mailto:mitsunorif@robostudy.jp?subject=%E3%83%A9%E3%82%A4%E3%83%95%E3%83%A1%E3%83%A2%E3%83%8A%E3%83%93%20%E4%B8%80%E6%8B%AC%E8%B3%BC%E5%85%A5%E5%B8%8C%E6%9C%9B&body=%E3%81%8A%E5%90%8D%E5%89%8D%EF%BC%9A%0D%0A%E3%83%A1%E3%83%BC%E3%83%AB%EF%BC%9A%0D%0A%E9%80%A3%E7%B5%A1%E5%85%88%EF%BC%88%E9%9B%BB%E8%A9%B1%EF%BC%89%EF%BC%9A%0D%0A%E3%80%90%E4%B8%80%E6%8B%AC%E8%B3%BC%E5%85%A5%208%2C800%E5%86%86%E3%80%91%E3%82%92%E5%B8%8C%E6%9C%9B%E3%81%97%E3%81%BE%E3%81%99%E3%80%82%0D%0A" className="lp-btn-secondary" style={{width:'100%',justifyContent:'center'}}>一括購入を相談する →</a>
+  </div>
+</div>
 
         {/* CTA */}
         <section className="lp-cta">
           <div className="lp-section-label">今すぐ始めましょう</div>
           <h2 className="lp-section-title">人生の記録は、<br />早く始めるほど豊かになります</h2>
-          <p>30日間、すべての機能を無料でお試しいただけます。<br />クレジットカード不要・登録は1分で完了。</p>
+          <p>初回1カ月、すべての機能を無料でお試しいただけます。<br />月払い／3か月まとめ払い／銀行振込（カード不要）の3つから選べます。</p>
           <div className="lp-cta-btns">
-            <a href="/register" className="lp-btn-light">✦ 無料で記録を始める</a>
-            <a href="https://robostudy.jp" className="lp-btn-ghost" target="_blank" rel="noreferrer">ロボ・スタディ公式サイト →</a>
+            <a href="https://bit.ly/4l24WT0" className="lp-btn-light" target="_blank" rel="noreferrer">✦ 1カ月無料で試す</a>
+            <a href="https://bit.ly/4rI0N9n" className="lp-btn-ghost" target="_blank" rel="noreferrer">3か月まとめ払いを見る →</a>
           </div>
         </section>
 
