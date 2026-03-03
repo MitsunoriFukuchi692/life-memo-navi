@@ -308,57 +308,57 @@ export default function LandingPage() {
               <a href="/register" className="lp-btn-primary">✦ 無料で記録を始める</a>
               <a href="#lp-how" className="lp-btn-secondary">使い方を見る →</a>
             </div>
-          
 
-{/* トップに料金（要望対応） */}
-<div className="lp-top-pricing" aria-label="料金プラン（トップ）">
-  <div className="lp-top-pricing-head">
-    <div className="lp-top-pricing-kicker">ご利用料金</div>
-    <div className="lp-top-pricing-title">まずは <strong>1カ月無料</strong>でお試し</div>
-  </div>
-  <div className="lp-top-pricing-cards">
-    <a className="lp-top-price-card" href="https://bit.ly/4l24WT0" target="_blank" rel="noreferrer">
-      <div className="lp-top-price-name">月払い</div>
-      <div className="lp-top-price-num">380円<span>/月</span></div>
-      <div className="lp-top-price-note">※1カ月無料後に課金開始</div>
-    </a>
-    <a className="lp-top-price-card featured" href="https://bit.ly/4rI0N9n" target="_blank" rel="noreferrer">
-      <div className="lp-top-price-badge">おすすめ</div>
-      <div className="lp-top-price-name">まとめ払い</div>
-      <div className="lp-top-price-num">990円<span>/3ヶ月</span></div>
-      <div className="lp-top-price-note">月あたり330円（50円おトク）</div>
-    </a>
-    <a className="lp-top-price-card" href="mailto:mitsunorif@robostudy.jp?subject=%E3%83%A9%E3%82%A4%E3%83%95%E3%83%A1%E3%83%A2%E3%83%8A%E3%83%93%20%E4%B8%80%E6%8B%AC%E8%B3%BC%E5%85%A5%E5%B8%8C%E6%9C%9B&body=%E3%81%8A%E5%90%8D%E5%89%8D%EF%BC%9A%0D%0A%E3%83%A1%E3%83%BC%E3%83%AB%EF%BC%9A%0D%0A%E9%80%A3%E7%B5%A1%E5%85%88%EF%BC%88%E9%9B%BB%E8%A9%B1%EF%BC%89%EF%BC%9A%0D%0A%E3%80%90%E4%B8%80%E6%8B%AC%E8%B3%BC%E5%85%A5%208%2C800%E5%86%86%E3%80%91%E3%82%92%E5%B8%8C%E6%9C%9B%E3%81%97%E3%81%BE%E3%81%99%E3%80%82%0D%0A">
-      <div className="lp-top-price-name">一括購入（カード不要）</div>
-      <div className="lp-top-price-num">
-        <span className="lp-top-price-was">通常12,000円</span>
-        8,800円
-      </div>
-      <div className="lp-top-price-note">永久利用・サポート込み（銀行振込）</div>
-    </a>
-  </div>
-  <div className="lp-top-pricing-foot">
-    <a href="#lp-pricing">料金の詳細を見る →</a>
-  </div>
-</div></div>
+
+            {/* トップに料金（要望対応） */}
+            <div className="lp-top-pricing" aria-label="料金プラン（トップ）">
+              <div className="lp-top-pricing-head">
+                <div className="lp-top-pricing-kicker">ご利用料金</div>
+                <div className="lp-top-pricing-title">まずは <strong>1カ月無料</strong>でお試し</div>
+              </div>
+              <div className="lp-top-pricing-cards">
+                <a className="lp-top-price-card" href="https://bit.ly/4l24WT0" target="_blank" rel="noreferrer">
+                  <div className="lp-top-price-name">月払い</div>
+                  <div className="lp-top-price-num">380円<span>/月</span></div>
+                  <div className="lp-top-price-note">※1カ月無料後に課金開始</div>
+                </a>
+                <a className="lp-top-price-card featured" href="https://bit.ly/4rI0N9n" target="_blank" rel="noreferrer">
+                  <div className="lp-top-price-badge">おすすめ</div>
+                  <div className="lp-top-price-name">まとめ払い</div>
+                  <div className="lp-top-price-num">990円<span>/3ヶ月</span></div>
+                  <div className="lp-top-price-note">月あたり330円（50円おトク）</div>
+                </a>
+                <a className="lp-top-price-card" href="mailto:mitsunorif@robostudy.jp?subject=%E3%83%A9%E3%82%A4%E3%83%95%E3%83%A1%E3%83%A2%E3%83%8A%E3%83%93%20%E4%B8%80%E6%8B%AC%E8%B3%BC%E5%85%A5%E5%B8%8C%E6%9C%9B&body=%E3%81%8A%E5%90%8D%E5%89%8D%EF%BC%9A%0D%0A%E3%83%A1%E3%83%BC%E3%83%AB%EF%BC%9A%0D%0A%E9%80%A3%E7%B5%A1%E5%85%88%EF%BC%88%E9%9B%BB%E8%A9%B1%EF%BC%89%EF%BC%9A%0D%0A%E3%80%90%E4%B8%80%E6%8B%AC%E8%B3%BC%E5%85%A5%208%2C800%E5%86%86%E3%80%91%E3%82%92%E5%B8%8C%E6%9C%9B%E3%81%97%E3%81%BE%E3%81%99%E3%80%82%0D%0A">
+                  <div className="lp-top-price-name">一括購入（カード不要）</div>
+                  <div className="lp-top-price-num">
+                    <span className="lp-top-price-was">通常12,000円</span>
+                    8,800円
+                  </div>
+                  <div className="lp-top-price-note">永久利用・サポート込み（銀行振込）</div>
+                </a>
+              </div>
+              <div className="lp-top-pricing-foot">
+                <a href="#lp-pricing">料金の詳細を見る →</a>
+              </div>
+            </div></div>
           <div className="lp-hero-visual">
             <div className="lp-card">
               <div className="lp-card-title">📖 自分史の記録 — 進捗</div>
               {[
-                { icon:'👶', label:'幼少期・生い立ち', w:'100%', color:'var(--green)', txt:'完了', txtColor:'var(--green)' },
-                { icon:'🎓', label:'学生時代', w:'100%', color:'var(--green)', txt:'完了', txtColor:'var(--green)' },
-                { icon:'💼', label:'仕事・キャリア', w:'70%', color:'var(--brown-light)', txt:'7/10問', txtColor:'var(--text-light)' },
-                { icon:'🌸', label:'家族・思い出', w:'20%', color:'var(--brown-light)', txt:'3/15問', txtColor:'var(--text-light)' },
+                { icon: '👶', label: '幼少期・生い立ち', w: '100%', color: 'var(--green)', txt: '完了', txtColor: 'var(--green)' },
+                { icon: '🎓', label: '学生時代', w: '100%', color: 'var(--green)', txt: '完了', txtColor: 'var(--green)' },
+                { icon: '💼', label: '仕事・キャリア', w: '70%', color: 'var(--brown-light)', txt: '7/10問', txtColor: 'var(--text-light)' },
+                { icon: '🌸', label: '家族・思い出', w: '20%', color: 'var(--brown-light)', txt: '3/15問', txtColor: 'var(--text-light)' },
               ].map((item, i) => (
                 <div key={i} className="lp-prog-item">
                   <div className="lp-prog-icon">{item.icon}</div>
-                  <div style={{flex:1}}>
-                    <div style={{fontSize:'0.8rem',color:'var(--brown)',marginBottom:'5px'}}>{item.label}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--brown)', marginBottom: '5px' }}>{item.label}</div>
                     <div className="lp-prog-bar-wrap">
-                      <div className="lp-prog-bar" style={{width:item.w, background:item.color}}></div>
+                      <div className="lp-prog-bar" style={{ width: item.w, background: item.color }}></div>
                     </div>
                   </div>
-                  <div className="lp-prog-label" style={{color:item.txtColor}}>{item.txt}</div>
+                  <div className="lp-prog-label" style={{ color: item.txtColor }}>{item.txt}</div>
                 </div>
               ))}
               <div className="lp-card-footer">
@@ -372,10 +372,10 @@ export default function LandingPage() {
         {/* 数字 */}
         <div className="lp-stats">
           {[
-            { num:'30', unit:'日', label:'無料トライアル期間' },
-            { num:'15', unit:'問', label:'丁寧なインタビュー設問' },
-            { num:'4', unit:'種類', label:'記録できるカテゴリ' },
-            { num:'AI', unit:'搭載', label:'文章をやさしくサポート' },
+            { num: '30', unit: '日', label: '無料トライアル期間' },
+            { num: '15', unit: '問', label: '丁寧なインタビュー設問' },
+            { num: '4', unit: '種類', label: '記録できるカテゴリ' },
+            { num: 'AI', unit: '搭載', label: '文章をやさしくサポート' },
           ].map((s, i) => (
             <div key={i}>
               <div className="lp-stat-num">{s.num}<span>{s.unit}</span></div>
@@ -392,10 +392,10 @@ export default function LandingPage() {
           </div>
           <div className="lp-prob-grid">
             {[
-              { icon:'😔', title:'何から書けばいいか分からない', text:'いざ自分の人生を振り返ろうとしても、どこから手をつければいいのか分からず、気がつけば後回しになっていませんか。' },
-              { icon:'✍️', title:'文章を書くのが苦手', text:'「文章力がないから…」と尻込みしてしまう方でも、大丈夫。AIが話し言葉を自然な文章に整えてくれます。' },
-              { icon:'📦', title:'記録が散らばったまま', text:'アルバム、メモ、日記帳……あちこちに散らばった思い出を、ひとつにまとめて整理したいと思っていませんか。' },
-              { icon:'👨‍👩‍👧', title:'子や孫に残してあげたい', text:'自分が経験してきたこと、大切にしてきた想い。いつか家族に伝えたいけど、形にする機会がなかった方に。' },
+              { icon: '😔', title: '何から書けばいいか分からない', text: 'いざ自分の人生を振り返ろうとしても、どこから手をつければいいのか分からず、気がつけば後回しになっていませんか。' },
+              { icon: '✍️', title: '文章を書くのが苦手', text: '「文章力がないから…」と尻込みしてしまう方でも、大丈夫。AIが話し言葉を自然な文章に整えてくれます。' },
+              { icon: '📦', title: '記録が散らばったまま', text: 'アルバム、メモ、日記帳……あちこちに散らばった思い出を、ひとつにまとめて整理したいと思っていませんか。' },
+              { icon: '👨‍👩‍👧', title: '子や孫に残してあげたい', text: '自分が経験してきたこと、大切にしてきた想い。いつか家族に伝えたいけど、形にする機会がなかった方に。' },
             ].map((p, i) => (
               <div key={i} className="lp-prob-card">
                 <div className="lp-prob-icon">{p.icon}</div>
@@ -415,12 +415,12 @@ export default function LandingPage() {
           </div>
           <div className="lp-feat-grid">
             {[
-              { emoji:'🤖', title:'AIインタビューサポート', text:'「あなたが生まれた時代は？」など15の質問に答えるだけ。AIが文章を自然に整えてくれます。' },
-              { emoji:'📅', title:'人生年表の作成', text:'大切な出来事を年表形式で登録。写真と一緒に思い出を可視化することで、人生の流れが一目でわかります。' },
-              { emoji:'📸', title:'思い出の写真を保存', text:'大切な写真をアップロードしてコメントを添えるだけ。記録の中に思い出の一場面を刻みます。' },
-              { emoji:'📄', title:'美しいPDF出力', text:'記録した内容をいつでも美しいPDFとして出力できます。印刷して手元に置いたり、家族に送ることも。' },
-              { emoji:'🔒', title:'安心のセキュリティ', text:'すべての記録は暗号化されて保存。大切な個人情報とライフストーリーを安全にお守りします。' },
-              { emoji:'📱', title:'スマホ・PCどちらでも', text:'パソコンでもスマートフォンでも、いつでもどこからでも記録できます。続きはいつでも再開可能。' },
+              { emoji: '🤖', title: 'AIインタビューサポート', text: '「あなたが生まれた時代は？」など15の質問に答えるだけ。AIが文章を自然に整えてくれます。' },
+              { emoji: '📅', title: '人生年表の作成', text: '大切な出来事を年表形式で登録。写真と一緒に思い出を可視化することで、人生の流れが一目でわかります。' },
+              { emoji: '📸', title: '思い出の写真を保存', text: '大切な写真をアップロードしてコメントを添えるだけ。記録の中に思い出の一場面を刻みます。' },
+              { emoji: '📄', title: '美しいPDF出力', text: '記録した内容をいつでも美しいPDFとして出力できます。印刷して手元に置いたり、家族に送ることも。' },
+              { emoji: '🔒', title: '安心のセキュリティ', text: 'すべての記録は暗号化されて保存。大切な個人情報とライフストーリーを安全にお守りします。' },
+              { emoji: '📱', title: 'スマホ・PCどちらでも', text: 'パソコンでもスマートフォンでも、いつでもどこからでも記録できます。続きはいつでも再開可能。' },
             ].map((f, i) => (
               <div key={i} className="lp-feat-card">
                 <div className="lp-feat-emoji">{f.emoji}</div>
@@ -439,9 +439,9 @@ export default function LandingPage() {
           </div>
           <div className="lp-steps">
             {[
-              { n:'1', title:'無料登録する', text:'メールアドレスとお名前を登録するだけ。30日間、すべての機能を無料でお試しいただけます。' },
-              { n:'2', title:'インタビューに答える', text:'15の質問に、思い出すままにお答えください。箇条書きでも大丈夫。AIが文章を整えます。' },
-              { n:'3', title:'PDFで保存・共有', text:'完成した記録をPDFで出力して、印刷したり家族に送ったりして、大切に残しましょう。' },
+              { n: '1', title: '無料登録する', text: 'メールアドレスとお名前を登録するだけ。30日間、すべての機能を無料でお試しいただけます。' },
+              { n: '2', title: 'インタビューに答える', text: '15の質問に、思い出すままにお答えください。箇条書きでも大丈夫。AIが文章を整えます。' },
+              { n: '3', title: 'PDFで保存・共有', text: '完成した記録をPDFで出力して、印刷したり家族に送ったりして、大切に残しましょう。' },
             ].map((s, i) => (
               <div key={i} className="lp-step">
                 <div className="lp-step-num">{s.n}</div>
@@ -461,10 +461,10 @@ export default function LandingPage() {
           </div>
           <div className="lp-fields-grid">
             {[
-              { cls:'f1', emoji:'📖', title:'自分史', text:'生い立ちから現在まで、あなたの人生の物語を記録。次の世代へ受け継ぐ、かけがえのない一冊に。' },
-              { cls:'f2', emoji:'🏢', title:'会社史', text:'会社の創業から現在までの歩みを記録。創業の想いや苦労を後継者や社員に伝えましょう。' },
-              { cls:'f3', emoji:'🕊️', title:'終活ノート', text:'医療・財産・葬儀の希望など、大切なことを整理。家族への想いを丁寧に残せます。' },
-              { cls:'f4', emoji:'📝', title:'その他の記録', text:'旅の記録、趣味の歩み、コミュニティの歴史など。自由に記録・整理したい方に。' },
+              { cls: 'f1', emoji: '📖', title: '自分史', text: '生い立ちから現在まで、あなたの人生の物語を記録。次の世代へ受け継ぐ、かけがえのない一冊に。' },
+              { cls: 'f2', emoji: '🏢', title: '会社史', text: '会社の創業から現在までの歩みを記録。創業の想いや苦労を後継者や社員に伝えましょう。' },
+              { cls: 'f3', emoji: '🕊️', title: '終活ノート', text: '医療・財産・葬儀の希望など、大切なことを整理。家族への想いを丁寧に残せます。' },
+              { cls: 'f4', emoji: '📝', title: 'その他の記録', text: '旅の記録、趣味の歩み、コミュニティの歴史など。自由に記録・整理したい方に。' },
             ].map((f, i) => (
               <div key={i} className={`lp-field-card ${f.cls}`}>
                 <div className="lp-field-emoji">{f.emoji}</div>
@@ -483,9 +483,9 @@ export default function LandingPage() {
           </div>
           <div className="lp-voices-grid">
             {[
-              { text:'質問に答えていくだけで、気づいたら自分の人生が一冊の本になっていました。孫に読んでもらいたくて、印刷して渡しました。', author:'70代・女性（浜松市）' },
-              { text:'文章を書くのが苦手でも、AIが上手く整えてくれるので安心でした。会社の創業50年の記念に会社史を作りました。', author:'65歳・経営者（静岡県）' },
-              { text:'終活ノートとして使っています。家族への想いをちゃんと形にできた気がして、気持ちが楽になりました。ありがとうございます。', author:'72歳・男性（愛知県）' },
+              { text: '質問に答えていくだけで、気づいたら自分の人生が一冊の本になっていました。孫に読んでもらいたくて、印刷して渡しました。', author: '70代・女性（浜松市）' },
+              { text: '文章を書くのが苦手でも、AIが上手く整えてくれるので安心でした。会社の創業50年の記念に会社史を作りました。', author: '65歳・経営者（静岡県）' },
+              { text: '終活ノートとして使っています。家族への想いをちゃんと形にできた気がして、気持ちが楽になりました。ありがとうございます。', author: '72歳・男性（愛知県）' },
             ].map((v, i) => (
               <div key={i} className="lp-voice-card">
                 <div className="lp-voice-text">{v.text}</div>
@@ -497,44 +497,45 @@ export default function LandingPage() {
 
         {/* 料金 */}
         <section className="lp-section lp-pricing" id="lp-pricing">
-          <div className="lp-section-header" style={{textAlign:'center'}}>
+          <div className="lp-section-header" style={{ textAlign: 'center' }}>
             <div className="lp-section-label">Pricing</div>
             <h2 className="lp-section-title">シンプルな料金プラン</h2>
-            <p className="lp-section-sub" style={{margin:'0 auto'}}>まずは30日間、すべての機能を無料でお試しいただけます。</p>
+            <p className="lp-section-sub" style={{ margin: '0 auto' }}>まずは30日間、すべての機能を無料でお試しいただけます。</p>
           </div>
-          
-<div className="lp-pricing-cards">
-  <div className="lp-price-card">
-    <div className="lp-price-name">月払い</div>
-    <div className="lp-price-num">¥380<span style={{fontSize:'1rem',fontWeight:400}}>/月</span></div>
-    <div className="lp-price-desc">※初回1カ月無料（無料期間後に課金開始）</div>
-    <ul className="lp-price-feats">
-      {['全機能が使い放題','自分史・会社史・終活ノート対応','PDF出力','写真アップロード','サポート付き'].map((f,i)=><li key={i}>{f}</li>)}
-    </ul>
-    <a href="https://bit.ly/4l24WT0" className="lp-btn-primary" style={{width:'100%',justifyContent:'center'}} target="_blank" rel="noreferrer">1カ月無料で試す →</a>
-  </div>
 
-  <div className="lp-price-card featured">
-    <div className="lp-price-badge">おすすめ</div>
-    <div className="lp-price-name">まとめ払い</div>
-    <div className="lp-price-num">¥990<span style={{fontSize:'1rem',fontWeight:400}}>/3ヶ月</span></div>
-    <div className="lp-price-desc">月あたり330円（50円おトク）／税込</div>
-    <ul className="lp-price-feats">
-      {['全機能が使い放題','データはそのまま引き継ぎ','PDF出力','写真アップロード','サポート付き'].map((f,i)=><li key={i}>{f}</li>)}
-    </ul>
-    <a href="https://bit.ly/4rI0N9n" className="lp-btn-primary" style={{width:'100%',justifyContent:'center'}} target="_blank" rel="noreferrer">3か月で申し込む →</a>
-  </div>
+          <div className="lp-pricing-cards">
+            <div className="lp-price-card">
+              <div className="lp-price-name">月払い</div>
+              <div className="lp-price-num">¥380<span style={{ fontSize: '1rem', fontWeight: 400 }}>/月</span></div>
+              <div className="lp-price-desc">※初回1カ月無料（無料期間後に課金開始）</div>
+              <ul className="lp-price-feats">
+                {['全機能が使い放題', '自分史・会社史・終活ノート対応', 'PDF出力', '写真アップロード', 'サポート付き'].map((f, i) => <li key={i}>{f}</li>)}
+              </ul>
+              <a href="https://bit.ly/4l24WT0" className="lp-btn-primary" style={{ width: '100%', justifyContent: 'center' }} target="_blank" rel="noreferrer">1カ月無料で試す →</a>
+            </div>
 
-  <div className="lp-price-card">
-    <div className="lp-price-name">一括購入（カード不要）</div>
-    <div className="lp-price-num" style={{fontSize:'2.2rem'}}>¥8,800</div>
-    <div className="lp-price-desc"><span style={{textDecoration:'line-through',color:'var(--text-light)'}}>通常 ¥12,000</span> → 今だけ</div>
-    <ul className="lp-price-feats">
-      {['永久利用','サポート込み','銀行振込（カード不要）','ご家族への記録にもおすすめ','不明点はメールで相談OK'].map((f,i)=><li key={i}>{f}</li>)}
-    </ul>
-    <a href="mailto:mitsunorif@robostudy.jp?subject=%E3%83%A9%E3%82%A4%E3%83%95%E3%83%A1%E3%83%A2%E3%83%8A%E3%83%93%20%E4%B8%80%E6%8B%AC%E8%B3%BC%E5%85%A5%E5%B8%8C%E6%9C%9B&body=%E3%81%8A%E5%90%8D%E5%89%8D%EF%BC%9A%0D%0A%E3%83%A1%E3%83%BC%E3%83%AB%EF%BC%9A%0D%0A%E9%80%A3%E7%B5%A1%E5%85%88%EF%BC%88%E9%9B%BB%E8%A9%B1%EF%BC%89%EF%BC%9A%0D%0A%E3%80%90%E4%B8%80%E6%8B%AC%E8%B3%BC%E5%85%A5%208%2C800%E5%86%86%E3%80%91%E3%82%92%E5%B8%8C%E6%9C%9B%E3%81%97%E3%81%BE%E3%81%99%E3%80%82%0D%0A" className="lp-btn-secondary" style={{width:'100%',justifyContent:'center'}}>一括購入を相談する →</a>
-  </div>
-</div>
+            <div className="lp-price-card featured">
+              <div className="lp-price-badge">おすすめ</div>
+              <div className="lp-price-name">まとめ払い</div>
+              <div className="lp-price-num">¥990<span style={{ fontSize: '1rem', fontWeight: 400 }}>/3ヶ月</span></div>
+              <div className="lp-price-desc">月あたり330円（50円おトク）／税込</div>
+              <ul className="lp-price-feats">
+                {['全機能が使い放題', 'データはそのまま引き継ぎ', 'PDF出力', '写真アップロード', 'サポート付き'].map((f, i) => <li key={i}>{f}</li>)}
+              </ul>
+              <a href="https://bit.ly/4rI0N9n" className="lp-btn-primary" style={{ width: '100%', justifyContent: 'center' }} target="_blank" rel="noreferrer">3か月で申し込む →</a>
+            </div>
+
+            <div className="lp-price-card">
+              <div className="lp-price-name">一括購入（カード不要）</div>
+              <div className="lp-price-num" style={{ fontSize: '2.2rem' }}>¥8,800</div>
+              <div className="lp-price-desc"><span style={{ textDecoration: 'line-through', color: 'var(--text-light)' }}>通常 ¥12,000</span> → 今だけ</div>
+              <ul className="lp-price-feats">
+                {['永久利用', 'サポート込み', '銀行振込（カード不要）', 'ご家族への記録にもおすすめ', '不明点はメールで相談OK'].map((f, i) => <li key={i}>{f}</li>)}
+              </ul>
+              <a href="mailto:mitsunorif@robostudy.jp?subject=%E3%83%A9%E3%82%A4%E3%83%95%E3%83%A1%E3%83%A2%E3%83%8A%E3%83%93%20%E4%B8%80%E6%8B%AC%E8%B3%BC%E5%85%A5%E5%B8%8C%E6%9C%9B&body=%E3%81%8A%E5%90%8D%E5%89%8D%EF%BC%9A%0D%0A%E3%83%A1%E3%83%BC%E3%83%AB%EF%BC%9A%0D%0A%E9%80%A3%E7%B5%A1%E5%85%88%EF%BC%88%E9%9B%BB%E8%A9%B1%EF%BC%89%EF%BC%9A%0D%0A%E3%80%90%E4%B8%80%E6%8B%AC%E8%B3%BC%E5%85%A5%208%2C800%E5%86%86%E3%80%91%E3%82%92%E5%B8%8C%E6%9C%9B%E3%81%97%E3%81%BE%E3%81%99%E3%80%82%0D%0A" className="lp-btn-secondary" style={{ width: '100%', justifyContent: 'center' }}>一括購入を相談する →</a>
+            </div>
+          </div>
+        </section>
 
         {/* CTA */}
         <section className="lp-cta">
