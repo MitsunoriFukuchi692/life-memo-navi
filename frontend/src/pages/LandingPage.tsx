@@ -317,12 +317,12 @@ export default function LandingPage() {
                 <div className="lp-top-pricing-title">まずは <strong>1カ月無料</strong>でお試し</div>
               </div>
               <div className="lp-top-pricing-cards">
-                <a className="lp-top-price-card" href="https://bit.ly/4l24WT0" target="_blank" rel="noreferrer">
+                <a className="lp-top-price-card" href="https://buy.stripe.com/7sYaEY7Bda5L6IageO4F209" target="_blank" rel="noreferrer">
                   <div className="lp-top-price-name">月払い</div>
                   <div className="lp-top-price-num">380円<span>/月</span></div>
                   <div className="lp-top-price-note">※1カ月無料後に課金開始</div>
                 </a>
-                <a className="lp-top-price-card featured" href="https://bit.ly/4rI0N9n" target="_blank" rel="noreferrer">
+                <a className="lp-top-price-card featured" href="https://buy.stripe.com/14A00kg7J7XD0jMd2C4F208" target="_blank" rel="noreferrer">
                   <div className="lp-top-price-badge">おすすめ</div>
                   <div className="lp-top-price-name">まとめ払い</div>
                   <div className="lp-top-price-num">990円<span>/3ヶ月</span></div>
@@ -331,6 +331,7 @@ export default function LandingPage() {
                 <a className="lp-top-price-card" href="mailto:mitsunorif@robostudy.jp?subject=%E3%83%A9%E3%82%A4%E3%83%95%E3%83%A1%E3%83%A2%E3%83%8A%E3%83%93%20%E4%B8%80%E6%8B%AC%E8%B3%BC%E5%85%A5%E5%B8%8C%E6%9C%9B&body=%E3%81%8A%E5%90%8D%E5%89%8D%EF%BC%9A%0D%0A%E3%83%A1%E3%83%BC%E3%83%AB%EF%BC%9A%0D%0A%E9%80%A3%E7%B5%A1%E5%85%88%EF%BC%88%E9%9B%BB%E8%A9%B1%EF%BC%89%EF%BC%9A%0D%0A%E3%80%90%E4%B8%80%E6%8B%AC%E8%B3%BC%E5%85%A5%208%2C800%E5%86%86%E3%80%91%E3%82%92%E5%B8%8C%E6%9C%9B%E3%81%97%E3%81%BE%E3%81%99%E3%80%82%0D%0A">
                   <div className="lp-top-price-name">一括購入（カード不要）</div>
                   <div className="lp-top-price-num">
+                    <span className="lp-top-price-was">通常12,000円</span>
                     8,800円
                   </div>
                   <div className="lp-top-price-note">永久利用・サポート込み（銀行振込）</div>
@@ -510,7 +511,7 @@ export default function LandingPage() {
               <ul className="lp-price-feats">
                 {['全機能が使い放題', '自分史・会社史・終活ノート対応', 'PDF出力', '写真アップロード', 'サポート付き'].map((f, i) => <li key={i}>{f}</li>)}
               </ul>
-              <a href="https://bit.ly/4l24WT0" className="lp-btn-primary" style={{ width: '100%', justifyContent: 'center' }} target="_blank" rel="noreferrer">1カ月無料で試す →</a>
+              <a href="https://buy.stripe.com/7sYaEY7Bda5L6IageO4F209" className="lp-btn-primary" style={{ width: '100%', justifyContent: 'center' }} target="_blank" rel="noreferrer">1カ月無料で試す →</a>
             </div>
 
             <div className="lp-price-card featured">
@@ -521,13 +522,13 @@ export default function LandingPage() {
               <ul className="lp-price-feats">
                 {['全機能が使い放題', 'データはそのまま引き継ぎ', 'PDF出力', '写真アップロード', 'サポート付き'].map((f, i) => <li key={i}>{f}</li>)}
               </ul>
-              <a href="https://bit.ly/4rI0N9n" className="lp-btn-primary" style={{ width: '100%', justifyContent: 'center' }} target="_blank" rel="noreferrer">3か月で申し込む →</a>
+              <a href="https://buy.stripe.com/14A00kg7J7XD0jMd2C4F208" className="lp-btn-primary" style={{ width: '100%', justifyContent: 'center' }} target="_blank" rel="noreferrer">3か月で申し込む →</a>
             </div>
 
             <div className="lp-price-card">
               <div className="lp-price-name">一括購入（カード不要）</div>
               <div className="lp-price-num" style={{ fontSize: '2.2rem' }}>¥8,800</div>
-              <div className="lp-price-desc">発売記念価格</div>
+              <div className="lp-price-desc"><span style={{ textDecoration: 'line-through', color: 'var(--text-light)' }}>通常 ¥12,000</span> → 今だけ</div>
               <ul className="lp-price-feats">
                 {['永久利用', 'サポート込み', '銀行振込（カード不要）', 'ご家族への記録にもおすすめ', '不明点はメールで相談OK'].map((f, i) => <li key={i}>{f}</li>)}
               </ul>
@@ -542,8 +543,8 @@ export default function LandingPage() {
           <h2 className="lp-section-title">人生の記録は、<br />早く始めるほど豊かになります</h2>
           <p>初回1カ月、すべての機能を無料でお試しいただけます。<br />月払い／3か月まとめ払い／銀行振込（カード不要）の3つから選べます。</p>
           <div className="lp-cta-btns">
-            <a href="https://bit.ly/4l24WT0" className="lp-btn-light" target="_blank" rel="noreferrer">✦ 1カ月無料で試す</a>
-            <a href="https://bit.ly/4rI0N9n" className="lp-btn-ghost" target="_blank" rel="noreferrer">3か月まとめ払いを見る →</a>
+            <a href="https://buy.stripe.com/7sYaEY7Bda5L6IageO4F209" className="lp-btn-light" target="_blank" rel="noreferrer">✦ 1カ月無料で試す</a>
+            <a href="https://buy.stripe.com/14A00kg7J7XD0jMd2C4F208" className="lp-btn-ghost" target="_blank" rel="noreferrer">3か月まとめ払いを見る →</a>
           </div>
         </section>
 
