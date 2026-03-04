@@ -331,7 +331,6 @@ export default function LandingPage() {
                 <a className="lp-top-price-card" href="mailto:mitsunorif@robostudy.jp?subject=%E3%83%A9%E3%82%A4%E3%83%95%E3%83%A1%E3%83%A2%E3%83%8A%E3%83%93%20%E4%B8%80%E6%8B%AC%E8%B3%BC%E5%85%A5%E5%B8%8C%E6%9C%9B&body=%E3%81%8A%E5%90%8D%E5%89%8D%EF%BC%9A%0D%0A%E3%83%A1%E3%83%BC%E3%83%AB%EF%BC%9A%0D%0A%E9%80%A3%E7%B5%A1%E5%85%88%EF%BC%88%E9%9B%BB%E8%A9%B1%EF%BC%89%EF%BC%9A%0D%0A%E3%80%90%E4%B8%80%E6%8B%AC%E8%B3%BC%E5%85%A5%208%2C800%E5%86%86%E3%80%91%E3%82%92%E5%B8%8C%E6%9C%9B%E3%81%97%E3%81%BE%E3%81%99%E3%80%82%0D%0A">
                   <div className="lp-top-price-name">一括購入（カード不要）</div>
                   <div className="lp-top-price-num">
-                    <span className="lp-top-price-was">通常12,000円</span>
                     8,800円
                   </div>
                   <div className="lp-top-price-note">永久利用・サポート込み（銀行振込）</div>
@@ -528,7 +527,7 @@ export default function LandingPage() {
             <div className="lp-price-card">
               <div className="lp-price-name">一括購入（カード不要）</div>
               <div className="lp-price-num" style={{ fontSize: '2.2rem' }}>¥8,800</div>
-              <div className="lp-price-desc"><span style={{ textDecoration: 'line-through', color: 'var(--text-light)' }}>通常 ¥12,000</span> → 今だけ</div>
+              <div className="lp-price-desc">発売記念価格</div>
               <ul className="lp-price-feats">
                 {['永久利用', 'サポート込み', '銀行振込（カード不要）', 'ご家族への記録にもおすすめ', '不明点はメールで相談OK'].map((f, i) => <li key={i}>{f}</li>)}
               </ul>
