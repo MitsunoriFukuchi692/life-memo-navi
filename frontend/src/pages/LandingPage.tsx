@@ -317,7 +317,7 @@ export default function LandingPage() {
                 <div className="lp-top-pricing-title">まずは <strong>1カ月無料</strong>でお試し</div>
               </div>
               <div className="lp-top-pricing-cards">
-                <a className="lp-top-price-card" href="https://buy.stripe.com/7sYaEY7Bda5L6IageO4F209" target="_blank" rel="noreferrer">
+                <a className="lp-top-price-card" href="https://memo.robostudy.jp/register" target="_blank" rel="noreferrer">
                   <div className="lp-top-price-name">月払い</div>
                   <div className="lp-top-price-num">380円<span>/月</span></div>
                   <div className="lp-top-price-note">※1カ月無料後に課金開始</div>
@@ -510,7 +510,7 @@ export default function LandingPage() {
               <ul className="lp-price-feats">
                 {['全機能が使い放題', '自分史・会社史・終活ノート対応', 'PDF出力', '写真アップロード', 'サポート付き'].map((f, i) => <li key={i}>{f}</li>)}
               </ul>
-              <a href="https://buy.stripe.com/7sYaEY7Bda5L6IageO4F209" className="lp-btn-primary" style={{ width: '100%', justifyContent: 'center' }} target="_blank" rel="noreferrer">1カ月無料で試す →</a>
+              <a href="https://memo.robostudy.jp/register" className="lp-btn-primary" style={{ width: '100%', justifyContent: 'center' }} target="_blank" rel="noreferrer">1カ月無料で試す →</a>
             </div>
 
             <div className="lp-price-card featured">
@@ -542,7 +542,7 @@ export default function LandingPage() {
           <h2 className="lp-section-title">人生の記録は、<br />早く始めるほど豊かになります</h2>
           <p>初回1カ月、すべての機能を無料でお試しいただけます。<br />月払い／3か月まとめ払い／銀行振込（カード不要）の3つから選べます。</p>
           <div className="lp-cta-btns">
-            <a href="https://buy.stripe.com/7sYaEY7Bda5L6IageO4F209" className="lp-btn-light" target="_blank" rel="noreferrer">✦ 1カ月無料で試す</a>
+            <a href="https://memo.robostudy.jp/register" className="lp-btn-light" target="_blank" rel="noreferrer">✦ 1カ月無料で試す</a>
             <a href="https://buy.stripe.com/14A00kg7J7XD0jMd2C4F208" className="lp-btn-ghost" target="_blank" rel="noreferrer">3か月まとめ払いを見る →</a>
           </div>
         </section>
