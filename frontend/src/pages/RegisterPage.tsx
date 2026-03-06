@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authApi } from '../api';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://life-memo-navi-backend.onrender.com';
+const API_BASE = (import.meta.env.VITE_API_URL || 'https://life-memo-navi-backend.onrender.com/api').replace('/api', '');
 
 const PROJECT_TYPES = [
   { value: 'jibunshi', label: '自分史' },
