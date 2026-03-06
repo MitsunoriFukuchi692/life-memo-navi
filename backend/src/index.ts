@@ -10,6 +10,7 @@ import timelinesRoutes from './routes/timelines.js';
 import photosRoutes from './routes/photos.js';
 import pdfRoutes from './routes/pdf.js';
 import adminRoutes from './routes/admin.js';
+import orgRoutes, { initOrganizationTables } from './routes/organization.js';
 
 dotenv.config();
 
@@ -41,6 +42,7 @@ app.use('/api/timelines', timelinesRoutes);
 app.use('/api/photos', photosRoutes);
 app.use('/api/pdf', pdfRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/org', orgRoutes);
 
 // ルートエンドポイント
 app.get('/', (req: Request, res: Response) => {
@@ -75,7 +77,8 @@ app.use((req: Request, res: Response) => {
 });
 
 // サーバー起動
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
+  await initOrganizationTables();
   console.log(`
 ╔═════════════════════════════════════════╗
 ║   🌸 ライフメモナビ バックエンド       ║
