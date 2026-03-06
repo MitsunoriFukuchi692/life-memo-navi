@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const API_BASE = process.env.REACT_APP_API_URL || 'https://your-backend.onrender.com';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://life-memo-navi-backend.onrender.com';
 
 // ========================================
 // 型定義
