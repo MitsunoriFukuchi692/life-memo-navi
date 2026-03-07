@@ -171,6 +171,38 @@ export default function LandingPage() {
         .lp-field-card h3 { font-family:'Noto Serif JP',serif; font-size:1.2rem; color:var(--brown-dark); margin-bottom:8px; font-weight:700; }
         .lp-field-card p { font-size:0.85rem; color:var(--text-light); line-height:1.8; }
 
+        /* 活用事例 */
+        .lp-usecases { background:var(--cream); }
+        .lp-usecase-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:24px; margin-bottom:48px; }
+        .lp-usecase-card {
+          background:var(--white); border-radius:18px; padding:32px;
+          box-shadow:var(--shadow); border:1px solid var(--cream-dark);
+          transition:all 0.3s; position:relative;
+        }
+        .lp-usecase-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-lg); }
+        .lp-usecase-icon { font-size:2.5rem; margin-bottom:16px; }
+        .lp-usecase-card h3 { font-family:'Noto Serif JP',serif; font-size:1.15rem; color:var(--brown-dark); margin-bottom:6px; font-weight:700; }
+        .lp-usecase-subtitle {
+          font-size:0.78rem; color:var(--accent-warm);
+          padding:4px 12px; background:rgba(212,118,58,0.1);
+          border-radius:12px; display:inline-block; margin-bottom:14px;
+        }
+        .lp-usecase-card p { font-size:0.9rem; color:var(--text); line-height:1.8; margin-bottom:14px; }
+        .lp-usecase-example {
+          font-size:0.8rem; color:var(--text-light); line-height:1.7;
+          padding:12px 16px; background:var(--cream-dark);
+          border-left:3px solid var(--brown-light); border-radius:6px;
+        }
+        .lp-usecase-cta {
+          text-align:center; padding:40px 32px;
+          background:var(--cream-dark); border-radius:16px;
+          border:2px dashed var(--brown-light);
+        }
+        .lp-usecase-cta p {
+          font-size:0.95rem; color:var(--brown-dark);
+          margin-bottom:20px; font-weight:500;
+        }
+
         /* 声 */
         .lp-voices { background:var(--brown-dark); }
         .lp-voices .lp-section-title { color:var(--cream); }
@@ -471,6 +503,59 @@ export default function LandingPage() {
                 <p>{f.text}</p>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* 活用事例 */}
+        <section className="lp-section lp-usecases">
+          <div className="lp-section-header">
+            <div className="lp-section-label">Use Cases</div>
+            <h2 className="lp-section-title">企業・団体での活用シーン</h2>
+            <p className="lp-section-sub">製造業や中小企業の経営者の方々に、特にご活用いただいています。</p>
+          </div>
+          <div className="lp-usecase-grid">
+            {[
+              {
+                icon: '🏭',
+                title: '創業ストーリーの記録',
+                subtitle: '製造業・創業経営者',
+                text: '会社を立ち上げたときの苦労や想い、技術へのこだわりを記録。後継者や若手社員に、創業の精神を確実に伝えることができます。',
+                example: '例）創業50年の金属加工会社が、創業者の半生と技術の歩みを一冊に'
+              },
+              {
+                icon: '👥',
+                title: '社員への福利厚生',
+                subtitle: '団体導入プラン',
+                text: '従業員やその家族が無料で使える福利厚生として導入可能。社員一人ひとりの人生記録を会社がサポートします。',
+                example: '例）従業員50名の企業が、全社員に団体コードを発行して提供'
+              },
+              {
+                icon: '🎉',
+                title: '周年記念事業として',
+                subtitle: '創立記念・節目の年に',
+                text: '会社の節目に、経営陣や長年勤めた社員の想いを形に。記念誌として印刷し、取引先や関係者に配布することもできます。',
+                example: '例）創立30周年記念として、社長と幹部5名の会社史を作成'
+              },
+              {
+                icon: '🤝',
+                title: '業界団体での活用',
+                subtitle: '協会・組合での導入',
+                text: '業界団体や組合の会員サービスとして。会員の技術や経験を記録し、業界全体の知恵として残していくことができます。',
+                example: '例）地域の商工会議所が会員向けサービスとして導入'
+              },
+            ].map((uc, i) => (
+              <div key={i} className="lp-usecase-card">
+                <div className="lp-usecase-icon">{uc.icon}</div>
+                <h3>{uc.title}</h3>
+                <div className="lp-usecase-subtitle">{uc.subtitle}</div>
+                <p>{uc.text}</p>
+                <div className="lp-usecase-example">{uc.example}</div>
+              </div>
+            ))}
+          </div>
+          <div className="lp-usecase-cta">
+            <p>企業・団体でのご導入をご検討の方は、お気軽にご相談ください。</p>
+            <a href="mailto:mitsunorif@robostudy.jp?subject=ライフメモナビ 団体導入の相談&body=お名前：%0D%0A会社名・団体名：%0D%0A人数規模：%0D%0Aご相談内容：%0D%0A" className="lp-btn-secondary">団体導入を相談する →</a>
           </div>
         </section>
 
