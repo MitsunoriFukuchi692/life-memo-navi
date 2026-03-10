@@ -11,6 +11,7 @@ import photosRoutes from './routes/photos.js';
 import pdfRoutes from './routes/pdf.js';
 import adminRoutes from './routes/admin.js';
 import orgRoutes, { initOrganizationTables } from './routes/organization.js';
+import aiInterviewRoutes from './routes/aiInterview.js';
 
 dotenv.config();
 
@@ -41,6 +42,7 @@ app.use('/api/interviews', interviewRoutes);
 app.use('/api/timelines', timelinesRoutes);
 app.use('/api/photos', photosRoutes);
 app.use('/api/pdf', pdfRoutes);
+app.use('/api/ai-interview', aiInterviewRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/org', orgRoutes);
 
