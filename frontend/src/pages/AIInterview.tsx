@@ -67,7 +67,7 @@ export default function AIInterview() {
         ? { messages, userAnswer, isFirst: false }
         : { isFirst: true };
 
-      const res = await fetch(`${API_BASE}/api/ai-interview`, {
+      const res = await fetch(`${API_BASE}/ai-interview`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
