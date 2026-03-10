@@ -117,6 +117,16 @@ export default function Layout({ children, title }: LayoutProps) {
           <div style={{ borderTop: '1px solid var(--cream-dark)', margin: '16px 0' }} />
         )}
 
+        <Link
+          to="/ai-interview"
+          style={navLinkStyle('/ai-interview')}
+          onClick={() => setMenuOpen(false)}
+        >
+          🎤 AIインタビュー
+        </Link>
+
+        <div style={{ borderTop: '1px solid var(--cream-dark)', margin: '16px 0' }} />
+
         <button
           onClick={() => { navigate('/'); setMenuOpen(false); }}
           style={{

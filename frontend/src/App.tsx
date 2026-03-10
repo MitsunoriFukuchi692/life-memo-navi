@@ -10,6 +10,7 @@ import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import LandingPage from './pages/LandingPage';
 import SettingsPage from './pages/SettingsPage';
 import OrgDashboard from './pages/OrgDashboard';
+import AIInterview from "./pages/AIInterview";
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const token = localStorage.getItem('token');
@@ -31,7 +32,8 @@ function App() {
         <Route path="/field/:fieldType/timeline" element={<PrivateRoute><TimelinePage /></PrivateRoute>} />
         <Route path="/field/:fieldType/photos" element={<PrivateRoute><PhotosPage /></PrivateRoute>} />
         <Route path="/org-dashboard" element={<OrgDashboard />} />
-        <Route path="*" element={<Navigate to="/" replace />} />  
+        <Route path="/ai-interview" element={<PrivateRoute><AIInterview /></PrivateRoute>} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
