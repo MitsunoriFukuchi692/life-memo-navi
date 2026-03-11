@@ -1,8 +1,7 @@
 import { Router, Request, Response } from 'express';
-import Anthropic from '@anthropic-ai/sdk';
-
+import OpenAI from 'openai';
 const router = Router();
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const SYSTEM_PROMPT = `あなたは「メモちゃん」です。高齢者の人生の思い出を引き出すやさしいインタビュアーです。
 
@@ -62,14 +61,15 @@ router.post('/', async (req: Request, res: Response) => {
       ];
     }
 
-    const response = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4o-mini',
       max_tokens: 1024,
-      system: SYSTEM_PROMPT,
-      messages: conversationMessages,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        ...conversationMessages,
+      ],
     });
-
-    const text = response.content[0].type === 'text' ? response.content[0].text : '';
+    const text = response.choices[0].message.content || '';
 
     // JSONパース
     const clean = text.replace(/```json|```/g, '').trim();
