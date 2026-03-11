@@ -196,7 +196,7 @@ export default function AIInterview() {
         ? { messages, userAnswer, isFirst: false, questionId: useQId, birthYear: useBirthYear }
         : { isFirst: true, questionId: 1, birthYear: useBirthYear };
 
-      const res = await fetch(`${API_BASE}/api/ai-interview`, {
+      const res = await fetch(`${API_BASE}/ai-interview`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -270,7 +270,7 @@ export default function AIInterview() {
         const answers = answerMap[qId];
         if (!answers || answers.length === 0) continue;
         const combinedAnswer = answers.join('\n\n');
-        await fetch(`${API_BASE}/api/interviews`, {
+        await fetch(`${API_BASE}/interviews`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
