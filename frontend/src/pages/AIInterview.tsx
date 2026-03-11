@@ -426,7 +426,7 @@ export default function AIInterview() {
             <div style={styles.resumeBtnRow}>
               <button
                 style={styles.startBtn}
-                onClick={() => fetchAIResponse(undefined, resumeQuestionId, birthYear ?? undefined)}
+                onClick={() => fetchAIResponse('続きから再開します', resumeQuestionId, birthYear ?? undefined)}
                 className="hoverBtn"
               >
                 続きからはじめる →
