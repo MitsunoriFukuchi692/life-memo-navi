@@ -3,102 +3,112 @@ import OpenAI from 'openai';
 const router = Router();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-// 生まれ年から時代イベントを生成する関数
-const getEraEvents = (birthYear: number): string => {
-  const childhood = birthYear + 10; // 10代
-  const youth = birthYear + 20;     // 20代
-  const work = birthYear + 35;      // 30〜40代
+// 自分史の15問（固定）
+const JIBUNSHI_QUESTIONS = [
+  "あなたの生まれた時代はどんな時代でしたか？",
+  "生まれた場所と、幼い頃の思い出は？",
+  "家族について教えてください",
+  "学生時代の思い出は？",
+  "最初の職場での経験は？",
+  "人生での大きな決断は？",
+  "仕事でやりがいを感じたことは？",
+  "人生で出会った大切な人は？",
+  "趣味や好きなことは？",
+  "人生での失敗や試練は？",
+  "それらからどう学びましたか？",
+  "今、大切にしていることは？",
+  "家族や後世代に伝えたいことは？",
+  "人生で一番幸せだった時は？",
+  "未来へのメッセージは？"
+];
 
-  const getDecadeEvents = (year: number): string => {
-    if (year < 1945) return '戦時中・終戦直後の混乱期';
-    if (year < 1955) return '戦後復興期：闇市、引き揚げ、朝鮮戦争特需、NHKテレビ放送開始（1953年）';
-    if (year < 1965) return '高度経済成長期：東京オリンピック（1964年）、新幹線開業、力道山、三種の神器（白黒テレビ・洗濯機・冷蔵庫）';
-    if (year < 1975) return '激動の時代：大阪万博（1970年）、沖縄返還（1972年）、オイルショック、ビートルズ来日、石原裕次郎・吉永小百合の映画黄金期';
-    if (year < 1985) return 'バブル前夜：ウォークマン登場、インベーダーゲームブーム、山口百恵引退、日本映画「砂の器」「幸福の黄色いハンカチ」';
-    if (year < 1995) return 'バブル経済：東京ディズニーランド開園（1983年）、ファミコンブーム、バブル崩壊、阪神淡路大震災（1995年）';
-    if (year < 2005) return '失われた10年：インターネット普及、携帯電話の普及、「もののけ姫」「タイタニック」大ヒット';
-    return '情報化社会：スマートフォン普及、東日本大震災（2011年）、SNS時代';
+// 生まれ年に合わせた時代ヒントを生成
+const getEraHint = (questionId: number, birthYear: number): string => {
+  const age10 = birthYear + 10;
+  const age20 = birthYear + 20;
+  const age35 = birthYear + 35;
+
+  const getEvents = (year: number): string => {
+    if (year < 1945) return '戦時中・終戦直後';
+    if (year < 1955) return '戦後復興期（NHKテレビ放送開始・朝鮮戦争特需）';
+    if (year < 1965) return '高度経済成長期（東京オリンピック・新幹線開業・三種の神器）';
+    if (year < 1975) return '激動の時代（大阪万博・オイルショック・ビートルズ来日）';
+    if (year < 1985) return 'バブル前夜（ウォークマン・インベーダーゲーム・山口百恵引退）';
+    if (year < 1995) return 'バブル期（東京ディズニーランド開園・ファミコンブーム・バブル崩壊）';
+    if (year < 2005) return '失われた10年（インターネット普及・携帯電話の普及）';
+    return '情報化社会（スマートフォン・SNS時代）';
   };
 
-  return `
-## ユーザーの生まれ年に合わせた時代背景
-生まれ年: ${birthYear}年
-
-【子ども時代 ${birthYear}〜${childhood}年頃】
-${getDecadeEvents(birthYear + 5)}
-
-【学生・青春時代 ${childhood}〜${youth}年頃】
-${getDecadeEvents(childhood + 5)}
-
-【仕事・社会人時代 ${youth}〜${work}年頃】
-${getDecadeEvents(youth + 5)}
-
-## 時代イベントを使った質問の例
-- 「ちょうどその頃、○○がありましたね。あなたはどこで何をしていましたか？」
-- 「○○が流行っていた時代ですね。あなたにとってその頃の思い出は？」
-- 「東京オリンピック／大阪万博／バブルの頃、○○さんは何をされていましたか？」
-
-必ずユーザーの年齢に合った時代の出来事や文化を会話に織り交ぜてください。`;
+  switch (questionId) {
+    case 1:
+      return `（${birthYear}年生まれ。当時の日本は「${getEvents(birthYear)}」の時代です。この時代背景をヒントとして自然に会話に織り交ぜてください）`;
+    case 2:
+      return `（幼少期は${birthYear}〜${age10}年頃。「${getEvents(birthYear + 5)}」の時代です）`;
+    case 4:
+      return `（学生時代は${age10}〜${age20}年頃。「${getEvents(age10 + 5)}」の時代です。当時の流行や出来事をヒントに）`;
+    case 5:
+    case 6:
+    case 7:
+      return `（社会人時代は${age20}〜${age35}年頃。「${getEvents(age20 + 5)}」の時代です。当時の社会状況をヒントに）`;
+    default:
+      return '';
+  }
 };
 
-const BASE_SYSTEM_PROMPT = `あなたは「メモちゃん」です。高齢者の人生の思い出を引き出すやさしいインタビュアーです。
+const buildSystemPrompt = (questionId: number, birthYear?: number): string => {
+  const question = JIBUNSHI_QUESTIONS[questionId - 1];
+  const eraHint = birthYear ? getEraHint(questionId, birthYear) : '';
+
+  return `あなたは「メモちゃん」です。高齢者の自分史作りをサポートするやさしいインタビュアーです。
 
 ## キャラクター設定
-- 孫のような親しみやすい口調で話す
-- 敬語と親しみを混ぜた温かい話し方（「〜ですね」「〜でしたか？」）
+- 孫のような親しみやすい口調で話す（「〜ですね」「〜でしたか？」）
 - 絵文字を1〜2個使って親しみやすくする
-- 一度に1つの質問だけする（絶対に2つ以上聞かない）
+- 一度に1つの質問だけする
 - 相手の答えに必ず共感・感想を一言添えてから次の質問をする
 
-## インタビューの進め方
-1. ユーザーの回答をよく聞いて、その内容に関連した深掘り質問をする
-2. 深掘りが2〜3回続いたら、新しいカテゴリ（子ども時代→学生時代→仕事→家族→夢・希望）に移る
-3. 以下のようなテーマを順番にカバーする：
-   - 子ども時代の思い出
-   - 学生時代・青春
-   - 仕事・キャリア
-   - 家族・大切な人
-   - 人生で誇れること
-   - 次の世代へのメッセージ
-4. 【重要】学生時代・仕事時代の質問では、下記の時代背景情報を活用して、
-   その人が実際に体験したであろう歴史的出来事・流行・文化を会話に自然に織り交ぜること
+## 今回の質問テーマ
+「${question}」${eraHint}
+
+## 進め方
+1. このテーマについて、上記の質問を会話形式でやさしく聞く
+2. 答えが返ってきたら、内容に共感しつつ1回だけ深掘りする
+3. 深掘りの答えが返ってきたら moveToNext を true にして次のテーマへ進む
 
 ## 返答フォーマット（必ずこのJSON形式で返す）
 {
   "reaction": "ユーザーの回答への共感・感想（1〜2文）",
   "question": "次の質問（1つだけ）",
-  "category": "現在のカテゴリ名（子ども時代/学生時代/仕事/家族/人生/メッセージ）",
-  "isDeepDive": true または false（深掘り質問かどうか）
+  "isDeepDive": true または false,
+  "moveToNext": true または false
 }
 
 必ずJSON形式のみで返答し、それ以外のテキストは含めないこと。`;
+};
 
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { messages, userAnswer, isFirst, birthYear } = req.body;
+    const { messages, userAnswer, isFirst, questionId = 1, birthYear } = req.body;
 
     // 最初の質問
     if (isFirst) {
+      const eraHint = birthYear ? `（${birthYear}年生まれの方ですね😊 その時代のことも交えてお話しましょう）` : '';
       return res.json({
         reaction: "",
-        question: "はじめまして！わたし、メモちゃんといいます🌸 あなたの大切な思い出をいっしょに残しましょうね。まず最初に、子どもの頃のことを聞かせてください。子どもの頃、一番楽しかった遊びや思い出は何ですか？",
-        category: "子ども時代",
+        question: `はじめまして！わたし、メモちゃんといいます🌸 あなたの大切な人生の記録を、いっしょに残しましょうね。${eraHint}\n\nまず最初に、「あなたが生まれた時代」について聞かせてください。子どもの頃、どんな時代でしたか？`,
+        questionId: 1,
+        questionText: JIBUNSHI_QUESTIONS[0],
         isDeepDive: false,
+        moveToNext: false,
       });
     }
 
-    // 時代イベント情報をシステムプロンプトに追加
-    const systemPrompt = birthYear
-      ? BASE_SYSTEM_PROMPT + getEraEvents(Number(birthYear))
-      : BASE_SYSTEM_PROMPT;
-
-    // 会話履歴を構築
-   let conversationMessages: { role: 'user' | 'assistant'; content: string }[] = [
-  ...(messages || []).slice(-6),  // ← .slice(-6) を追加
+    // 会話履歴を構築（直近6件のみ）
+    let conversationMessages: { role: 'user' | 'assistant'; content: string }[] = [
+      ...(messages || []).slice(-6),
       { role: 'user', content: userAnswer },
     ];
 
-    // 先頭がassistantの場合は補正
     if (conversationMessages.length > 0 && conversationMessages[0].role === 'assistant') {
       conversationMessages = [
         { role: 'user', content: 'インタビューを始めてください' },
@@ -106,22 +116,32 @@ router.post('/', async (req: Request, res: Response) => {
       ];
     }
 
+    const systemPrompt = buildSystemPrompt(questionId, birthYear ? Number(birthYear) : undefined);
+
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
-      max_tokens: 4096,
+      max_tokens: 1024,
       response_format: { type: 'json_object' },
       messages: [
         { role: 'system', content: systemPrompt },
         ...conversationMessages,
       ],
     });
-    const text = response.choices[0].message.content || '';
 
-    // JSONパース
+    const text = response.choices[0].message.content || '';
     const clean = text.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(clean);
 
-    res.json(parsed);
+    // 次の質問IDを決定
+    const nextQuestionId = parsed.moveToNext
+      ? Math.min(questionId + 1, 15)
+      : questionId;
+
+    res.json({
+      ...parsed,
+      questionId: nextQuestionId,
+      questionText: JIBUNSHI_QUESTIONS[questionId - 1],
+    });
   } catch (error) {
     console.error('AI Interview error:', error);
     res.status(500).json({ error: 'AIとの通信に失敗しました' });
