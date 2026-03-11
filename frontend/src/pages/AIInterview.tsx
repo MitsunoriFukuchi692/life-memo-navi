@@ -44,8 +44,19 @@ const TypingText = ({ text, onDone }: { text: string; onDone?: () => void }) => 
   return <span>{displayed}<span style={styles.cursor}>|</span></span>;
 };
 
+// 昭和→西暦変換
+const showaToSeireki = (showa: number): number => showa + 1925;
+// 大正→西暦
+const taishoToSeireki = (taisho: number): number => taisho + 1911;
+// 平成→西暦
+const heiseiToSeireki = (heisei: number): number => heisei + 1988;
+
 export default function AIInterview() {
-  const [phase, setPhase] = useState<'intro' | 'question' | 'thinking' | 'answered' | 'complete'>('intro');
+  const [phase, setPhase] = useState<'intro' | 'birthYear' | 'question' | 'thinking' | 'answered' | 'complete'>('intro');
+  const [birthYear, setBirthYear] = useState<number | null>(null);
+  const [birthYearInput, setBirthYearInput] = useState('');
+  const [eraType, setEraType] = useState<'seireki' | 'showa' | 'taisho' | 'heisei'>('showa');
+  const [birthYearError, setBirthYearError] = useState('');
   const [currentQuestion, setCurrentQuestion] = useState('');
   const [currentReaction, setCurrentReaction] = useState('');
   const [currentCategory, setCurrentCategory] = useState('');
@@ -56,16 +67,39 @@ export default function AIInterview() {
   const [listening, setListening] = useState(false);
   const [error, setError] = useState('');
   const [questionCount, setQuestionCount] = useState(0);
-  const MAX_QUESTIONS = 8;
+  const MAX_QUESTIONS = 15;
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const fetchAIResponse = async (userAnswer?: string) => {
+  const calcBirthYear = (): number | null => {
+    const num = parseInt(birthYearInput);
+    if (isNaN(num)) return null;
+    switch (eraType) {
+      case 'showa': return showaToSeireki(num);
+      case 'taisho': return taishoToSeireki(num);
+      case 'heisei': return heiseiToSeireki(num);
+      default: return num;
+    }
+  };
+
+  const handleBirthYearSubmit = () => {
+    const year = calcBirthYear();
+    if (!year || year < 1900 || year > 2010) {
+      setBirthYearError('正しい年を入力してください');
+      return;
+    }
+    setBirthYearError('');
+    setBirthYear(year);
+    fetchAIResponse(undefined, year);
+  };
+
+  const fetchAIResponse = async (userAnswer?: string, byYear?: number) => {
     setPhase('thinking');
     setError('');
+    const useBirthYear = byYear ?? birthYear;
     try {
       const body = userAnswer
-        ? { messages, userAnswer, isFirst: false }
-        : { isFirst: true };
+        ? { messages, userAnswer, isFirst: false, birthYear: useBirthYear }
+        : { isFirst: true, birthYear: useBirthYear };
 
       const res = await fetch(`${API_BASE}/ai-interview`, {
         method: 'POST',
@@ -98,18 +132,16 @@ export default function AIInterview() {
       setTyping(true);
     } catch (e) {
       setError('AIとの通信に失敗しました。もう一度お試しください。');
-      setPhase(questionCount === 0 ? 'intro' : 'question');
+      setPhase(questionCount === 0 ? 'birthYear' : 'question');
     }
   };
 
   const handleStart = () => {
-    fetchAIResponse();
+    setPhase('birthYear');
   };
 
   const handleAnswer = () => {
     if (!answer.trim()) return;
-
-    // 履歴に保存
     setHistory((h) => [
       ...h,
       { category: currentCategory, question: currentQuestion, answer },
@@ -154,6 +186,11 @@ export default function AIInterview() {
 
   const progressPercent = Math.round((questionCount / MAX_QUESTIONS) * 100);
 
+  // 生まれ年の表示（西暦）
+  const birthYearDisplay = birthYear
+    ? `${birthYear}年（${birthYear - 1988 > 0 ? `平成${birthYear - 1988}年` : birthYear - 1925 > 0 ? `昭和${birthYear - 1925}年` : `大正${birthYear - 1911}年`}）生まれ`
+    : '';
+
   return (
     <div style={styles.root}>
       <style>{css}</style>
@@ -162,6 +199,9 @@ export default function AIInterview() {
       <div style={styles.header}>
         <div style={styles.logo}>📖 ライフ・メモナビ</div>
         <div style={styles.headerRight}>
+          {birthYear && (
+            <div style={styles.birthYearTag}>🎂 {birthYearDisplay}</div>
+          )}
           <div style={styles.progressBar}>
             <div style={{ ...styles.progressFill, width: `${progressPercent}%` }} />
           </div>
@@ -187,6 +227,14 @@ export default function AIInterview() {
                   こんにちは！わたしはメモちゃんです🌸<br />
                   あなたの大切な思い出を、いっしょに残しましょう。<br />
                   質問に答えるだけで大丈夫ですよ。
+                </p>
+              )}
+              {phase === 'birthYear' && (
+                <p style={styles.bubbleText}>
+                  あなたは何年生まれですか？😊<br />
+                  <span style={{ fontSize: '16px', color: '#a07050' }}>
+                    生まれた時代に合わせてお話しますね♪
+                  </span>
                 </p>
               )}
               {phase === 'thinking' && (
@@ -218,7 +266,7 @@ export default function AIInterview() {
               )}
               <div style={styles.bubbleTail} />
             </div>
-            {currentCategory && phase !== 'intro' && phase !== 'complete' && (
+            {currentCategory && phase !== 'intro' && phase !== 'birthYear' && phase !== 'complete' && (
               <div style={styles.categoryBadge}>{currentCategory}</div>
             )}
           </div>
@@ -238,6 +286,59 @@ export default function AIInterview() {
               🎤　インタビューをはじめる
             </button>
             <p style={styles.hint}>ボタンを押して、メモちゃんとお話しましょう</p>
+          </div>
+        )}
+
+        {/* 生まれ年入力 */}
+        {phase === 'birthYear' && (
+          <div style={styles.birthYearArea} className="fadeIn">
+            {/* 元号選択 */}
+            <div style={styles.eraSelector}>
+              {(['showa', 'taisho', 'heisei', 'seireki'] as const).map((era) => (
+                <button
+                  key={era}
+                  style={{ ...styles.eraBtn, ...(eraType === era ? styles.eraBtnActive : {}) }}
+                  onClick={() => { setEraType(era); setBirthYearInput(''); }}
+                >
+                  {era === 'showa' ? '昭和' : era === 'taisho' ? '大正' : era === 'heisei' ? '平成' : '西暦'}
+                </button>
+              ))}
+            </div>
+
+            {/* 年入力 */}
+            <div style={styles.birthYearInputRow}>
+              <input
+                type="number"
+                style={styles.birthYearInput}
+                value={birthYearInput}
+                onChange={(e) => setBirthYearInput(e.target.value)}
+                placeholder={eraType === 'seireki' ? '例：1945' : eraType === 'showa' ? '例：20' : eraType === 'taisho' ? '例：10' : '例：5'}
+                onKeyDown={(e) => e.key === 'Enter' && handleBirthYearSubmit()}
+              />
+              <span style={styles.birthYearUnit}>年</span>
+            </div>
+
+            {/* プレビュー */}
+            {birthYearInput && !isNaN(parseInt(birthYearInput)) && (
+              <div style={styles.birthYearPreview}>
+                西暦 {calcBirthYear()}年生まれ
+              </div>
+            )}
+
+            {birthYearError && (
+              <p style={styles.birthYearErrorText}>{birthYearError}</p>
+            )}
+
+            <button
+              style={{ ...styles.startBtn, fontSize: '20px', padding: '16px 48px', marginTop: '8px' }}
+              onClick={handleBirthYearSubmit}
+              className="hoverBtn"
+            >
+              インタビューをスタート 🌸
+            </button>
+            <button style={styles.skipBtn} onClick={() => { setBirthYear(null); fetchAIResponse(undefined, undefined); }}>
+              生まれ年をとばしてはじめる
+            </button>
           </div>
         )}
 
@@ -344,6 +445,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   logo: { fontSize: '20px', fontWeight: 'bold', color: '#c06030', letterSpacing: '0.05em' },
   headerRight: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' },
+  birthYearTag: { fontSize: '13px', color: '#c06030', fontWeight: 'bold', background: '#ffebd8', padding: '2px 10px', borderRadius: '20px' },
   progressBar: { width: '160px', height: '8px', background: '#f0d5b8', borderRadius: '10px', overflow: 'hidden' },
   progressFill: { height: '100%', background: 'linear-gradient(90deg, #e8804a, #c05828)', borderRadius: '10px', transition: 'width 0.5s ease' },
   progressText: { fontSize: '13px', color: '#a07050' },
@@ -388,6 +490,41 @@ const styles: Record<string, React.CSSProperties> = {
   },
   hint: { color: '#a07050', fontSize: '15px' },
   thinkingDots: { color: '#a07050' },
+
+  // 生まれ年入力エリア
+  birthYearArea: {
+    display: 'flex', flexDirection: 'column', alignItems: 'center',
+    gap: '16px', padding: '20px 0',
+  },
+  eraSelector: { display: 'flex', gap: '8px' },
+  eraBtn: {
+    padding: '10px 20px', borderRadius: '30px', fontSize: '18px',
+    border: '2px solid #f0d5b8', background: '#fff',
+    cursor: 'pointer', color: '#a07050', fontWeight: 'bold',
+  },
+  eraBtnActive: {
+    background: 'linear-gradient(135deg, #e8804a, #c05828)',
+    color: '#fff', border: '2px solid #c05828',
+  },
+  birthYearInputRow: { display: 'flex', alignItems: 'center', gap: '8px' },
+  birthYearInput: {
+    width: '140px', padding: '14px 18px', fontSize: '28px',
+    border: '2px solid #f0d5b8', borderRadius: '16px',
+    textAlign: 'center', color: '#3d2c1e', outline: 'none',
+    background: '#fffdf9',
+  },
+  birthYearUnit: { fontSize: '24px', color: '#3d2c1e', fontWeight: 'bold' },
+  birthYearPreview: {
+    fontSize: '16px', color: '#c06030', fontWeight: 'bold',
+    background: '#ffebd8', padding: '6px 20px', borderRadius: '20px',
+  },
+  birthYearErrorText: { color: '#c04040', fontSize: '15px', margin: 0 },
+  skipBtn: {
+    background: 'transparent', border: 'none',
+    color: '#a07050', fontSize: '14px', cursor: 'pointer',
+    textDecoration: 'underline',
+  },
+
   answerArea: { display: 'flex', flexDirection: 'column', gap: '14px' },
   label: { fontSize: '16px', color: '#a07050', fontWeight: 'bold' },
   textarea: {
@@ -463,4 +600,6 @@ const css = `
   .fadeIn { animation: fadeIn 0.4s ease forwards; }
   .hoverBtn:hover { transform: scale(1.04); filter: brightness(1.05); }
   textarea:focus { border-color: #e8804a !important; }
+  input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+  input[type=number] { -moz-appearance: textfield; }
 `;
