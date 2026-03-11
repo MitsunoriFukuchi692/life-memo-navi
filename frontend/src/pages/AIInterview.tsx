@@ -64,7 +64,7 @@ const heiseiToSeireki = (n: number) => n + 1988;
 
 export default function AIInterview() {
   const navigate = useNavigate();
-  const [phase, setPhase] = useState<'intro' | 'birthYear' | 'question' | 'thinking' | 'answered' | 'complete'>('intro');
+  const [phase, setPhase] = useState<'loading' | 'intro' | 'resume' | 'birthYear' | 'question' | 'thinking' | 'answered' | 'complete'>('loading');
   const [birthYear, setBirthYear] = useState<number | null>(null);
   const [birthYearInput, setBirthYearInput] = useState('');
   const [eraType, setEraType] = useState<'showa' | 'taisho' | 'heisei' | 'seireki'>('showa');
@@ -81,8 +81,87 @@ export default function AIInterview() {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [resumeQuestionId, setResumeQuestionId] = useState(1);
+  const [previousAnswer, setPreviousAnswer] = useState('');
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // 起動時：既存の回答を読み込んで途中再開チェック
+  useEffect(() => {
+    const loadExisting = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) { setPhase('intro'); return; }
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const userId = payload?.userId || payload?.id;
+        if (!userId) { setPhase('intro'); return; }
+
+        const res = await fetch(`${API_BASE}/interviews/${userId}?field_type=jibunshi`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) { setPhase('intro'); return; }
+        const rows = await res.json();
+
+        if (!rows || rows.length === 0) {
+          setPhase('intro');
+          return;
+        }
+
+        // 既存回答をanswerMapに復元
+        const loaded: AnswerMap = {};
+        let maxQId = 0;
+        for (const row of rows) {
+          if (row.answer_text) {
+            loaded[row.question_id] = [row.answer_text];
+            if (row.question_id > maxQId) maxQId = row.question_id;
+          }
+        }
+        setAnswerMap(loaded);
+
+        // 次に答えるべき質問IDを特定
+        const nextQId = Math.min(maxQId + 1, 15);
+        setResumeQuestionId(nextQId);
+        setPreviousAnswer(loaded[maxQId]?.[0] || '');
+        setCurrentQuestionId(nextQId);
+
+        if (maxQId >= 15) {
+          setPhase('complete');
+        } else {
+          setPhase('resume');
+        }
+      } catch {
+        setPhase('intro');
+      }
+    };
+    loadExisting();
+  }, []);
+
+  // 回答を即時自動保存
+  const autoSave = async (qId: number, answerText: string) => {
+    try {
+      const token = localStorage.getItem('token');
+      const payload = token ? JSON.parse(atob(token.split('.')[1])) : null;
+      const userId = payload?.userId || payload?.id;
+      if (!userId) return;
+
+      await fetch(`${API_BASE}/interviews`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          question_id: qId,
+          question_text: JIBUNSHI_QUESTIONS[qId - 1],
+          answer_text: answerText,
+          field_type: 'jibunshi',
+        }),
+      });
+    } catch (e) {
+      console.error('自動保存エラー:', e);
+    }
+  };
 
   const calcBirthYear = (): number | null => {
     const num = parseInt(birthYearInput);
@@ -117,7 +196,7 @@ export default function AIInterview() {
         ? { messages, userAnswer, isFirst: false, questionId: useQId, birthYear: useBirthYear }
         : { isFirst: true, questionId: 1, birthYear: useBirthYear };
 
-      const res = await fetch(`${API_BASE}/ai-interview`, {
+      const res = await fetch(`${API_BASE}/api/ai-interview`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -155,11 +234,13 @@ export default function AIInterview() {
 
   const handleAnswer = () => {
     if (!answer.trim()) return;
-    // 現在のquestion_idに回答を蓄積
+    const combined = [...(answerMap[currentQuestionId] || []), answer].join('\n\n');
     setAnswerMap((prev) => ({
       ...prev,
       [currentQuestionId]: [...(prev[currentQuestionId] || []), answer],
     }));
+    // 自動保存
+    autoSave(currentQuestionId, combined);
     setPhase('answered');
   };
 
@@ -189,7 +270,7 @@ export default function AIInterview() {
         const answers = answerMap[qId];
         if (!answers || answers.length === 0) continue;
         const combinedAnswer = answers.join('\n\n');
-        await fetch(`${API_BASE}/interviews`, {
+        await fetch(`${API_BASE}/api/interviews`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -266,11 +347,23 @@ export default function AIInterview() {
           </div>
           <div style={styles.bubbleWrap}>
             <div style={styles.bubble}>
+              {phase === 'loading' && (
+                <p style={styles.bubbleText}>読み込んでいます…</p>
+              )}
               {phase === 'intro' && (
                 <p style={styles.bubbleText}>
                   こんにちは！わたしはメモちゃんです🌸<br />
                   あなたの大切な人生の記録を、いっしょに残しましょう。<br />
                   質問に答えるだけで自分史ができあがりますよ。
+                </p>
+              )}
+              {phase === 'resume' && (
+                <p style={styles.bubbleText}>
+                  おかえりなさい😊🌸<br />
+                  前回の続きから再開しましょう！<br />
+                  <span style={{ fontSize: '16px', color: '#a07050' }}>
+                    Q{resumeQuestionId}「{JIBUNSHI_QUESTIONS[resumeQuestionId - 1]}」からですね。
+                  </span>
                 </p>
               )}
               {phase === 'birthYear' && (
@@ -303,7 +396,7 @@ export default function AIInterview() {
               )}
               <div style={styles.bubbleTail} />
             </div>
-            {phase !== 'intro' && phase !== 'birthYear' && phase !== 'complete' && phase !== 'thinking' && (
+            {phase !== 'intro' && phase !== 'resume' && phase !== 'birthYear' && phase !== 'complete' && phase !== 'thinking' && phase !== 'loading' && (
               <div style={styles.questionBadge}>
                 Q{currentQuestionId}. {JIBUNSHI_QUESTIONS[currentQuestionId - 1]}
               </div>
@@ -313,6 +406,40 @@ export default function AIInterview() {
 
         {/* エラー */}
         {error && <div style={styles.errorBox}>⚠️ {error}</div>}
+
+        {/* ローディング */}
+        {phase === 'loading' && (
+          <div style={styles.centerArea}>
+            <p style={styles.hint}>データを読み込んでいます…</p>
+          </div>
+        )}
+
+        {/* 再開確認 */}
+        {phase === 'resume' && (
+          <div style={styles.resumeArea} className="fadeIn">
+            {previousAnswer && (
+              <div style={styles.resumePrevCard}>
+                <div style={styles.resumePrevLabel}>📝 前回のQ{resumeQuestionId - 1}の答え</div>
+                <p style={styles.resumePrevText}>{previousAnswer}</p>
+              </div>
+            )}
+            <div style={styles.resumeBtnRow}>
+              <button
+                style={styles.startBtn}
+                onClick={() => fetchAIResponse(undefined, resumeQuestionId, birthYear ?? undefined)}
+                className="hoverBtn"
+              >
+                続きからはじめる →
+              </button>
+              <button
+                style={styles.restartBtn}
+                onClick={() => { setAnswerMap({}); setCurrentQuestionId(1); setPhase('birthYear'); }}
+              >
+                最初からやり直す
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* イントロ */}
         {phase === 'intro' && (
@@ -518,6 +645,12 @@ const styles: Record<string, React.CSSProperties> = {
   articleBtn: { width: '100%', background: 'linear-gradient(135deg, #e8804a, #c05828)', color: '#fff', border: 'none', borderRadius: '50px', padding: '18px', fontSize: '20px', fontWeight: 'bold', cursor: 'pointer', marginTop: '16px' },
   historyHint: { textAlign: 'center', color: '#a07050', fontSize: '14px', marginTop: '20px', padding: '10px', background: '#ffebd8', borderRadius: '50px' },
   cursor: { animation: 'blink 0.8s steps(1) infinite' },
+  resumeArea: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px', padding: '20px 0' },
+  resumePrevCard: { width: '100%', background: '#fff', border: '2px solid #d4e8c8', borderRadius: '16px', padding: '16px 20px' },
+  resumePrevLabel: { fontSize: '13px', color: '#6a9e5a', fontWeight: 'bold', marginBottom: '8px' },
+  resumePrevText: { fontSize: '17px', lineHeight: '1.8', color: '#3d2c1e', margin: 0, whiteSpace: 'pre-wrap' as const },
+  resumeBtnRow: { display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: '12px' },
+  restartBtn: { background: 'transparent', border: '2px solid #f0d5b8', color: '#a07050', borderRadius: '50px', padding: '12px 28px', fontSize: '16px', cursor: 'pointer' },
 };
 
 const css = `
