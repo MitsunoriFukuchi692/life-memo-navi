@@ -527,6 +527,10 @@ export default function AIInterview() {
                 保存する ✓
               </button>
             </div>
+            <p style={{ fontSize: '13px', color: '#a07050', textAlign: 'center', margin: '4px 0 0' }}>
+              💾「保存する✓」を押した時点で自動保存されます。その後はいつでも中断できます。
+            </p>
+
             {currentQuestionId >= 14 && (
               <button style={styles.completeBtn} onClick={handleComplete}>
                 まとめを見る →
