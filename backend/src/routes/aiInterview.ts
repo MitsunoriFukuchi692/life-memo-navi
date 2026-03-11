@@ -93,8 +93,8 @@ router.post('/', async (req: Request, res: Response) => {
       : BASE_SYSTEM_PROMPT;
 
     // 会話履歴を構築
-    let conversationMessages: { role: 'user' | 'assistant'; content: string }[] = [
-      ...(messages || []),
+   let conversationMessages: { role: 'user' | 'assistant'; content: string }[] = [
+  ...(messages || []).slice(-6),  // ← .slice(-6) を追加
       { role: 'user', content: userAnswer },
     ];
 
@@ -108,7 +108,7 @@ router.post('/', async (req: Request, res: Response) => {
 
     const response = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
-      max_tokens: 2048,
+      max_tokens: 4096,
       response_format: { type: 'json_object' },
       messages: [
         { role: 'system', content: systemPrompt },
