@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://life-memo-navi-backend.onrender.com';
 
@@ -67,8 +68,11 @@ export default function AIInterview() {
   const [listening, setListening] = useState(false);
   const [error, setError] = useState('');
   const [questionCount, setQuestionCount] = useState(0);
-  const MAX_QUESTIONS = 15;
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const MAX_QUESTIONS = 20;
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const navigate = useNavigate();
 
   const calcBirthYear = (): number | null => {
     const num = parseInt(birthYearInput);
@@ -162,6 +166,45 @@ export default function AIInterview() {
 
   const handleComplete = () => {
     setPhase('complete');
+  };
+
+  // インタビュー内容を自分史入力画面に転記して保存
+  const handleSaveAsArticle = async () => {
+    setSaving(true);
+    setSaveError('');
+    try {
+      const token = localStorage.getItem('token');
+      // JWTからuser_idを取得
+      const payload = token ? JSON.parse(atob(token.split('.')[1])) : null;
+      const userId = payload?.userId || payload?.id;
+      if (!userId) throw new Error('ログインが必要です');
+
+      // historyの各アイテムをinterviewsテーブルに保存（最大15件）
+      const saveItems = history.slice(0, 15);
+      for (let i = 0; i < saveItems.length; i++) {
+        const item = saveItems[i];
+        await fetch(`${API_BASE}/interviews`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            user_id: userId,
+            question_id: i + 1,
+            question_text: item.question,
+            answer_text: item.answer,
+            field_type: 'jibunshi',
+          }),
+        });
+      }
+      // 自分史入力画面へ遷移
+      navigate('/interview');
+    } catch (e: any) {
+      setSaveError(e.message || '保存に失敗しました。もう一度お試しください。');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const toggleListening = () => {
@@ -409,7 +452,12 @@ export default function AIInterview() {
                   <p style={styles.episodeA}>{h.answer}</p>
                 </div>
               ))}
-              <button style={styles.articleBtn}>✨ 記事として保存する</button>
+              <button style={styles.articleBtn} onClick={handleSaveAsArticle} disabled={saving}>
+                {saving ? '保存中...' : '✨ 記事として保存する'}
+              </button>
+              {saveError && (
+                <p style={{ color: '#c04040', fontSize: '15px', textAlign: 'center', marginTop: '8px' }}>{saveError}</p>
+              )}
             </div>
           </div>
         )}
