@@ -49,10 +49,18 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     // 会話履歴を構築
-    const conversationMessages = [
+    let conversationMessages: { role: 'user' | 'assistant'; content: string }[] = [
       ...(messages || []),
       { role: 'user', content: userAnswer },
     ];
+
+    // Anthropic APIは先頭がuser必須 → assistantで始まる場合は補正
+    if (conversationMessages.length > 0 && conversationMessages[0].role === 'assistant') {
+      conversationMessages = [
+        { role: 'user', content: 'インタビューを始めてください' },
+        ...conversationMessages,
+      ];
+    }
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
