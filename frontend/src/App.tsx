@@ -11,6 +11,8 @@ import LandingPage from './pages/LandingPage';
 import SettingsPage from './pages/SettingsPage';
 import OrgDashboard from './pages/OrgDashboard';
 import AIInterview from "./pages/AIInterview";
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const token = localStorage.getItem('token');
@@ -24,6 +26,8 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/privacy" element={<PrivacyPolicyPage />} />
         <Route path="/home" element={<PrivateRoute><FieldSelectPage /></PrivateRoute>} />
         <Route path="/settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />

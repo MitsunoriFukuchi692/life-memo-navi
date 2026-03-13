@@ -67,17 +67,11 @@ export default function LoginPage() {
           <Link to="/register" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>新規登録</Link>
         </p>
         {/* パスワード忘れ案内 */}
-        <div style={{
-          marginTop: '24px', padding: '16px',
-          background: 'var(--cream)', borderRadius: '8px',
-          textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-light)',
-          border: '1px solid var(--cream-dark)',
-        }}>
-          パスワードをお忘れの方は管理者までご連絡ください。<br />
-          <a href="mailto:mitsunorif@robostudy.jp" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>
-            mitsunorif@robostudy.jp
-          </a>
-        </div>
+        <p style={{ textAlign: 'center', marginTop: '16px', fontSize: '0.85rem' }}>
+          <Link to="/forgot-password" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>
+            パスワードをお忘れの方はこちら
+          </Link>
+        </p>
       </div>
     </div>
   );
