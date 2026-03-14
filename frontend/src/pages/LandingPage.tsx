@@ -358,7 +358,7 @@ export default function LandingPage() {
                   <div className="lp-top-price-badge">おすすめ</div>
                   <div className="lp-top-price-name">まとめ払い</div>
                   <div className="lp-top-price-num">990円<span>/3ヶ月</span></div>
-                  <div className="lp-top-price-note">月あたり330円（50円おトク）</div>
+                  <div className="lp-top-price-note">月あたり330円（150円お得）</div>
                 </a>
                 <a className="lp-top-price-card" href="mailto:mitsunorif@robostudy.jp?subject=%E3%83%A9%E3%82%A4%E3%83%95%E3%83%A1%E3%83%A2%E3%83%8A%E3%83%93%20%E4%B8%80%E6%8B%AC%E8%B3%BC%E5%85%A5%E5%B8%8C%E6%9C%9B&body=%E3%81%8A%E5%90%8D%E5%89%8D%EF%BC%9A%0D%0A%E3%83%A1%E3%83%BC%E3%83%AB%EF%BC%9A%0D%0A%E9%80%A3%E7%B5%A1%E5%85%88%EF%BC%88%E9%9B%BB%E8%A9%B1%EF%BC%89%EF%BC%9A%0D%0A%E3%80%90%E4%B8%80%E6%8B%AC%E8%B3%BC%E5%85%A5%208%2C800%E5%86%86%E3%80%91%E3%82%92%E5%B8%8C%E6%9C%9B%E3%81%97%E3%81%BE%E3%81%99%E3%80%82%0D%0A">
                   <div className="lp-top-price-name">一括購入（カード不要）</div>
@@ -397,6 +397,59 @@ export default function LandingPage() {
                 <button className="lp-card-btn" onClick={() => window.open('/sample.pdf', '_blank')}>PDFを作成する</button>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* 活用事例 */}
+        <section className="lp-section lp-usecases">
+          <div className="lp-section-header">
+            <div className="lp-section-label">Use Cases</div>
+            <h2 className="lp-section-title">企業・団体での活用シーン</h2>
+            <p className="lp-section-sub">製造業や中小企業の経営者の方々に、特にご活用いただいています。</p>
+          </div>
+          <div className="lp-usecase-grid">
+            {[
+              {
+                icon: '🏭',
+                title: '創業ストーリーの記録',
+                subtitle: '製造業・創業経営者',
+                text: '会社を立ち上げたときの苦労や想い、技術へのこだわりを記録。後継者や若手社員に、創業の精神を確実に伝えることができます。',
+                example: '例）創業50年の金属加工会社が、創業者の半生と技術の歩みを一冊に'
+              },
+              {
+                icon: '👥',
+                title: '社員への福利厚生',
+                subtitle: '団体導入プラン',
+                text: '従業員やその家族が無料で使える福利厚生として導入可能。社員一人ひとりの人生記録を会社がサポートします。',
+                example: '例）従業員50名の企業が、全社員に団体コードを発行して提供'
+              },
+              {
+                icon: '🎉',
+                title: '周年記念事業として',
+                subtitle: '創立記念・節目の年に',
+                text: '会社の節目に、経営陣や長年勤めた社員の想いを形に。記念誌として印刷し、取引先や関係者に配布することもできます。',
+                example: '例）創立30周年記念として、社長と幹部5名の会社史を作成'
+              },
+              {
+                icon: '🤝',
+                title: '業界団体での活用',
+                subtitle: '協会・組合での導入',
+                text: '業界団体や組合の会員サービスとして。会員の技術や経験を記録し、業界全体の知恵として残していくことができます。',
+                example: '例）地域の商工会議所が会員向けサービスとして導入'
+              },
+            ].map((uc, i) => (
+              <div key={i} className="lp-usecase-card">
+                <div className="lp-usecase-icon">{uc.icon}</div>
+                <h3>{uc.title}</h3>
+                <div className="lp-usecase-subtitle">{uc.subtitle}</div>
+                <p>{uc.text}</p>
+                <div className="lp-usecase-example">{uc.example}</div>
+              </div>
+            ))}
+          </div>
+          <div className="lp-usecase-cta">
+            <p>企業・団体でのご導入をご検討の方は、お気軽にご相談ください。</p>
+            <a href="mailto:mitsunorif@robostudy.jp?subject=ライフメモナビ 団体導入の相談&body=お名前：%0D%0A会社名・団体名：%0D%0A人数規模：%0D%0Aご相談内容：%0D%0A" className="lp-btn-secondary">団体導入を相談する →</a>
           </div>
         </section>
 
@@ -506,59 +559,6 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 活用事例 */}
-        <section className="lp-section lp-usecases">
-          <div className="lp-section-header">
-            <div className="lp-section-label">Use Cases</div>
-            <h2 className="lp-section-title">企業・団体での活用シーン</h2>
-            <p className="lp-section-sub">製造業や中小企業の経営者の方々に、特にご活用いただいています。</p>
-          </div>
-          <div className="lp-usecase-grid">
-            {[
-              {
-                icon: '🏭',
-                title: '創業ストーリーの記録',
-                subtitle: '製造業・創業経営者',
-                text: '会社を立ち上げたときの苦労や想い、技術へのこだわりを記録。後継者や若手社員に、創業の精神を確実に伝えることができます。',
-                example: '例）創業50年の金属加工会社が、創業者の半生と技術の歩みを一冊に'
-              },
-              {
-                icon: '👥',
-                title: '社員への福利厚生',
-                subtitle: '団体導入プラン',
-                text: '従業員やその家族が無料で使える福利厚生として導入可能。社員一人ひとりの人生記録を会社がサポートします。',
-                example: '例）従業員50名の企業が、全社員に団体コードを発行して提供'
-              },
-              {
-                icon: '🎉',
-                title: '周年記念事業として',
-                subtitle: '創立記念・節目の年に',
-                text: '会社の節目に、経営陣や長年勤めた社員の想いを形に。記念誌として印刷し、取引先や関係者に配布することもできます。',
-                example: '例）創立30周年記念として、社長と幹部5名の会社史を作成'
-              },
-              {
-                icon: '🤝',
-                title: '業界団体での活用',
-                subtitle: '協会・組合での導入',
-                text: '業界団体や組合の会員サービスとして。会員の技術や経験を記録し、業界全体の知恵として残していくことができます。',
-                example: '例）地域の商工会議所が会員向けサービスとして導入'
-              },
-            ].map((uc, i) => (
-              <div key={i} className="lp-usecase-card">
-                <div className="lp-usecase-icon">{uc.icon}</div>
-                <h3>{uc.title}</h3>
-                <div className="lp-usecase-subtitle">{uc.subtitle}</div>
-                <p>{uc.text}</p>
-                <div className="lp-usecase-example">{uc.example}</div>
-              </div>
-            ))}
-          </div>
-          <div className="lp-usecase-cta">
-            <p>企業・団体でのご導入をご検討の方は、お気軽にご相談ください。</p>
-            <a href="mailto:mitsunorif@robostudy.jp?subject=ライフメモナビ 団体導入の相談&body=お名前：%0D%0A会社名・団体名：%0D%0A人数規模：%0D%0Aご相談内容：%0D%0A" className="lp-btn-secondary">団体導入を相談する →</a>
-          </div>
-        </section>
-
         {/* 声 */}
         <section className="lp-section lp-voices">
           <div className="lp-section-header">
@@ -602,7 +602,7 @@ export default function LandingPage() {
               <div className="lp-price-badge">おすすめ</div>
               <div className="lp-price-name">まとめ払い</div>
               <div className="lp-price-num">¥990<span style={{ fontSize: '1rem', fontWeight: 400 }}>/3ヶ月</span></div>
-              <div className="lp-price-desc">月あたり330円（50円おトク）／税込</div>
+              <div className="lp-price-desc">月あたり330円（150円お得）／税込</div>
               <ul className="lp-price-feats">
                 {['全機能が使い放題', 'データはそのまま引き継ぎ', 'PDF出力', '写真アップロード', 'サポート付き'].map((f, i) => <li key={i}>{f}</li>)}
               </ul>
