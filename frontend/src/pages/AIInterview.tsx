@@ -427,7 +427,15 @@ export default function AIInterview() {
 
       {/* Header */}
       <div style={styles.header}>
-        <div style={styles.logo}>{isKaisha ? '🏢 ライフ・メモナビ' : '📖 ライフ・メモナビ'}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button
+            onClick={() => navigate(-1)}
+            style={styles.backBtn}
+          >
+            ← 戻る
+          </button>
+          <div style={styles.logo}>{isKaisha ? '🏢 ライフ・メモナビ' : '📖 ライフ・メモナビ'}</div>
+        </div>
         <div style={styles.headerRight}>
           {yearTagDisplay && (
             <div style={styles.birthTag}>
@@ -751,6 +759,7 @@ const styles: Record<string, React.CSSProperties> = {
   root: { minHeight: '100vh', background: 'linear-gradient(145deg, #fdf6ec 0%, #fef9f3 50%, #fff8f0 100%)', fontFamily: "'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif", color: '#3d2c1e' },
   header: { background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(10px)', borderBottom: '2px solid #f0d5b8', padding: '16px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10 },
   logo: { fontSize: '20px', fontWeight: 'bold', color: '#c06030' },
+  backBtn: { background: 'transparent', border: '1px solid #f0d5b8', borderRadius: '20px', padding: '6px 14px', fontSize: '14px', color: '#a07050', cursor: 'pointer', whiteSpace: 'nowrap' as const },
   headerRight: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' },
   birthTag: { fontSize: '13px', color: '#c06030', fontWeight: 'bold', background: '#ffebd8', padding: '2px 10px', borderRadius: '20px' },
   progressBar: { width: '160px', height: '8px', background: '#f0d5b8', borderRadius: '10px', overflow: 'hidden' },
