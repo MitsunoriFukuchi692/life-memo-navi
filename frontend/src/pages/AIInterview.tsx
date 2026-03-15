@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://life-memo-navi-backend.onrender.com';
 
+// ============================================================
+// 自分史の15問
+// ============================================================
 const JIBUNSHI_QUESTIONS = [
   "あなたの生まれた時代はどんな時代でしたか？",
   "生まれた場所と、幼い頃の思い出は？",
@@ -21,6 +24,27 @@ const JIBUNSHI_QUESTIONS = [
   "未来へのメッセージは？"
 ];
 
+// ============================================================
+// 会社史の15問
+// ============================================================
+const KAISHAISHI_QUESTIONS = [
+  "会社を創業しようと思ったきっかけは何ですか？",
+  "創業当時、どのような事業からスタートしましたか？",
+  "創業期に最も苦労したことは何でしたか？",
+  "最初のお客様や取引先との出会いを教えてください。",
+  "事業が軌道に乗ったと感じたのはいつ頃ですか？",
+  "会社の成長を支えてくれた社員や仲間について教えてください。",
+  "経営上の大きな転機や転換点はありましたか？",
+  "業界や市場の変化にどのように対応してきましたか？",
+  "会社として誇りに思う実績やエピソードを教えてください。",
+  "経営で大切にしてきた理念や信条は何ですか？",
+  "苦境を乗り越えた経験があれば教えてください。",
+  "地域や社会との関わりで印象に残っていることはありますか？",
+  "会社の文化や雰囲気をどのように作ってきましたか？",
+  "後継者や次世代への思いはありますか？",
+  "これから会社をどのようにしていきたいですか？"
+];
+
 interface Message {
   role: 'user' | 'assistant';
   content: string;
@@ -35,7 +59,6 @@ interface AIResponse {
   moveToNext: boolean;
 }
 
-// question_idごとに回答を蓄積する
 interface AnswerMap {
   [questionId: number]: string[];
 }
@@ -64,11 +87,30 @@ const heiseiToSeireki = (n: number) => n + 1988;
 
 export default function AIInterview() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // ============================================================
+  // fieldType：URLパラメータ ?fieldType=kaishaishi で切り替え
+  // ============================================================
+  const rawFieldType = searchParams.get('fieldType');
+  const fieldType = rawFieldType === 'kaishaishi' ? '会社史' : '自分史';
+  const isKaisha = fieldType === '会社史';
+  const QUESTIONS = isKaisha ? KAISHAISHI_QUESTIONS : JIBUNSHI_QUESTIONS;
+  const FIELD_TYPE_KEY = isKaisha ? 'kaishaishi' : 'jibunshi';
+
   const [phase, setPhase] = useState<'loading' | 'intro' | 'resume' | 'birthYear' | 'question' | 'thinking' | 'answered' | 'complete'>('loading');
+
+  // 自分史：生まれ年
   const [birthYear, setBirthYear] = useState<number | null>(null);
   const [birthYearInput, setBirthYearInput] = useState('');
   const [eraType, setEraType] = useState<'showa' | 'taisho' | 'heisei' | 'seireki'>('showa');
   const [birthYearError, setBirthYearError] = useState('');
+
+  // 会社史：創業年
+  const [foundingYear, setFoundingYear] = useState<number | null>(null);
+  const [foundingYearInput, setFoundingYearInput] = useState('');
+  const [foundingEraType, setFoundingEraType] = useState<'showa' | 'heisei' | 'seireki'>('showa');
+  const [foundingYearError, setFoundingYearError] = useState('');
 
   const [currentQuestion, setCurrentQuestion] = useState('');
   const [currentReaction, setCurrentReaction] = useState('');
@@ -86,7 +128,9 @@ export default function AIInterview() {
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // ============================================================
   // 起動時：既存の回答を読み込んで途中再開チェック
+  // ============================================================
   useEffect(() => {
     const loadExisting = async () => {
       try {
@@ -96,7 +140,7 @@ export default function AIInterview() {
         const userId = payload?.userId || payload?.id;
         if (!userId) { setPhase('intro'); return; }
 
-        const res = await fetch(`${API_BASE}/interviews/${userId}?field_type=jibunshi`, {
+        const res = await fetch(`${API_BASE}/interviews/${userId}?field_type=${FIELD_TYPE_KEY}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) { setPhase('intro'); return; }
@@ -107,7 +151,6 @@ export default function AIInterview() {
           return;
         }
 
-        // 既存回答をanswerMapに復元
         const loaded: AnswerMap = {};
         let maxQId = 0;
         for (const row of rows) {
@@ -118,7 +161,6 @@ export default function AIInterview() {
         }
         setAnswerMap(loaded);
 
-        // 次に答えるべき質問IDを特定
         const nextQId = Math.min(maxQId + 1, 15);
         setResumeQuestionId(nextQId);
         setPreviousAnswer(loaded[maxQId]?.[0] || '');
@@ -134,9 +176,11 @@ export default function AIInterview() {
       }
     };
     loadExisting();
-  }, []);
+  }, [FIELD_TYPE_KEY]);
 
+  // ============================================================
   // 回答を即時自動保存
+  // ============================================================
   const autoSave = async (qId: number, answerText: string) => {
     try {
       const token = localStorage.getItem('token');
@@ -153,9 +197,9 @@ export default function AIInterview() {
         body: JSON.stringify({
           user_id: userId,
           question_id: qId,
-          question_text: JIBUNSHI_QUESTIONS[qId - 1],
+          question_text: QUESTIONS[qId - 1],
           answer_text: answerText,
-          field_type: 'jibunshi',
+          field_type: FIELD_TYPE_KEY,
         }),
       });
     } catch (e) {
@@ -163,6 +207,9 @@ export default function AIInterview() {
     }
   };
 
+  // ============================================================
+  // 自分史：生まれ年計算
+  // ============================================================
   const calcBirthYear = (): number | null => {
     const num = parseInt(birthYearInput);
     if (isNaN(num)) return null;
@@ -174,6 +221,22 @@ export default function AIInterview() {
     }
   };
 
+  // ============================================================
+  // 会社史：創業年計算
+  // ============================================================
+  const calcFoundingYear = (): number | null => {
+    const num = parseInt(foundingYearInput);
+    if (isNaN(num)) return null;
+    switch (foundingEraType) {
+      case 'showa': return showaToSeireki(num);
+      case 'heisei': return heiseiToSeireki(num);
+      default: return num;
+    }
+  };
+
+  // ============================================================
+  // 生まれ年 or 創業年 のSubmit
+  // ============================================================
   const handleBirthYearSubmit = () => {
     const year = calcBirthYear();
     if (!year || year < 1900 || year > 2010) {
@@ -182,19 +245,53 @@ export default function AIInterview() {
     }
     setBirthYearError('');
     setBirthYear(year);
-    fetchAIResponse(undefined, 1, year);
+    fetchAIResponse(undefined, 1, year, undefined);
   };
 
-  const fetchAIResponse = async (userAnswer?: string, qId?: number, byYear?: number) => {
+  const handleFoundingYearSubmit = () => {
+    const year = calcFoundingYear();
+    if (!year || year < 1868 || year > 2026) {
+      setFoundingYearError('正しい年を入力してください');
+      return;
+    }
+    setFoundingYearError('');
+    setFoundingYear(year);
+    fetchAIResponse(undefined, 1, undefined, year);
+  };
+
+  // ============================================================
+  // AIへのリクエスト
+  // ============================================================
+  const fetchAIResponse = async (
+    userAnswer?: string,
+    qId?: number,
+    byBirthYear?: number,
+    byFoundingYear?: number
+  ) => {
     setPhase('thinking');
     setError('');
     const useQId = qId ?? currentQuestionId;
-    const useBirthYear = byYear ?? birthYear;
+    const useBirthYear = byBirthYear ?? birthYear;
+    const useFoundingYear = byFoundingYear ?? foundingYear;
 
     try {
       const body = userAnswer
-        ? { messages, userAnswer, isFirst: false, questionId: useQId, birthYear: useBirthYear }
-        : { isFirst: true, questionId: 1, birthYear: useBirthYear };
+        ? {
+            messages,
+            userAnswer,
+            isFirst: false,
+            questionId: useQId,
+            fieldType,
+            birthYear: useBirthYear,
+            foundingYear: useFoundingYear,
+          }
+        : {
+            isFirst: true,
+            questionId: 1,
+            fieldType,
+            birthYear: useBirthYear,
+            foundingYear: useFoundingYear,
+          };
 
       const res = await fetch(`${API_BASE}/ai-interview`, {
         method: 'POST',
@@ -239,7 +336,6 @@ export default function AIInterview() {
       ...prev,
       [currentQuestionId]: [...(prev[currentQuestionId] || []), answer],
     }));
-    // 自動保存
     autoSave(currentQuestionId, combined);
     setPhase('answered');
   };
@@ -256,7 +352,9 @@ export default function AIInterview() {
 
   const handleComplete = () => setPhase('complete');
 
-  // 自分史に保存（question_idごとの回答をまとめて転記）
+  // ============================================================
+  // まとめを自分史/会社史に保存
+  // ============================================================
   const handleSave = async () => {
     setSaving(true);
     setSaveError('');
@@ -279,9 +377,9 @@ export default function AIInterview() {
           body: JSON.stringify({
             user_id: userId,
             question_id: qId,
-            question_text: JIBUNSHI_QUESTIONS[qId - 1],
+            question_text: QUESTIONS[qId - 1],
             answer_text: combinedAnswer,
-            field_type: 'jibunshi',
+            field_type: FIELD_TYPE_KEY,
           }),
         });
       }
@@ -313,9 +411,15 @@ export default function AIInterview() {
   };
 
   const progressPercent = Math.round((currentQuestionId - 1) / 15 * 100);
+
+  // ヘッダータグ表示
   const birthYearDisplay = birthYear
     ? (birthYear >= 1989 ? `平成${birthYear - 1988}` : birthYear >= 1926 ? `昭和${birthYear - 1925}` : `大正${birthYear - 1911}`) + `年（${birthYear}年）生まれ`
     : '';
+  const foundingYearDisplay = foundingYear
+    ? (foundingYear >= 1989 ? `平成${foundingYear - 1988}` : foundingYear >= 1926 ? `昭和${foundingYear - 1925}` : `${foundingYear}年`) + `年（${foundingYear}年）創業`
+    : '';
+  const yearTagDisplay = isKaisha ? foundingYearDisplay : birthYearDisplay;
 
   return (
     <div style={styles.root}>
@@ -323,9 +427,13 @@ export default function AIInterview() {
 
       {/* Header */}
       <div style={styles.header}>
-        <div style={styles.logo}>📖 ライフ・メモナビ</div>
+        <div style={styles.logo}>{isKaisha ? '🏢 ライフ・メモナビ' : '📖 ライフ・メモナビ'}</div>
         <div style={styles.headerRight}>
-          {birthYear && <div style={styles.birthTag}>🎂 {birthYearDisplay}</div>}
+          {yearTagDisplay && (
+            <div style={styles.birthTag}>
+              {isKaisha ? '🏢 ' : '🎂 '}{yearTagDisplay}
+            </div>
+          )}
           <div style={styles.progressBar}>
             <div style={{ ...styles.progressFill, width: `${progressPercent}%` }} />
           </div>
@@ -341,7 +449,7 @@ export default function AIInterview() {
         <div style={styles.characterArea}>
           <div style={styles.avatarWrap}>
             <div style={{ ...styles.avatar, ...(phase === 'thinking' ? { animation: 'pulse 1s infinite' } : {}) }}>
-              <span style={styles.avatarEmoji}>{phase === 'thinking' ? '💭' : '🌸'}</span>
+              <span style={styles.avatarEmoji}>{phase === 'thinking' ? '💭' : (isKaisha ? '🏢' : '🌸')}</span>
             </div>
             <div style={styles.characterName}>メモちゃん</div>
           </div>
@@ -352,26 +460,29 @@ export default function AIInterview() {
               )}
               {phase === 'intro' && (
                 <p style={styles.bubbleText}>
-                  こんにちは！わたしはメモちゃんです🌸<br />
-                  あなたの大切な人生の記録を、いっしょに残しましょう。<br />
-                  質問に答えるだけで自分史ができあがりますよ。
+                  {isKaisha ? (
+                    <>こんにちは！わたしはメモちゃんです🏢<br />貴社の大切な歴史を、いっしょに記録しましょう。<br />質問に答えるだけで会社史ができあがりますよ。</>
+                  ) : (
+                    <>こんにちは！わたしはメモちゃんです🌸<br />あなたの大切な人生の記録を、いっしょに残しましょう。<br />質問に答えるだけで自分史ができあがりますよ。</>
+                  )}
                 </p>
               )}
               {phase === 'resume' && (
                 <p style={styles.bubbleText}>
-                  おかえりなさい😊🌸<br />
+                  おかえりなさい😊{isKaisha ? '🏢' : '🌸'}<br />
                   前回の続きから再開しましょう！<br />
                   <span style={{ fontSize: '16px', color: '#a07050' }}>
-                    Q{resumeQuestionId}「{JIBUNSHI_QUESTIONS[resumeQuestionId - 1]}」からですね。
+                    Q{resumeQuestionId}「{QUESTIONS[resumeQuestionId - 1]}」からですね。
                   </span>
                 </p>
               )}
               {phase === 'birthYear' && (
                 <p style={styles.bubbleText}>
-                  あなたは何年生まれですか？😊<br />
-                  <span style={{ fontSize: '16px', color: '#a07050' }}>
-                    生まれた時代に合わせて、その頃の出来事をヒントにお話しますね♪
-                  </span>
+                  {isKaisha ? (
+                    <>創業年はいつですか？🏢<br /><span style={{ fontSize: '16px', color: '#a07050' }}>創業当時の経済状況や時代背景をヒントにお話しますね♪</span></>
+                  ) : (
+                    <>あなたは何年生まれですか？😊<br /><span style={{ fontSize: '16px', color: '#a07050' }}>生まれた時代に合わせて、その頃の出来事をヒントにお話しますね♪</span></>
+                  )}
                 </p>
               )}
               {phase === 'thinking' && (
@@ -390,15 +501,15 @@ export default function AIInterview() {
               {phase === 'complete' && (
                 <p style={styles.bubbleText}>
                   全部答えてくれてありがとう🎉<br />
-                  すてきな自分史になりましたね！<br />
-                  下のボタンで自分史に保存しましょう。
+                  すてきな{isKaisha ? '会社史' : '自分史'}になりましたね！<br />
+                  下のボタンで保存しましょう。
                 </p>
               )}
               <div style={styles.bubbleTail} />
             </div>
             {phase !== 'intro' && phase !== 'resume' && phase !== 'birthYear' && phase !== 'complete' && phase !== 'thinking' && phase !== 'loading' && (
               <div style={styles.questionBadge}>
-                Q{currentQuestionId}. {JIBUNSHI_QUESTIONS[currentQuestionId - 1]}
+                Q{currentQuestionId}. {QUESTIONS[currentQuestionId - 1]}
               </div>
             )}
           </div>
@@ -426,7 +537,7 @@ export default function AIInterview() {
             <div style={styles.resumeBtnRow}>
               <button
                 style={styles.startBtn}
-                onClick={() => fetchAIResponse('続きから再開します', resumeQuestionId, birthYear ?? undefined)}
+                onClick={() => fetchAIResponse('続きから再開します', resumeQuestionId)}
                 className="hoverBtn"
               >
                 続きからはじめる →
@@ -451,45 +562,90 @@ export default function AIInterview() {
           </div>
         )}
 
-        {/* 生まれ年入力 */}
+        {/* 自分史：生まれ年入力 / 会社史：創業年入力 */}
         {phase === 'birthYear' && (
           <div style={styles.birthYearArea} className="fadeIn">
-            <div style={styles.eraSelector}>
-              {(['showa', 'taisho', 'heisei', 'seireki'] as const).map((era) => (
+            {isKaisha ? (
+              /* ===== 会社史：創業年入力 ===== */
+              <>
+                <div style={styles.eraSelector}>
+                  {(['showa', 'heisei', 'seireki'] as const).map((era) => (
+                    <button
+                      key={era}
+                      style={{ ...styles.eraBtn, ...(foundingEraType === era ? styles.eraBtnActive : {}) }}
+                      onClick={() => { setFoundingEraType(era); setFoundingYearInput(''); }}
+                    >
+                      {era === 'showa' ? '昭和' : era === 'heisei' ? '平成' : '西暦'}
+                    </button>
+                  ))}
+                </div>
+                <div style={styles.birthYearInputRow}>
+                  <input
+                    type="number"
+                    style={styles.birthYearInput}
+                    value={foundingYearInput}
+                    onChange={(e) => setFoundingYearInput(e.target.value)}
+                    placeholder={foundingEraType === 'seireki' ? '例：1965' : foundingEraType === 'showa' ? '例：40' : '例：5'}
+                    onKeyDown={(e) => e.key === 'Enter' && handleFoundingYearSubmit()}
+                  />
+                  <span style={styles.birthYearUnit}>年</span>
+                </div>
+                {foundingYearInput && !isNaN(parseInt(foundingYearInput)) && (
+                  <div style={styles.birthYearPreview}>西暦 {calcFoundingYear()}年 創業</div>
+                )}
+                {foundingYearError && <p style={styles.birthYearErrorText}>{foundingYearError}</p>}
                 <button
-                  key={era}
-                  style={{ ...styles.eraBtn, ...(eraType === era ? styles.eraBtnActive : {}) }}
-                  onClick={() => { setEraType(era); setBirthYearInput(''); }}
+                  style={{ ...styles.startBtn, fontSize: '20px', padding: '16px 48px' }}
+                  onClick={handleFoundingYearSubmit}
+                  className="hoverBtn"
                 >
-                  {era === 'showa' ? '昭和' : era === 'taisho' ? '大正' : era === 'heisei' ? '平成' : '西暦'}
+                  インタビューをスタート 🏢
                 </button>
-              ))}
-            </div>
-            <div style={styles.birthYearInputRow}>
-              <input
-                type="number"
-                style={styles.birthYearInput}
-                value={birthYearInput}
-                onChange={(e) => setBirthYearInput(e.target.value)}
-                placeholder={eraType === 'seireki' ? '例：1945' : eraType === 'showa' ? '例：20' : eraType === 'taisho' ? '例：10' : '例：5'}
-                onKeyDown={(e) => e.key === 'Enter' && handleBirthYearSubmit()}
-              />
-              <span style={styles.birthYearUnit}>年</span>
-            </div>
-            {birthYearInput && !isNaN(parseInt(birthYearInput)) && (
-              <div style={styles.birthYearPreview}>西暦 {calcBirthYear()}年生まれ</div>
+                <button style={styles.skipBtn} onClick={() => { setFoundingYear(null); fetchAIResponse(undefined, 1, undefined, undefined); }}>
+                  創業年をとばしてはじめる
+                </button>
+              </>
+            ) : (
+              /* ===== 自分史：生まれ年入力（既存） ===== */
+              <>
+                <div style={styles.eraSelector}>
+                  {(['showa', 'taisho', 'heisei', 'seireki'] as const).map((era) => (
+                    <button
+                      key={era}
+                      style={{ ...styles.eraBtn, ...(eraType === era ? styles.eraBtnActive : {}) }}
+                      onClick={() => { setEraType(era); setBirthYearInput(''); }}
+                    >
+                      {era === 'showa' ? '昭和' : era === 'taisho' ? '大正' : era === 'heisei' ? '平成' : '西暦'}
+                    </button>
+                  ))}
+                </div>
+                <div style={styles.birthYearInputRow}>
+                  <input
+                    type="number"
+                    style={styles.birthYearInput}
+                    value={birthYearInput}
+                    onChange={(e) => setBirthYearInput(e.target.value)}
+                    placeholder={eraType === 'seireki' ? '例：1945' : eraType === 'showa' ? '例：20' : eraType === 'taisho' ? '例：10' : '例：5'}
+                    onKeyDown={(e) => e.key === 'Enter' && handleBirthYearSubmit()}
+                  />
+                  <span style={styles.birthYearUnit}>年</span>
+                </div>
+                {birthYearInput && !isNaN(parseInt(birthYearInput)) && (
+                  <div style={styles.birthYearPreview}>西暦 {calcBirthYear()}年生まれ</div>
+                )}
+                {birthYearError && <p style={styles.birthYearErrorText}>{birthYearError}</p>}
+                <button
+                  style={{ ...styles.startBtn, fontSize: '20px', padding: '16px 48px' }}
+                  onClick={handleBirthYearSubmit}
+                  className="hoverBtn"
+                >
+                  インタビューをスタート 🌸
+                </button>
+                <button style={styles.skipBtn} onClick={() => { setBirthYear(null); fetchAIResponse(undefined, 1, undefined, undefined); }}>
+                  生まれ年をとばしてはじめる
+                </button>
+              </>
             )}
-            {birthYearError && <p style={styles.birthYearErrorText}>{birthYearError}</p>}
-            <button
-              style={{ ...styles.startBtn, fontSize: '20px', padding: '16px 48px' }}
-              onClick={handleBirthYearSubmit}
-              className="hoverBtn"
-            >
-              インタビューをスタート 🌸
-            </button>
-            <button style={styles.skipBtn} onClick={() => { setBirthYear(null); fetchAIResponse(undefined, 1, undefined); }}>
-              生まれ年をとばしてはじめる
-            </button>
           </div>
         )}
 
@@ -556,8 +712,10 @@ export default function AIInterview() {
         {phase === 'complete' && (
           <div style={styles.completeArea} className="fadeIn">
             <div style={styles.completeCard}>
-              <h2 style={styles.completeTitle}>📚 あなたの自分史まとめ</h2>
-              {JIBUNSHI_QUESTIONS.map((q, i) => {
+              <h2 style={styles.completeTitle}>
+                {isKaisha ? '📚 会社史まとめ' : '📚 あなたの自分史まとめ'}
+              </h2>
+              {QUESTIONS.map((q, i) => {
                 const qId = i + 1;
                 const answers = answerMap[qId];
                 if (!answers || answers.length === 0) return null;
@@ -570,7 +728,7 @@ export default function AIInterview() {
                 );
               })}
               <button style={styles.articleBtn} onClick={handleSave} disabled={saving}>
-                {saving ? '保存中...' : '✨ 自分史に保存する'}
+                {saving ? '保存中...' : `✨ ${isKaisha ? '会社史' : '自分史'}に保存する`}
               </button>
               {saveError && (
                 <p style={{ color: '#c04040', fontSize: '15px', textAlign: 'center', marginTop: '8px' }}>{saveError}</p>
@@ -581,7 +739,7 @@ export default function AIInterview() {
 
         {Object.keys(answerMap).length > 0 && phase !== 'complete' && (
           <div style={styles.historyHint}>
-            💬 {Object.keys(answerMap).length}テーマの思い出を記録しました
+            💬 {Object.keys(answerMap).length}テーマの記録を保存しました
           </div>
         )}
       </div>

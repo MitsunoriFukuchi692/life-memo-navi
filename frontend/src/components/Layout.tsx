@@ -10,6 +10,12 @@ const fieldLabels: Record<string, string> = {
   other: 'その他',
 };
 
+// fieldType → AIインタビューのURLパラメータ対応表
+const aiInterviewLinks: Record<string, string> = {
+  jibunshi: '/ai-interview',
+  kaishashi: '/ai-interview?fieldType=kaishaishi',
+};
+
 export default function Layout({ children, title }: LayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -30,6 +36,14 @@ export default function Layout({ children, title }: LayoutProps) {
   ] : [];
 
   const fieldLabel = fieldType ? fieldLabels[fieldType] || fieldType : '';
+
+  // ▼ fieldTypeに応じてAIインタビューのリンク先を切り替え
+  const aiInterviewLink = fieldType
+    ? (aiInterviewLinks[fieldType] ?? '/ai-interview')
+    : '/ai-interview';
+
+  // ▼ 終活ノート・その他はAIインタビュー非対応なので非表示
+  const showAiInterview = !fieldType || fieldType === 'jibunshi' || fieldType === 'kaishashi';
 
   const navLinkStyle = (path: string): React.CSSProperties => {
     const active = location.pathname === path;
@@ -117,13 +131,16 @@ export default function Layout({ children, title }: LayoutProps) {
           <div style={{ borderTop: '1px solid var(--cream-dark)', margin: '16px 0' }} />
         )}
 
-        <Link
-          to="/ai-interview"
-          style={navLinkStyle('/ai-interview')}
-          onClick={() => setMenuOpen(false)}
-        >
-          🎤 AIインタビュー
-        </Link>
+        {/* ▼ 自分史・会社史のときだけAIインタビューを表示、リンク先も自動切り替え */}
+        {showAiInterview && (
+          <Link
+            to={aiInterviewLink}
+            style={navLinkStyle('/ai-interview')}
+            onClick={() => setMenuOpen(false)}
+          >
+            🎤 AIインタビュー
+          </Link>
+        )}
 
         <div style={{ borderTop: '1px solid var(--cream-dark)', margin: '16px 0' }} />
 
