@@ -66,6 +66,8 @@ export default function ShukatsuPage() {
   const [saveMsg, setSaveMsg] = useState('');
   const [currentQuestion, setCurrentQuestion] = useState('');
   const [finished, setFinished] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const userId = localStorage.getItem('userId');
@@ -79,6 +81,33 @@ export default function ShukatsuPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // 音声入力トグル
+  const toggleListening = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("このブラウザは音声入力に対応していません。Chrome推奨です。");
+      return;
+    }
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = "ja-JP";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.onresult = (e: any) => {
+      const transcript = e.results[0][0].transcript;
+      setInput(prev => prev + transcript);
+    };
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => setIsListening(false);
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsListening(true);
+  };
 
   const fetchSavedCategories = async () => {
     if (!userId) return;
@@ -337,6 +366,18 @@ export default function ShukatsuPage() {
               disabled={loading}
               style={styles.textarea}
             />
+            <button
+              onClick={toggleListening}
+              disabled={loading}
+              style={{
+                ...styles.micBtn,
+                background: isListening ? '#e74c3c' : '#f0f0f0',
+                color: isListening ? 'white' : '#555',
+              }}
+              title={isListening ? '音声入力停止' : '音声で入力'}
+            >
+              {isListening ? '⏹️' : '🎤'}
+            </button>
             <button
               onClick={sendMessage}
               disabled={loading || !input.trim()}
@@ -601,6 +642,15 @@ const styles: Record<string, React.CSSProperties> = {
     resize: 'none',
     height: 60,
     fontFamily: 'inherit',
+  },
+  micBtn: {
+    padding: '0 14px',
+    borderRadius: 10,
+    border: 'none',
+    fontSize: 20,
+    cursor: 'pointer',
+    transition: 'background 0.2s',
+    flexShrink: 0,
   },
   sendBtn: {
     padding: '0 20px',
