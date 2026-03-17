@@ -13,6 +13,7 @@ import OrgDashboard from './pages/OrgDashboard';
 import AIInterview from "./pages/AIInterview";
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import ShukatsuPage from './pages/ShukatsuPage'; // ← 追加
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const token = localStorage.getItem('token');
@@ -37,6 +38,7 @@ function App() {
         <Route path="/field/:fieldType/photos" element={<PrivateRoute><PhotosPage /></PrivateRoute>} />
         <Route path="/org-dashboard" element={<OrgDashboard />} />
         <Route path="/ai-interview" element={<PrivateRoute><AIInterview /></PrivateRoute>} />
+        <Route path="/shukatsu" element={<PrivateRoute><ShukatsuPage /></PrivateRoute>} /> {/* ← 追加 */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
