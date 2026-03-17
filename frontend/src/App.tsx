@@ -15,6 +15,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import ShukatsuPage from './pages/ShukatsuPage'; // ← 追加
 import PaymentSuccessPage from './pages/PaymentSuccessPage'; // ← 追加
+import ShukatsuLandingPage from './pages/ShukatsuLandingPage'; // ← 追加
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const token = localStorage.getItem('token');
@@ -41,6 +42,7 @@ function App() {
         <Route path="/ai-interview" element={<PrivateRoute><AIInterview /></PrivateRoute>} />
         <Route path="/shukatsu" element={<PrivateRoute><ShukatsuPage /></PrivateRoute>} /> {/* ← 追加 */}
         <Route path="/payment-success" element={<PaymentSuccessPage />} /> {/* ← 追加 */}
+        <Route path="/shukatsu-lp" element={<ShukatsuLandingPage />} /> {/* ← 追加 */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
