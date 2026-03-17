@@ -13,6 +13,7 @@ import adminRoutes from './routes/admin.js';
 import orgRoutes, { initOrganizationTables } from './routes/organization.js';
 import aiInterviewRoutes from './routes/aiInterview.js';
 import paymentRoutes, { initPaymentTables } from './routes/payment.js'; // ← 追加
+import shukatsuRoutes, { initShukatsuTables } from './routes/shukatsu.js'; // ← 追加
 
 dotenv.config();
 
@@ -52,6 +53,7 @@ app.use('/api/ai-interview', aiInterviewRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/org', orgRoutes);
 app.use('/api/payment', paymentRoutes); // ← 追加
+app.use('/api/shukatsu', shukatsuRoutes); // ← 追加
 
 // ルートエンドポイント
 app.get('/', (req: Request, res: Response) => {
@@ -95,6 +97,7 @@ app.use((req: Request, res: Response) => {
 app.listen(PORT, async () => {
   await initOrganizationTables();
   await initPaymentTables(); // ← 追加
+  await initShukatsuTables(); // ← 追加
   console.log(`
 ╔═════════════════════════════════════════╗
 ║   🌸 ライフメモナビ バックエンド       ║
