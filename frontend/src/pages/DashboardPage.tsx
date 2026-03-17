@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { interviewApi, timelineApi, photoApi, pdfApi } from '../api';
 
@@ -19,6 +19,7 @@ const fieldDescriptions: Record<string, string> = {
 
 export default function DashboardPage() {
   const { fieldType = 'jibunshi' } = useParams<{ fieldType: string }>();
+  const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const [stats, setStats] = useState({ interviews: 0, timelines: 0, photos: 0 });
   const [loading, setLoading] = useState(true);
@@ -181,6 +182,64 @@ export default function DashboardPage() {
             </div>
           </Link>
         ))}
+      </div>
+
+      {/* ===== 終活ノート ===== */}
+      <div
+        className="fade-in"
+        onClick={() => navigate('/shukatsu')}
+        style={{
+          background: 'linear-gradient(135deg, #f9f0ff, #fdf6ec)',
+          borderRadius: 'var(--radius)',
+          padding: '32px',
+          boxShadow: 'var(--shadow)',
+          border: '2px solid #d4a8e0',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '20px',
+          marginBottom: '40px',
+          cursor: 'pointer',
+          transition: 'all 0.25s',
+        }}
+        onMouseEnter={e => {
+          (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)';
+          (e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow-lg)';
+        }}
+        onMouseLeave={e => {
+          (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
+          (e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow)';
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <div style={{ fontSize: '3rem' }}>📖</div>
+          <div>
+            <h3 style={{
+              fontFamily: "'Noto Serif JP', serif",
+              fontSize: '1.3rem',
+              color: '#6B3FA0',
+              marginBottom: '8px',
+            }}>
+              終活ノート
+            </h3>
+            <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', lineHeight: 1.6 }}>
+              医療・介護の希望、財産・相続、葬儀の希望、家族へのメッセージを<br />
+              AIと対話しながら整理できます。
+            </p>
+          </div>
+        </div>
+        <div style={{
+          background: '#8E44AD',
+          color: 'white',
+          padding: '14px 28px',
+          borderRadius: 'var(--radius-sm)',
+          fontWeight: 500,
+          fontSize: '1rem',
+          whiteSpace: 'nowrap',
+        }}>
+          開く →
+        </div>
       </div>
 
       {/* PDF出力 */}
