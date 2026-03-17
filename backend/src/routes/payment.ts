@@ -4,9 +4,7 @@ import { Pool } from 'pg';
 
 const router = Router();
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-01-27.acacia',
-});
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -156,12 +154,12 @@ router.post('/webhook', async (req: Request, res: Response) => {
 
         // サブスクリプション詳細取得
         const subscriptionId = session.subscription as string;
-        const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+        const subscription = await stripe.subscriptions.retrieve(subscriptionId) as any;
 
         const trialEnd = subscription.trial_end
           ? new Date(subscription.trial_end * 1000)
           : null;
-        const periodEnd = new Date(subscription.current_period_end * 1000);
+        const periodEnd = new Date((subscription.current_period_end as number) * 1000);
 
         await pool.query(`
           INSERT INTO subscriptions
@@ -191,7 +189,7 @@ router.post('/webhook', async (req: Request, res: Response) => {
 
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription;
+        const subscription = event.data.object as any;
         const userId = subscription.metadata?.user_id;
 
         if (!userId) break;
@@ -199,7 +197,7 @@ router.post('/webhook', async (req: Request, res: Response) => {
         const trialEnd = subscription.trial_end
           ? new Date(subscription.trial_end * 1000)
           : null;
-        const periodEnd = new Date(subscription.current_period_end * 1000);
+        const periodEnd = new Date((subscription.current_period_end as number) * 1000);
 
         await pool.query(`
           UPDATE subscriptions SET
