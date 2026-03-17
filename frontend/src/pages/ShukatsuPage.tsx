@@ -70,7 +70,8 @@ export default function ShukatsuPage() {
   const recognitionRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const userId = localStorage.getItem('userId');
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userId = user.id ? String(user.id) : null;
   const token = localStorage.getItem('token');
   const headers = { Authorization: `Bearer ${token}` };
 
