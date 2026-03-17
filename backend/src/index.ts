@@ -12,6 +12,7 @@ import pdfRoutes from './routes/pdf.js';
 import adminRoutes from './routes/admin.js';
 import orgRoutes, { initOrganizationTables } from './routes/organization.js';
 import aiInterviewRoutes from './routes/aiInterview.js';
+import paymentRoutes, { initPaymentTables } from './routes/payment.js'; // ← 追加
 
 dotenv.config();
 
@@ -19,6 +20,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app: Express = express();
 const PORT = process.env.PORT || 5000;
+
+// ========================================
+// Stripe Webhookは raw body が必要なので先に設定
+// ========================================
+app.use('/api/payment/webhook', express.raw({ type: 'application/json' }));
 
 // ミドルウェア
 app.use(cors({
@@ -45,6 +51,7 @@ app.use('/api/pdf', pdfRoutes);
 app.use('/api/ai-interview', aiInterviewRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/org', orgRoutes);
+app.use('/api/payment', paymentRoutes); // ← 追加
 
 // ルートエンドポイント
 app.get('/', (req: Request, res: Response) => {
@@ -59,7 +66,13 @@ app.get('/', (req: Request, res: Response) => {
       timelines: { list: 'GET /api/timelines/user/:user_id', create: 'POST /api/timelines' },
       photos: { upload: 'POST /api/photos/upload', list: 'GET /api/photos/:user_id' },
       pdf: { generate: 'GET /api/pdf/generate/:user_id' },
-      admin: { users: 'GET /api/admin/users?key=SECRET' }
+      admin: { users: 'GET /api/admin/users?key=SECRET' },
+      payment: {
+        checkout: 'POST /api/payment/create-checkout-session',
+        status: 'GET /api/payment/status/:userId',
+        cancel: 'POST /api/payment/cancel',
+        webhook: 'POST /api/payment/webhook',
+      }
     }
   });
 });
@@ -81,6 +94,7 @@ app.use((req: Request, res: Response) => {
 // サーバー起動
 app.listen(PORT, async () => {
   await initOrganizationTables();
+  await initPaymentTables(); // ← 追加
   console.log(`
 ╔═════════════════════════════════════════╗
 ║   🌸 ライフメモナビ バックエンド       ║
