@@ -11,11 +11,51 @@ export default function SettingsPage() {
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
 
+  const [subStatus, setSubStatus] = useState<any>(null);
+  const [subLoading, setSubLoading] = useState(false);
+
   useEffect(() => {
     const stored = localStorage.getItem('user');
     if (!stored) { navigate('/login'); return; }
-    setUser(JSON.parse(stored));
+    const u = JSON.parse(stored);
+    setUser(u);
+    fetchSubStatus(u.id || u.user_id);
   }, []);
+
+  const fetchSubStatus = async (userId: number) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API}/payment/status/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSubStatus(data);
+      }
+    } catch {}
+  };
+
+  const startCheckout = async () => {
+    setSubLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API}/payment/create-checkout-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          userId: user.id || user.user_id,
+          userEmail: user.email,
+          orgCode: '',
+        }),
+      });
+      const data = await res.json();
+      if (data.url) window.location.href = data.url;
+    } catch {
+      alert('決済画面への移動に失敗しました');
+    } finally {
+      setSubLoading(false);
+    }
+  };
 
   // トライアル残り日数
   const trialDaysLeft = () => {
@@ -102,35 +142,78 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* トライアル状況 */}
-        {days !== null && (
-          <section style={{
-            background: days <= 7 ? '#FFF3E0' : '#F0F7FF',
-            borderRadius: 16, padding: 24,
-            border: `1px solid ${days <= 7 ? '#FFB74D' : '#90CAF9'}`,
-            marginBottom: 24,
-          }}>
-            <h2 style={{ fontSize: 16, color: '#5C4033', marginBottom: 12, fontWeight: 600 }}>
-              📅 トライアル状況
-            </h2>
-            <p style={{ fontSize: 24, fontWeight: 700, color: days <= 7 ? '#E65100' : '#1565C0' }}>
-              残り <span>{days}</span> 日
-            </p>
-            {days <= 7 && (
-              <p style={{ fontSize: 13, color: '#E65100', marginTop: 8 }}>
-                ⚠️ まもなく期限が切れます。継続利用はお問い合わせください。
+        {/* サブスクリプション状況 */}
+        <section style={{
+          background: '#fff', borderRadius: 16, padding: 24,
+          border: '1px solid #F0E8D8', marginBottom: 24,
+          boxShadow: '0 2px 12px rgba(92,64,51,0.07)',
+        }}>
+          <h2 style={{ fontSize: 16, color: '#5C4033', marginBottom: 16, fontWeight: 600 }}>
+            💳 ご利用プラン
+          </h2>
+          {!subStatus || subStatus.status === 'inactive' ? (
+            <div>
+              <p style={{ fontSize: 14, color: '#7A6A5A', lineHeight: 1.8, marginBottom: 16 }}>
+                現在有効なプランがありません。<br />
+                サブスクリプションを開始してすべての機能をご利用ください。
               </p>
-            )}
-            <a href="mailto:mitsunorif@robostudy.jp" style={{
-              display: 'inline-block', marginTop: 12,
-              background: '#5C4033', color: '#FAF6F0',
-              padding: '8px 20px', borderRadius: 8, fontSize: 13,
-              textDecoration: 'none',
-            }}>
-              継続利用のお問い合わせ →
-            </a>
-          </section>
-        )}
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                <div style={{ flex: 1, minWidth: 180, border: '2px solid #C4A882', borderRadius: 12, padding: 16, textAlign: 'center' }}>
+                  <p style={{ fontSize: 12, color: '#8B7355', marginBottom: 4 }}>通常プラン</p>
+                  <p style={{ fontSize: 22, fontWeight: 700, color: '#5C4033' }}>¥380<span style={{ fontSize: 12, fontWeight: 400 }}>/月</span></p>
+                </div>
+                <div style={{ flex: 1, minWidth: 180, border: '2px solid #8E44AD', borderRadius: 12, padding: 16, textAlign: 'center', background: '#F9F0FF' }}>
+                  <p style={{ fontSize: 12, color: '#8E44AD', marginBottom: 4 }}>120学会会員プラン</p>
+                  <p style={{ fontSize: 22, fontWeight: 700, color: '#6B3FA0' }}>¥220<span style={{ fontSize: 12, fontWeight: 400 }}>/月</span></p>
+                  <p style={{ fontSize: 11, color: '#8E44AD' }}>14日間無料トライアル付き</p>
+                </div>
+              </div>
+              <button
+                onClick={startCheckout}
+                disabled={subLoading}
+                style={{
+                  width: '100%', marginTop: 16,
+                  padding: '14px', background: subLoading ? '#ccc' : '#5C4033',
+                  color: '#FAF6F0', border: 'none', borderRadius: 8,
+                  fontSize: 15, fontWeight: 600, cursor: subLoading ? 'not-allowed' : 'pointer',
+                }}
+              >
+                {subLoading ? '移動中...' : '💳 サブスクリプションを開始する'}
+              </button>
+            </div>
+          ) : subStatus.isActive ? (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                <span style={{ fontSize: 28 }}>✅</span>
+                <div>
+                  <p style={{ fontSize: 16, fontWeight: 700, color: '#27AE60' }}>
+                    {subStatus.isTrial ? '無料トライアル中' : 'ご利用中'}
+                  </p>
+                  <p style={{ fontSize: 13, color: '#7A6A5A' }}>
+                    プラン: {subStatus.planType === 'gakkai' ? '120学会会員プラン（¥220/月）' : '通常プラン（¥380/月）'}
+                  </p>
+                </div>
+              </div>
+              {subStatus.isTrial && subStatus.trialEnd && (
+                <p style={{ fontSize: 13, color: '#E67E22', background: '#FEF9E7', padding: '10px 14px', borderRadius: 8 }}>
+                  ⏳ トライアル終了日: {new Date(subStatus.trialEnd).toLocaleDateString('ja-JP')}
+                </p>
+              )}
+              {subStatus.currentPeriodEnd && !subStatus.isTrial && (
+                <p style={{ fontSize: 13, color: '#7A6A5A', marginTop: 8 }}>
+                  次回請求日: {new Date(subStatus.currentPeriodEnd).toLocaleDateString('ja-JP')}
+                </p>
+              )}
+            </div>
+          ) : (
+            <div>
+              <p style={{ fontSize: 14, color: '#C62828' }}>プランが停止中です。再開するには下記よりお手続きください。</p>
+              <button onClick={startCheckout} style={{ marginTop: 12, padding: '12px 24px', background: '#5C4033', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 14 }}>
+                プランを再開する
+              </button>
+            </div>
+          )}
+        </section>
 
         {/* プライバシー */}
         <section style={{

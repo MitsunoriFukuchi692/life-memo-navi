@@ -42,6 +42,28 @@ export default function RegisterPage() {
     }
   };
 
+  const startCheckout = async (code?: string) => {
+    try {
+      const user = registeredUser || JSON.parse(localStorage.getItem('user') || '{}');
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/payment/create-checkout-session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          userId: user.user_id || user.id,
+          userEmail: user.email || form.email,
+          orgCode: code || '',
+        }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch {
+      navigate('/home');
+    }
+  };
+
   const handleOrgJoin = async () => {
     if (!orgCode.trim()) {
       setOrgError('団体コードを入力してください');
@@ -66,7 +88,15 @@ export default function RegisterPage() {
         return;
       }
       setOrgMessage(data.message);
-      setTimeout(() => navigate('/'), 1500);
+      // 学会コードの場合はStripe決済へ（14日トライアル付き¥220プラン）
+      const isGakkai = orgCode.trim().toUpperCase() === '120-4967';
+      setTimeout(() => {
+        if (isGakkai) {
+          startCheckout(orgCode.trim().toUpperCase());
+        } else {
+          navigate('/home');
+        }
+      }, 1500);
     } catch {
       setOrgError('サーバーに接続できませんでした');
     } finally {
@@ -131,10 +161,10 @@ export default function RegisterPage() {
               </button>
 
               <button
-                onClick={() => navigate('/')}
+                onClick={() => startCheckout()}
                 style={{ width: '100%', padding: '14px', background: 'transparent', color: 'var(--text-light)', border: '2px solid var(--cream-dark)', borderRadius: '8px', fontSize: '0.95rem', cursor: 'pointer' }}
               >
-                スキップしてホームへ
+                スキップして通常プランへ（¥380/月）
               </button>
             </>
           )}
