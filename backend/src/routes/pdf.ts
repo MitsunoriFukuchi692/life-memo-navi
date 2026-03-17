@@ -84,6 +84,27 @@ router.get('/generate/:user_id', async (req: Request, res: Response) => {
       [user_id, field_type]
     );
 
+    // 終活ノート取得（field_typeに関係なく常に取得）
+    const shukatsuResult = await pool.query(
+      `SELECT category, question, answer, display_order
+       FROM shukatsu_notes
+       WHERE user_id = $1
+       ORDER BY category, display_order`,
+      [user_id]
+    );
+    const shukatsuCategories: Record<string, { label: string; icon: string; rows: any[] }> = {
+      medical: { label: '医療・介護の希望', icon: '🏥', rows: [] },
+      assets:  { label: '財産・相続・保険情報', icon: '💰', rows: [] },
+      funeral: { label: '葬儀・お墓の希望', icon: '🌸', rows: [] },
+      message: { label: '家族・大切な人へのメッセージ', icon: '💌', rows: [] },
+    };
+    for (const row of shukatsuResult.rows) {
+      if (shukatsuCategories[row.category]) {
+        shukatsuCategories[row.category].rows.push(row);
+      }
+    }
+    const hasShukatsu = shukatsuResult.rows.length > 0;
+
     const fontExists = fs.existsSync(FONT_PATH);
     const doc = new PDFDocument({ size: 'A4', margins: { top: 60, bottom: 60, left: 70, right: 70 } });
 
@@ -268,6 +289,44 @@ router.get('/generate/:user_id', async (req: Request, res: Response) => {
             rowStartY = 60;
           }
         }
+      }
+    }
+
+    // ── 終活ノート ──
+    if (hasShukatsu) {
+      doc.addPage();
+      setFont(18, true);
+      doc.fillColor('#5C4033').text('終活ノート');
+      doc.moveDown(0.3);
+      setFont(11);
+      doc.fillColor('#8B7355').text('大切な方々へ残す記録です', { align: 'left' });
+      doc.moveDown(0.5);
+      doc.moveTo(70, doc.y).lineTo(525, doc.y).strokeColor('#C4A882').lineWidth(1).stroke();
+      doc.moveDown(1.0);
+
+      for (const [catKey, cat] of Object.entries(shukatsuCategories)) {
+        if (cat.rows.length === 0) continue;
+
+        // カテゴリタイトル
+        if (doc.y > 680) doc.addPage();
+        setFont(13, true);
+        doc.fillColor('#6B4F3A').text(`${cat.label}`);
+        doc.moveDown(0.3);
+        doc.moveTo(70, doc.y).lineTo(525, doc.y).strokeColor('#DDD').lineWidth(0.5).stroke();
+        doc.moveDown(0.5);
+
+        for (const row of cat.rows) {
+          if (doc.y > 700) doc.addPage();
+          // 質問
+          setFont(10, true);
+          doc.fillColor('#8B7355').text(`Q. ${row.question}`);
+          doc.moveDown(0.2);
+          // 回答
+          setFont(11);
+          doc.fillColor('#2C2C2C').text(row.answer || '未回答', { indent: 12, lineGap: 3 });
+          doc.moveDown(0.8);
+        }
+        doc.moveDown(0.5);
       }
     }
 
