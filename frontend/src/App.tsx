@@ -15,7 +15,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import ShukatsuPage from './pages/ShukatsuPage'; // ← 追加
 import PaymentSuccessPage from './pages/PaymentSuccessPage'; // ← 追加
-import ShukatsuLandingPage from './pages/ShukatsulandingPage'; // ← 追加
+import ShukatsuLandingPage from './pages/ShukatsuLandingPage'; // ← 追加
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const token = localStorage.getItem('token');
