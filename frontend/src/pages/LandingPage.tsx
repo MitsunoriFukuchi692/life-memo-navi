@@ -339,6 +339,8 @@ export default function LandingPage() {
             <div className="lp-btns">
               <a href="/register" className="lp-btn-primary">✦ 無料で記録を始める</a>
               <a href="#lp-how" className="lp-btn-secondary">使い方を見る →</a>
+              <a href="/shukatsu-lp" className="lp-btn-secondary">📋 終活ノートを見る →</a>
+
             </div>
 
 
