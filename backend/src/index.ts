@@ -93,6 +93,19 @@ app.use((req: Request, res: Response) => {
   res.status(404).json({ error: 'Not Found', path: req.path });
 });
 
+// ========================================
+// Renderのスリープ防止（14分ごとに自己ping）
+// ========================================
+const BACKEND_URL = process.env.RENDER_EXTERNAL_URL || 'https://life-memo-navi-backend.onrender.com';
+setInterval(async () => {
+  try {
+    const res = await fetch(`${BACKEND_URL}/health`);
+    console.log(`💓 Keep-alive ping: ${res.status}`);
+  } catch (e) {
+    console.log('Keep-alive失敗:', e);
+  }
+}, 14 * 60 * 1000); // 14分ごと
+
 // サーバー起動
 app.listen(PORT, async () => {
   await initOrganizationTables();
