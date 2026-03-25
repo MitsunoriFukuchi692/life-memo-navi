@@ -179,31 +179,47 @@ export default function AIInterview() {
   }, [FIELD_TYPE_KEY]);
 
   // ============================================================
-  // 回答を即時自動保存
+  // 回答を即時自動保存（リトライ付き）
   // ============================================================
   const autoSave = async (qId: number, answerText: string) => {
-    try {
-      const token = localStorage.getItem('token');
-      const payload = token ? JSON.parse(atob(token.split('.')[1])) : null;
-      const userId = payload?.userId || payload?.id;
-      if (!userId) return;
+    const token = localStorage.getItem('token');
+    const payload = token ? JSON.parse(atob(token.split('.')[1])) : null;
+    const userId = payload?.userId || payload?.id;
+    if (!userId) return;
 
-      await fetch(`${API_BASE}/interviews`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          user_id: userId,
-          question_id: qId,
-          question_text: QUESTIONS[qId - 1],
-          answer_text: answerText,
-          field_type: FIELD_TYPE_KEY,
-        }),
-      });
-    } catch (e) {
-      console.error('自動保存エラー:', e);
+    const MAX_RETRIES = 3;
+    const RETRY_DELAYS = [2000, 5000, 10000]; // 2秒、5秒、10秒後にリトライ
+
+    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const res = await fetch(`${API_BASE}/interviews`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            user_id: userId,
+            question_id: qId,
+            question_text: QUESTIONS[qId - 1],
+            answer_text: answerText,
+            field_type: FIELD_TYPE_KEY,
+          }),
+        });
+        if (res.ok) {
+          if (attempt > 0) console.log(`✅ 自動保存成功（${attempt}回目のリトライ）`);
+          return; // 成功したら終了
+        }
+        throw new Error(`HTTP ${res.status}`);
+      } catch (e) {
+        if (attempt < MAX_RETRIES) {
+          console.warn(`⚠️ 自動保存失敗（${attempt + 1}回目）。${RETRY_DELAYS[attempt] / 1000}秒後にリトライします...`);
+          await new Promise(resolve => setTimeout(resolve, RETRY_DELAYS[attempt]));
+        } else {
+          console.error('❌ 自動保存が最終的に失敗しました。回答はメモリに保持されています。', e);
+          setSaveError('保存に失敗しました。インターネット接続を確認してください。');
+        }
+      }
     }
   };
 
@@ -353,7 +369,7 @@ export default function AIInterview() {
   const handleComplete = () => setPhase('complete');
 
   // ============================================================
-  // まとめを自分史/会社史に保存
+  // まとめを自分史/会社史に保存（リトライ付き）
   // ============================================================
   const handleSave = async () => {
     setSaving(true);
@@ -364,28 +380,45 @@ export default function AIInterview() {
       const userId = payload?.userId || payload?.id;
       if (!userId) throw new Error('ログインが必要です');
 
+      const MAX_RETRIES = 3;
+      const RETRY_DELAYS = [2000, 5000, 10000];
+
       for (let qId = 1; qId <= 15; qId++) {
         const answers = answerMap[qId];
         if (!answers || answers.length === 0) continue;
         const combinedAnswer = answers.join('\n\n');
-        await fetch(`${API_BASE}/interviews`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            user_id: userId,
-            question_id: qId,
-            question_text: QUESTIONS[qId - 1],
-            answer_text: combinedAnswer,
-            field_type: FIELD_TYPE_KEY,
-          }),
-        });
+
+        let saved = false;
+        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+          try {
+            const res = await fetch(`${API_BASE}/interviews`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                user_id: userId,
+                question_id: qId,
+                question_text: QUESTIONS[qId - 1],
+                answer_text: combinedAnswer,
+                field_type: FIELD_TYPE_KEY,
+              }),
+            });
+            if (res.ok) { saved = true; break; }
+            throw new Error(`HTTP ${res.status}`);
+          } catch (e) {
+            if (attempt < MAX_RETRIES) {
+              await new Promise(resolve => setTimeout(resolve, RETRY_DELAYS[attempt]));
+            } else {
+              throw new Error(`Q${qId}の保存に失敗しました。後でもう一度お試しください。`);
+            }
+          }
+        }
       }
       navigate('/interview');
     } catch (e: any) {
-      setSaveError(e.message || '保存に失敗しました');
+      setSaveError(e.message || '保存に失敗しました。もう一度お試しください。');
     } finally {
       setSaving(false);
     }
