@@ -366,7 +366,7 @@ async function sendWelcomeEmail(
   orgName: string,
   tempPassword: string | null
 ): Promise<void> {
-  const loginUrl = 'https://memo.robostudy.jp';
+  const loginUrl = 'https://memo.robostudy.jp/login';
 
   const passwordSection = tempPassword
     ? `■ 仮パスワード: ${tempPassword}\n\n初回ログイン後、マイページからパスワードを変更してください。`
