@@ -270,6 +270,6 @@ export default function RegisterPage() {
           <Link to="/login" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>ログイン</Link>
         </p>
       </div>
-    );
-  }
+    </div>
+  );
 }
