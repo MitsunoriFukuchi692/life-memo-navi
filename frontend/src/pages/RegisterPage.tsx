@@ -175,10 +175,7 @@ export default function RegisterPage() {
               )}
 
               <button
-                onClick={() => {
-  localStorage.setItem('token', 'guest');
-  navigate('/home');
-}}
+                onClick={() => startCheckout()}
                 disabled={skipLoading || orgLoading}
                 style={{ width: '100%', padding: '14px', background: 'transparent', color: 'var(--text-light)', border: '2px solid var(--cream-dark)', borderRadius: '8px', fontSize: '0.95rem', cursor: skipLoading ? 'not-allowed' : 'pointer', opacity: skipLoading ? 0.7 : 1 }}
               >
@@ -270,9 +267,4 @@ export default function RegisterPage() {
         </form>
         <p style={{ textAlign: 'center', marginTop: '24px', color: 'var(--text-light)', fontSize: '0.9rem' }}>
           すでにアカウントをお持ちの方は{' '}
-          <Link to="/login" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>ログイン</Link>
-        </p>
-      </div>
-    </div>
-  );
-}
+          <Link to="/login" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>ログイン</Li
