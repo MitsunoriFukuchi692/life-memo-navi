@@ -140,7 +140,7 @@ export default function AIInterview() {
         const userId = payload?.userId || payload?.id;
         if (!userId) { setPhase('intro'); return; }
 
-        const res = await fetch(`${API_BASE}/interviews/${userId}?field_type=${FIELD_TYPE_KEY}`, {
+        const res = await fetch(`${API_BASE}/api/interviews/${userId}?field_type=${FIELD_TYPE_KEY}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) { setPhase('intro'); return; }
@@ -192,7 +192,7 @@ export default function AIInterview() {
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
-        const res = await fetch(`${API_BASE}/interviews`, {
+        const res = await fetch(`${API_BASE}/api/interviews`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -391,7 +391,7 @@ export default function AIInterview() {
         let saved = false;
         for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
           try {
-            const res = await fetch(`${API_BASE}/interviews`, {
+            const res = await fetch(`${API_BASE}/api/interviews`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
