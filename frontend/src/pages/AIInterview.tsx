@@ -309,7 +309,7 @@ export default function AIInterview() {
             foundingYear: useFoundingYear,
           };
 
-      const res = await fetch(`${API_BASE}/ai-interview`, {
+      const res = await fetch(`${API_BASE}/api/ai-interview`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
