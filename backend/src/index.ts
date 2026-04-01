@@ -44,6 +44,7 @@ app.get('/health', (req: Request, res: Response) => {
 });
 
 // API ルート
+app.use('/auth', authRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/interviews', interviewRoutes);
 app.use('/api/timelines', timelinesRoutes);
