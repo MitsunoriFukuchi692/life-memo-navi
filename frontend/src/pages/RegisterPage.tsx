@@ -52,7 +52,7 @@ export default function RegisterPage() {
       const token = localStorage.getItem('token');
       const res = await fetch(`${API_BASE}/api/payment/create-checkout-session`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: user.user_id || user.id,
           userEmail: user.email || form.email,
