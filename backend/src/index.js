@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 // ルート
-app.use('/api/auth', authRoutes);
+app.use('/auth', authRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ message: 'Server is running' });
