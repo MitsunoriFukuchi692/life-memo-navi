@@ -268,4 +268,8 @@ export default function RegisterPage() {
         <p style={{ textAlign: 'center', marginTop: '24px', color: 'var(--text-light)', fontSize: '0.9rem' }}>
           すでにアカウントをお持ちの方は{' '}
           <Link to="/login" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>ログイン</Link>
-</p>
+        </p>
+      </div>
+    );
+  }
+}
