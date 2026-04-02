@@ -63,7 +63,6 @@ router.post('/create-checkout-session', async (req: Request, res: Response) => {
     // Stripe Checkoutセッション作成
     const session = await stripe.checkout.sessions.create({
       customer_email: userEmail,
-      payment_method_types: ['card'],
       payment_method_collection: 'if_required',
       line_items: [{ price: priceId, quantity: 1 }],
       mode: 'subscription',
