@@ -64,10 +64,11 @@ router.post('/create-checkout-session', async (req: Request, res: Response) => {
     const session = await stripe.checkout.sessions.create({
       customer_email: userEmail,
       payment_method_types: ['card'],
+      payment_method_collection: 'if_required',
       line_items: [{ price: priceId, quantity: 1 }],
       mode: 'subscription',
       subscription_data: {
-        trial_period_days: isGakkai ? 14 : undefined,
+        trial_period_days: isGakkai ? 14 : 30,
         metadata: {
           user_id: String(userId),
           plan_type: planType,
