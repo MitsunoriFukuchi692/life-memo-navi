@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const API = import.meta.env.VITE_API_URL || 'https://life-memo-navi-backend.onrender.com';
+const API = import.meta.env.VITE_API_URL || 'https://life-memo-navi-backend.onrender.com/api';
 
 export default function SettingsPage() {
   const navigate = useNavigate();

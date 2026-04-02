@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://life-memo-navi-backend.onrender.com';
+const API_BASE = (import.meta.env.VITE_API_URL || 'https://life-memo-navi-backend.onrender.com/api').replace(/\/api$/, '');
 
 interface OrgJoinProps {
   userId: number;
