@@ -23,6 +23,8 @@ export default function TimelinePage() {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const [timelines, setTimelines] = useState<Timeline[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Timeline | null>(null);
   const [form, setForm] = useState({
@@ -104,11 +106,13 @@ export default function TimelinePage() {
 
   const fetchTimelines = async () => {
     setLoading(true);
+    setFetchError(false);
     try {
       const res = await timelineApi.getAll(user.id, fieldType);
       setTimelines(res.data);
     } catch (e) {
-      console.error(e);
+      console.error('年表データの取得に失敗:', e);
+      setFetchError(true);
     } finally {
       setLoading(false);
     }
@@ -139,10 +143,12 @@ export default function TimelinePage() {
           field_type: fieldType,
         });
       }
+      setSaveError('');
       resetForm();
       fetchTimelines();
     } catch (e) {
-      console.error(e);
+      console.error('保存エラー:', e);
+      setSaveError('保存に失敗しました。もう一度お試しください。');
     } finally {
       setSaving(false);
     }
@@ -324,6 +330,11 @@ export default function TimelinePage() {
               )}
             </div>
 
+            {saveError && (
+              <div style={{ background: '#FEE2DC', border: '1px solid #C0392B', borderRadius: '8px', padding: '12px 16px', marginBottom: '12px', color: '#C0392B', fontSize: '0.9rem' }}>
+                ⚠️ {saveError}
+              </div>
+            )}
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
               <button type="button" onClick={resetForm} style={secondaryButtonStyle}>キャンセル</button>
               <button type="submit" disabled={saving} style={primaryButtonStyle}>
@@ -344,6 +355,19 @@ export default function TimelinePage() {
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: '60px' }}><div className="spinner" /></div>
+      ) : fetchError ? (
+        <div style={{
+          background: '#FEE2DC', borderRadius: 'var(--radius)', padding: '40px',
+          textAlign: 'center', border: '2px solid #C0392B',
+        }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>⚠️</div>
+          <p style={{ color: '#C0392B', fontSize: '1rem', marginBottom: '16px' }}>
+            データの取得に失敗しました。<br />ページを再読み込みしてください。
+          </p>
+          <button onClick={fetchTimelines} style={{ padding: '10px 24px', background: '#C0392B', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.95rem' }}>
+            再読み込み
+          </button>
+        </div>
       ) : timelines.length === 0 ? (
         <div style={{
           background: 'var(--white)', borderRadius: 'var(--radius)', padding: '60px',

@@ -102,6 +102,8 @@ export default function InterviewPage() {
   const [answers, setAnswers] = useState<{ [key: number]: string }>({});
   const [saved, setSaved] = useState<{ [key: number]: boolean }>({});
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const [fetchError, setFetchError] = useState(false);
   const [aiEditing, setAiEditing] = useState(false);
   const [aiEditingAll, setAiEditingAll] = useState(false);
   const [interviews, setInterviews] = useState<Interview[]>([]);
@@ -178,6 +180,7 @@ export default function InterviewPage() {
     setAnswers({});
     setSaved({});
     setCurrent(0);
+    setFetchError(false);
     interviewApi.getAll(user.id, fieldType).then(res => {
       const map: { [key: number]: string } = {};
       const savedMap: { [key: number]: boolean } = {};
@@ -188,13 +191,17 @@ export default function InterviewPage() {
       setAnswers(map);
       setSaved(savedMap);
       setInterviews(res.data);
-    }).catch(console.error);
+    }).catch(e => {
+      console.error('回答データの取得に失敗:', e);
+      setFetchError(true);
+    });
   }, [user.id, fieldType]);
 
   const handleSave = async () => {
     const answerText = answers[current + 1];
     if (!answerText?.trim()) return;
     setSaving(true);
+    setSaveError('');
     try {
       await interviewApi.save({
         user_id: user.id,
@@ -204,7 +211,8 @@ export default function InterviewPage() {
       });
       setSaved(prev => ({ ...prev, [current + 1]: true }));
     } catch (e) {
-      console.error(e);
+      console.error('保存エラー:', e);
+      setSaveError('保存に失敗しました。もう一度お試しください。');
     } finally {
       setSaving(false);
     }
@@ -276,6 +284,16 @@ export default function InterviewPage() {
 
   return (
     <Layout title="💬 聞き取り">
+      {fetchError && (
+        <div style={{ background: '#FEE2DC', border: '2px solid #C0392B', borderRadius: 'var(--radius)', padding: '24px', marginBottom: '24px', textAlign: 'center' }}>
+          <p style={{ color: '#C0392B', fontSize: '1rem', marginBottom: '12px' }}>
+            ⚠️ 回答データの取得に失敗しました。ページを再読み込みしてください。
+          </p>
+          <button onClick={() => window.location.reload()} style={{ padding: '10px 24px', background: '#C0392B', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.95rem' }}>
+            再読み込み
+          </button>
+        </div>
+      )}
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius)', padding: '24px', marginBottom: '32px', boxShadow: 'var(--shadow)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
           <span style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>{completedCount} / 15 問完了</span>
@@ -393,6 +411,11 @@ export default function InterviewPage() {
           </p>
         </div>
 
+        {saveError && (
+          <div style={{ background: '#FEE2DC', border: '1px solid #C0392B', borderRadius: '8px', padding: '10px 16px', marginTop: '12px', color: '#C0392B', fontSize: '0.9rem' }}>
+            ⚠️ {saveError}
+          </div>
+        )}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', gap: '16px', flexWrap: 'wrap' }}>
           <button onClick={() => setCurrent(Math.max(0, current - 1))} disabled={current === 0} style={secondaryButtonStyle}>← 前の質問</button>
           <div style={{ display: 'flex', gap: '12px' }}>

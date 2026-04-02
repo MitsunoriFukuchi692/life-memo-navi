@@ -96,11 +96,18 @@ router.get('/:user_id', async (req: Request, res: Response) => {
       'SELECT * FROM interviews WHERE user_id = $1 AND field_type = $2 ORDER BY question_id',
       [user_id, field_type]
     );
-    // answer_text を復号して返す
-    const rows = result.rows.map(row => ({
-      ...row,
-      answer_text: row.answer_text ? decrypt(row.answer_text) : row.answer_text,
-    }));
+    // answer_text を復号して返す（復号失敗時は元データを維持）
+    const rows = result.rows.map(row => {
+      try {
+        return {
+          ...row,
+          answer_text: row.answer_text ? decrypt(row.answer_text) : row.answer_text,
+        };
+      } catch (e) {
+        console.error(`復号エラー (interview id=${row.id}):`, e);
+        return row;
+      }
+    });
     res.json(rows);
   } catch (error: any) {
     res.status(500).json({ error: error.message });

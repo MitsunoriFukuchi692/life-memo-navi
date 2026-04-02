@@ -63,10 +63,14 @@ export default function RegisterPage() {
       if (data.url) {
         window.location.href = data.url;
       } else {
-        setSkipError('決済ページの取得に失敗しました。もう一度お試しください。');
+        // 決済セッションの取得に失敗した場合は、トライアル期間を利用してホームへ
+        console.warn('決済セッション取得失敗:', data.error);
+        navigate('/home');
       }
     } catch {
-      setSkipError('サーバーに接続できませんでした。しばらくしてからもう一度お試しください。');
+      // ネットワークエラーの場合も、トライアル期間を利用してホームへ
+      console.warn('決済サーバー接続エラー - トライアル期間でホームへ移動');
+      navigate('/home');
     } finally {
       setSkipLoading(false);
     }
@@ -168,18 +172,12 @@ export default function RegisterPage() {
                 {orgLoading ? '確認中...' : '参加する'}
               </button>
 
-              {skipError && (
-                <div style={{ background: '#FEE2DC', border: '1px solid var(--accent)', borderRadius: '8px', padding: '12px 16px', marginBottom: '12px', color: '#C0392B', fontSize: '0.9rem' }}>
-                  {skipError}
-                </div>
-              )}
-
               <button
                 onClick={() => startCheckout()}
                 disabled={skipLoading || orgLoading}
                 style={{ width: '100%', padding: '14px', background: 'transparent', color: 'var(--text-light)', border: '2px solid var(--cream-dark)', borderRadius: '8px', fontSize: '0.95rem', cursor: skipLoading ? 'not-allowed' : 'pointer', opacity: skipLoading ? 0.7 : 1 }}
               >
-                {skipLoading ? '決済ページを準備中...' : 'スキップして通常プランへ（¥380/月）'}
+                {skipLoading ? '移動中...' : 'スキップして通常プランへ（¥380/月）'}
               </button>
             </>
           )}
