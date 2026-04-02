@@ -49,12 +49,11 @@ export default function RegisterPage() {
     setSkipError('');
     try {
       const user = registeredUser || JSON.parse(localStorage.getItem('user') || '{}');
-      const token = localStorage.getItem('token');
       const res = await fetch(`${API_BASE}/api/payment/create-checkout-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: user.user_id || user.id,
+          userId: user.id,
           userEmail: user.email || form.email,
           orgCode: code || '',
         }),
@@ -63,14 +62,14 @@ export default function RegisterPage() {
       if (data.url) {
         window.location.href = data.url;
       } else {
-        // 決済セッションの取得に失敗した場合は、トライアル期間を利用してホームへ
+        // 決済セッションの取得に失敗した場合はエラー表示（ホームへは飛ばない）
         console.warn('決済セッション取得失敗:', data.error);
-        navigate('/home');
+        setSkipError('決済ページへの移動に失敗しました。しばらく待ってから再度お試しください。');
       }
     } catch {
-      // ネットワークエラーの場合も、トライアル期間を利用してホームへ
-      console.warn('決済サーバー接続エラー - トライアル期間でホームへ移動');
-      navigate('/home');
+      // ネットワークエラーの場合もエラー表示
+      console.warn('決済サーバー接続エラー');
+      setSkipError('サーバーに接続できませんでした。しばらく待ってから再度お試しください。');
     } finally {
       setSkipLoading(false);
     }
@@ -179,6 +178,12 @@ export default function RegisterPage() {
               >
                 {skipLoading ? '移動中...' : 'スキップして通常プランへ（¥380/月）'}
               </button>
+
+              {skipError && (
+                <div style={{ background: '#FEE2DC', border: '1px solid var(--accent)', borderRadius: '8px', padding: '12px 16px', marginTop: '12px', color: '#C0392B', fontSize: '0.9rem' }}>
+                  ⚠️ {skipError}
+                </div>
+              )}
             </>
           )}
         </div>
