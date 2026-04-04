@@ -254,10 +254,8 @@ router.post('/webhook', async (req: Request, res: Response) => {
         const subscriptionId = session.subscription as string;
         const subscription = await stripe.subscriptions.retrieve(subscriptionId) as any;
 
-        const trialEnd = subscription.trial_end
-          ? new Date(subscription.trial_end * 1000)
-          : null;
-        const periodEnd = new Date((subscription.current_period_end as number) * 1000);
+        const trialEnd = subscription.trial_end ? new Date(subscription.trial_end * 1000) : null;
+        const periodEnd = subscription.current_period_end ? new Date(subscription.current_period_end * 1000) : null;
 
         await pool.query(`
           INSERT INTO subscriptions
@@ -328,8 +326,7 @@ router.post('/webhook', async (req: Request, res: Response) => {
         const trialEnd = subscription.trial_end
           ? new Date(subscription.trial_end * 1000)
           : null;
-        const periodEnd = new Date((subscription.current_period_end as number) * 1000);
-
+        const periodEnd = subscription.current_period_end ? new Date(subscription.current_period_end * 1000) : null;
         await pool.query(`
           UPDATE subscriptions SET
             status             = $1,
