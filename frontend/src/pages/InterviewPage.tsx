@@ -114,10 +114,61 @@ export default function InterviewPage() {
   const recognitionRef = useRef<any>(null);
   const currentRef = useRef<number>(0); // stale closure対策
 
+  // 音声読み上げ
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [autoReadEnabled, setAutoReadEnabled] = useState(true);
+  const [ttsSupported, setTtsSupported] = useState(false);
+
   // currentの変化をrefに同期
   useEffect(() => {
     currentRef.current = current;
   }, [current]);
+
+  // TTS（読み上げ）の初期化
+  useEffect(() => {
+    if ('speechSynthesis' in window) {
+      setTtsSupported(true);
+    }
+    return () => {
+      window.speechSynthesis?.cancel();
+    };
+  }, []);
+
+  // 質問を読み上げる関数
+  const speakQuestion = (text: string) => {
+    if (!ttsSupported) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ja-JP';
+    utterance.rate = 0.9;   // 少しゆっくり（高齢者向け）
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+    // 日本語の音声を優先選択
+    const voices = window.speechSynthesis.getVoices();
+    const jaVoice = voices.find(v => v.lang === 'ja-JP');
+    if (jaVoice) utterance.voice = jaVoice;
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // 質問が変わったら自動読み上げ
+  useEffect(() => {
+    if (autoReadEnabled && ttsSupported) {
+      // voicesが非同期で読み込まれる場合に対応
+      const doSpeak = () => speakQuestion(QUESTIONS[current]);
+      if (window.speechSynthesis.getVoices().length > 0) {
+        doSpeak();
+      } else {
+        window.speechSynthesis.onvoiceschanged = doSpeak;
+      }
+    }
+    return () => {
+      window.speechSynthesis?.cancel();
+      setIsSpeaking(false);
+    };
+  }, [current, autoReadEnabled, ttsSupported]);
 
   // Web Speech API の初期化
   useEffect(() => {
@@ -346,9 +397,50 @@ export default function InterviewPage() {
           )}
         </div>
 
-        <h3 style={{ fontFamily: "'Noto Serif JP', serif", fontSize: '1.4rem', color: 'var(--brown-dark)', margin: '20px 0 24px', lineHeight: 1.6 }}>
+        <h3 style={{ fontFamily: "'Noto Serif JP', serif", fontSize: '1.4rem', color: 'var(--brown-dark)', margin: '20px 0 12px', lineHeight: 1.6 }}>
           {QUESTIONS[current]}
         </h3>
+
+        {/* 音声読み上げコントロール */}
+        {ttsSupported && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => {
+                if (isSpeaking) {
+                  window.speechSynthesis.cancel();
+                  setIsSpeaking(false);
+                } else {
+                  speakQuestion(QUESTIONS[current]);
+                }
+              }}
+              style={{
+                padding: '8px 20px',
+                background: isSpeaking
+                  ? 'linear-gradient(135deg, #e53935, #ef5350)'
+                  : 'linear-gradient(135deg, #388E3C, #66BB6A)',
+                border: 'none', borderRadius: '50px', color: 'white',
+                fontSize: '0.95rem', fontWeight: 600, cursor: 'pointer',
+                fontFamily: "'Noto Sans JP', sans-serif",
+                boxShadow: isSpeaking
+                  ? '0 0 0 4px rgba(229,57,53,0.25)'
+                  : '0 3px 8px rgba(56,142,60,0.35)',
+                transition: 'all 0.2s',
+              }}
+            >
+              {isSpeaking ? '⏹ 読み上げ停止' : '🔊 質問を読み上げる'}
+            </button>
+
+            <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-light)' }}>
+              <input
+                type="checkbox"
+                checked={autoReadEnabled}
+                onChange={e => setAutoReadEnabled(e.target.checked)}
+                style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+              />
+              質問が変わったら自動で読み上げる
+            </label>
+          </div>
+        )}
 
         <textarea
           value={answers[current + 1] || ''}
