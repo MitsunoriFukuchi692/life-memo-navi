@@ -184,6 +184,64 @@ export default function DashboardPage() {
         ))}
       </div>
 
+      {/* ===== メモちゃんとおしゃべり ===== */}
+      <div
+        className="fade-in"
+        onClick={() => navigate(`/voice-chat?fieldType=${fieldType}`)}
+        style={{
+          background: 'linear-gradient(135deg, #fff8f0, #fdeede)',
+          borderRadius: 'var(--radius)',
+          padding: '32px',
+          boxShadow: 'var(--shadow)',
+          border: '2px solid #f0c070',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '20px',
+          marginBottom: '24px',
+          cursor: 'pointer',
+          transition: 'all 0.25s',
+        }}
+        onMouseEnter={e => {
+          (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)';
+          (e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow-lg)';
+        }}
+        onMouseLeave={e => {
+          (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
+          (e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow)';
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <div style={{ fontSize: '3rem' }}>🌸</div>
+          <div>
+            <h3 style={{
+              fontFamily: "'Noto Serif JP', serif",
+              fontSize: '1.3rem',
+              color: '#a06020',
+              marginBottom: '8px',
+            }}>
+              メモちゃんとおしゃべり
+            </h3>
+            <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', lineHeight: 1.6 }}>
+              メモちゃんが時代のヒントを教えてくれながら、<br />
+              声で話すだけで記録できる発話対話モードです。
+            </p>
+          </div>
+        </div>
+        <div style={{
+          background: 'linear-gradient(135deg, #c9773a, #e8956d)',
+          color: 'white',
+          padding: '14px 28px',
+          borderRadius: 'var(--radius-sm)',
+          fontWeight: 500,
+          fontSize: '1rem',
+          whiteSpace: 'nowrap',
+        }}>
+          🎤 話してみる →
+        </div>
+      </div>
+
       {/* ===== 終活ノート ===== */}
       <div
         className="fade-in"
