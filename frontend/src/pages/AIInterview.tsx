@@ -129,6 +129,47 @@ export default function AIInterview() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // ============================================================
+  // 音声読み上げ（TTS）
+  // ============================================================
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [autoReadEnabled, setAutoReadEnabled] = useState(true);
+  const [ttsSupported, setTtsSupported] = useState(false);
+
+  useEffect(() => {
+    if ('speechSynthesis' in window) setTtsSupported(true);
+    return () => { window.speechSynthesis?.cancel(); };
+  }, []);
+
+  const speakText = (text: string) => {
+    if (!ttsSupported || !autoReadEnabled) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'ja-JP';
+    utterance.rate = 0.9;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+    const doSpeak = () => {
+      const voices = window.speechSynthesis.getVoices();
+      const jaVoice = voices.find(v => v.lang === 'ja-JP');
+      if (jaVoice) utterance.voice = jaVoice;
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => setIsSpeaking(false);
+      window.speechSynthesis.speak(utterance);
+    };
+    if (window.speechSynthesis.getVoices().length > 0) {
+      doSpeak();
+    } else {
+      window.speechSynthesis.onvoiceschanged = doSpeak;
+    }
+  };
+
+  const stopSpeaking = () => {
+    window.speechSynthesis?.cancel();
+    setIsSpeaking(false);
+  };
+
+  // ============================================================
   // 起動時：既存の回答を読み込んで途中再開チェック
   // ============================================================
   useEffect(() => {
@@ -443,6 +484,25 @@ export default function AIInterview() {
     recognition.start();
   };
 
+  // フェーズ変化時に吹き出しテキストを読み上げ
+  useEffect(() => {
+    if (!autoReadEnabled || !ttsSupported) return;
+    if (phase === 'intro') {
+      speakText(isKaisha
+        ? 'こんにちは！わたしはメモちゃんです。貴社の大切な歴史を、いっしょに記録しましょう。質問に答えるだけで会社史ができあがりますよ。'
+        : 'こんにちは！わたしはメモちゃんです。あなたの大切な人生の記録を、いっしょに残しましょう。質問に答えるだけで自分史ができあがりますよ。');
+    } else if (phase === 'resume') {
+      speakText(`おかえりなさい。前回の続きから再開しましょう！Q${resumeQuestionId}「${QUESTIONS[resumeQuestionId - 1]}」からですね。`);
+    } else if (phase === 'birthYear') {
+      speakText(isKaisha
+        ? '創業年はいつですか？創業当時の経済状況や時代背景をヒントにお話しますね。'
+        : 'あなたは何年生まれですか？生まれた時代に合わせて、その頃の出来事をヒントにお話しますね。');
+    } else if (phase === 'complete') {
+      speakText(`全部答えてくれてありがとう！すてきな${isKaisha ? '会社史' : '自分史'}になりましたね！下のボタンで保存しましょう。`);
+    }
+    // question フェーズはTypingText完了後（onDone）で読み上げ
+  }, [phase, autoReadEnabled, ttsSupported]);
+
   const progressPercent = Math.round((currentQuestionId - 1) / 15 * 100);
 
   // ヘッダータグ表示
@@ -534,7 +594,7 @@ export default function AIInterview() {
                   {currentReaction && <p style={styles.reactionText}>{currentReaction}</p>}
                   <p style={styles.bubbleText}>
                     {typing
-                      ? <TypingText text={currentQuestion} onDone={() => setTyping(false)} />
+                      ? <TypingText text={currentQuestion} onDone={() => { setTyping(false); speakText(currentQuestion); }} />
                       : currentQuestion}
                   </p>
                 </div>
@@ -548,6 +608,50 @@ export default function AIInterview() {
               )}
               <div style={styles.bubbleTail} />
             </div>
+            {/* 音声読み上げコントロール */}
+            {ttsSupported && phase !== 'loading' && phase !== 'thinking' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => {
+                    if (isSpeaking) {
+                      stopSpeaking();
+                    } else {
+                      const textToSpeak = phase === 'intro'
+                        ? (isKaisha ? 'こんにちは！わたしはメモちゃんです。貴社の大切な歴史を、いっしょに記録しましょう。' : 'こんにちは！わたしはメモちゃんです。あなたの大切な人生の記録を、いっしょに残しましょう。')
+                        : phase === 'resume'
+                          ? `前回の続きから再開しましょう！Q${resumeQuestionId}「${QUESTIONS[resumeQuestionId - 1]}」からですね。`
+                          : phase === 'birthYear'
+                            ? (isKaisha ? '創業年はいつですか？' : 'あなたは何年生まれですか？')
+                            : phase === 'complete'
+                              ? `全部答えてくれてありがとう！すてきな${isKaisha ? '会社史' : '自分史'}になりましたね！`
+                              : currentQuestion;
+                      speakText(textToSpeak);
+                    }
+                  }}
+                  style={{
+                    padding: '6px 16px',
+                    background: isSpeaking
+                      ? 'linear-gradient(135deg, #e53935, #ef5350)'
+                      : 'linear-gradient(135deg, #388E3C, #66BB6A)',
+                    border: 'none', borderRadius: '50px', color: 'white',
+                    fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer',
+                    boxShadow: isSpeaking ? '0 0 0 3px rgba(229,57,53,0.25)' : '0 2px 6px rgba(56,142,60,0.35)',
+                    transition: 'all 0.2s', fontFamily: 'inherit',
+                  }}
+                >
+                  {isSpeaking ? '⏹ 停止' : '🔊 読み上げる'}
+                </button>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer', fontSize: '0.8rem', color: '#a07050' }}>
+                  <input
+                    type="checkbox"
+                    checked={autoReadEnabled}
+                    onChange={e => { setAutoReadEnabled(e.target.checked); if (!e.target.checked) stopSpeaking(); }}
+                    style={{ width: '14px', height: '14px', cursor: 'pointer' }}
+                  />
+                  自動で読み上げる
+                </label>
+              </div>
+            )}
             {phase !== 'intro' && phase !== 'resume' && phase !== 'birthYear' && phase !== 'complete' && phase !== 'thinking' && phase !== 'loading' && (
               <div style={styles.questionBadge}>
                 Q{currentQuestionId}. {QUESTIONS[currentQuestionId - 1]}
