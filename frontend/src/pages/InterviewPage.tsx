@@ -114,68 +114,54 @@ export default function InterviewPage() {
   const recognitionRef = useRef<any>(null);
   const currentRef = useRef<number>(0); // stale closure対策
 
-  // 音声読み上げ
+  // 音声読み上げ（OpenAI TTS）
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [autoReadEnabled, setAutoReadEnabled] = useState(true);
-  const [ttsSupported, setTtsSupported] = useState(false);
+  const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
+  const API_BASE_TTS = (import.meta.env.VITE_API_URL || 'https://life-memo-navi-backend.onrender.com/api').replace(/\/api$/, '');
 
   // currentの変化をrefに同期
   useEffect(() => {
     currentRef.current = current;
   }, [current]);
 
-  // TTS（読み上げ）の初期化
-  useEffect(() => {
-    if ('speechSynthesis' in window) {
-      setTtsSupported(true);
-    }
-    return () => {
-      window.speechSynthesis?.cancel();
-    };
-  }, []);
-
   // 質問を読み上げる関数
   const speakQuestion = (text: string) => {
-    if (!ttsSupported) return;
-    window.speechSynthesis.cancel();
+    if (ttsAudioRef.current) { ttsAudioRef.current.pause(); ttsAudioRef.current = null; }
     const cleanText = text
       .replace(/Q\d+[.．、\s]*/g, '')
       .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}]/gu, '')
       .trim();
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = 'ja-JP';
-    utterance.rate = 0.75;  // よりゆっくり・流ちょうに（高齢者向け）
-    utterance.pitch = 1.35; // かわいらしい明るい女性の声に
-    utterance.volume = 1.0;
-    // 柔らかく流ちょうな女性の声を優先選択
-    const voices = window.speechSynthesis.getVoices();
-    const femaleKeywords = ['Nanami', 'Haruka', 'Kyoko', 'O-ren', 'Google 日本語', 'ja-JP-Wavenet-A', 'ja-JP-Wavenet-B', 'Female'];
-    const jaVoice =
-      femaleKeywords.map(kw => voices.find(v => v.lang === 'ja-JP' && v.name.includes(kw))).find(Boolean) ||
-      voices.find(v => v.lang === 'ja-JP');
-    if (jaVoice) utterance.voice = jaVoice;
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-    window.speechSynthesis.speak(utterance);
+    if (!cleanText) return;
+    setIsSpeaking(true);
+    fetch(`${API_BASE_TTS}/api/tts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: cleanText }),
+    })
+      .then(res => res.blob())
+      .then(blob => {
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        ttsAudioRef.current = audio;
+        audio.onended = () => { setIsSpeaking(false); URL.revokeObjectURL(url); };
+        audio.onerror = () => setIsSpeaking(false);
+        audio.play();
+      })
+      .catch(() => setIsSpeaking(false));
   };
 
   // 質問が変わったら自動読み上げ
   useEffect(() => {
-    if (autoReadEnabled && ttsSupported) {
-      // voicesが非同期で読み込まれる場合に対応
-      const doSpeak = () => speakQuestion(QUESTIONS[current]);
-      if (window.speechSynthesis.getVoices().length > 0) {
-        doSpeak();
-      } else {
-        window.speechSynthesis.onvoiceschanged = doSpeak;
-      }
+    if (autoReadEnabled) {
+      speakQuestion(QUESTIONS[current]);
     }
     return () => {
-      window.speechSynthesis?.cancel();
+      ttsAudioRef.current?.pause();
+      ttsAudioRef.current = null;
       setIsSpeaking(false);
     };
-  }, [current, autoReadEnabled, ttsSupported]);
+  }, [current, autoReadEnabled]);
 
   // Web Speech API の初期化
   useEffect(() => {
@@ -409,12 +395,13 @@ export default function InterviewPage() {
         </h3>
 
         {/* 音声読み上げコントロール */}
-        {ttsSupported && (
+        {true && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
             <button
               onClick={() => {
                 if (isSpeaking) {
-                  window.speechSynthesis.cancel();
+                  ttsAudioRef.current?.pause();
+                  ttsAudioRef.current = null;
                   setIsSpeaking(false);
                 } else {
                   speakQuestion(QUESTIONS[current]);

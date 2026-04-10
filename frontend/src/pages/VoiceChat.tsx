@@ -112,50 +112,56 @@ function getFieldEmoji(fieldType: string) {
 }
 
 // ============================================================
-// TTS ユーティリティ
+// TTS ユーティリティ（OpenAI TTS使用）
 // ============================================================
+const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') ?? '';
+
+function cleanTextForTTS(text: string): string {
+  return text
+    .replace(/Q\d+[.．、\s]*/g, '')
+    .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}]/gu, '')
+    .trim();
+}
+
 function useTTS() {
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [ttsReady, setTtsReady] = useState(false);
+  const [ttsReady, setTtsReady] = useState(true);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    if ('speechSynthesis' in window) {
-      setTtsReady(true);
-      // voicesを事前ロード
-      window.speechSynthesis.getVoices();
-      window.speechSynthesis.onvoiceschanged = () => setTtsReady(true);
-    }
-    return () => { window.speechSynthesis?.cancel(); };
+    return () => { audioRef.current?.pause(); };
   }, []);
 
   const speak = useCallback((text: string, onEnd?: () => void) => {
-    if (!('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    const cleanText = text
-      .replace(/Q\d+[.．、\s]*/g, '')
-      .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}]/gu, '')
-      .trim();
-    const utter = new SpeechSynthesisUtterance(cleanText);
-    utter.lang = 'ja-JP';
-    utter.rate = 0.75;
-    utter.pitch = 1.35;
-    utter.volume = 1.0;
-    const voices = window.speechSynthesis.getVoices();
-    // 柔らかく流ちょうな女性の声を優先的に選択
-    const femaleKeywords = ['Nanami', 'Haruka', 'Kyoko', 'O-ren', 'Google 日本語', 'ja-JP-Wavenet-A', 'ja-JP-Wavenet-B', 'Female'];
-    const jaVoice =
-      femaleKeywords.map(kw => voices.find(v => v.lang === 'ja-JP' && v.name.includes(kw))).find(Boolean) ||
-      voices.find(v => v.lang === 'ja-JP' && v.localService) ||
-      voices.find(v => v.lang === 'ja-JP');
-    if (jaVoice) utter.voice = jaVoice;
-    utter.onstart = () => setIsSpeaking(true);
-    utter.onend = () => { setIsSpeaking(false); onEnd?.(); };
-    utter.onerror = () => setIsSpeaking(false);
-    window.speechSynthesis.speak(utter);
+    // 再生中なら止める
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    const cleanText = cleanTextForTTS(text);
+    if (!cleanText) return;
+
+    setIsSpeaking(true);
+    fetch(`${API_BASE}/api/tts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: cleanText }),
+    })
+      .then(res => res.blob())
+      .then(blob => {
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audioRef.current = audio;
+        audio.onended = () => { setIsSpeaking(false); onEnd?.(); URL.revokeObjectURL(url); };
+        audio.onerror = () => { setIsSpeaking(false); onEnd?.(); };
+        audio.play();
+      })
+      .catch(() => setIsSpeaking(false));
   }, []);
 
   const stop = useCallback(() => {
-    window.speechSynthesis?.cancel();
+    audioRef.current?.pause();
+    audioRef.current = null;
     setIsSpeaking(false);
   }, []);
 

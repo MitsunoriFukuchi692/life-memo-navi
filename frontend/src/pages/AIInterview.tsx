@@ -129,51 +129,41 @@ export default function AIInterview() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // ============================================================
-  // 音声読み上げ（TTS）
+  // 音声読み上げ（OpenAI TTS）
   // ============================================================
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [autoReadEnabled, setAutoReadEnabled] = useState(true);
-  const [ttsSupported, setTtsSupported] = useState(false);
-
-  useEffect(() => {
-    if ('speechSynthesis' in window) setTtsSupported(true);
-    return () => { window.speechSynthesis?.cancel(); };
-  }, []);
+  const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const speakText = (text: string) => {
-    if (!ttsSupported || !autoReadEnabled) return;
-    window.speechSynthesis.cancel();
+    if (!autoReadEnabled) return;
+    if (ttsAudioRef.current) { ttsAudioRef.current.pause(); ttsAudioRef.current = null; }
     const cleanText = text
       .replace(/Q\d+[.．、\s]*/g, '')
       .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}]/gu, '')
       .trim();
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = 'ja-JP';
-    utterance.rate = 0.75;
-    utterance.pitch = 1.35;
-    utterance.volume = 1.0;
-    const doSpeak = () => {
-      const voices = window.speechSynthesis.getVoices();
-      // 柔らかく流ちょうな女性の声を優先的に選択
-      const femaleKeywords = ['Nanami', 'Haruka', 'Kyoko', 'O-ren', 'Google 日本語', 'ja-JP-Wavenet-A', 'ja-JP-Wavenet-B', 'Female'];
-      const jaVoice =
-        femaleKeywords.map(kw => voices.find(v => v.lang === 'ja-JP' && v.name.includes(kw))).find(Boolean) ||
-        voices.find(v => v.lang === 'ja-JP');
-      if (jaVoice) utterance.voice = jaVoice;
-      utterance.onstart = () => setIsSpeaking(true);
-      utterance.onend = () => setIsSpeaking(false);
-      utterance.onerror = () => setIsSpeaking(false);
-      window.speechSynthesis.speak(utterance);
-    };
-    if (window.speechSynthesis.getVoices().length > 0) {
-      doSpeak();
-    } else {
-      window.speechSynthesis.onvoiceschanged = doSpeak;
-    }
+    if (!cleanText) return;
+    setIsSpeaking(true);
+    fetch(`${API_BASE}/api/tts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: cleanText }),
+    })
+      .then(res => res.blob())
+      .then(blob => {
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        ttsAudioRef.current = audio;
+        audio.onended = () => { setIsSpeaking(false); URL.revokeObjectURL(url); };
+        audio.onerror = () => setIsSpeaking(false);
+        audio.play();
+      })
+      .catch(() => setIsSpeaking(false));
   };
 
   const stopSpeaking = () => {
-    window.speechSynthesis?.cancel();
+    ttsAudioRef.current?.pause();
+    ttsAudioRef.current = null;
     setIsSpeaking(false);
   };
 

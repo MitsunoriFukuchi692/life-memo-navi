@@ -14,6 +14,7 @@ import orgRoutes, { initOrganizationTables } from './routes/organization.js';
 import aiInterviewRoutes from './routes/aiInterview.js';
 import paymentRoutes, { initPaymentTables } from './routes/payment.js'; // ← 追加
 import shukatsuRoutes, { initShukatsuTables } from './routes/shukatsu.js'; // ← 追加
+import ttsRoutes from './routes/tts.js';
 
 dotenv.config();
 
@@ -55,6 +56,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/org', orgRoutes);
 app.use('/api/payment', paymentRoutes); // ← 追加
 app.use('/api/shukatsu', shukatsuRoutes); // ← 追加
+app.use('/api/tts', ttsRoutes);
 
 // ルートエンドポイント
 app.get('/', (req: Request, res: Response) => {
