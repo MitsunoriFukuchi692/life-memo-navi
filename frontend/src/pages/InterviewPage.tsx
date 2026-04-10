@@ -138,7 +138,10 @@ export default function InterviewPage() {
   const speakQuestion = (text: string) => {
     if (!ttsSupported) return;
     window.speechSynthesis.cancel();
-    const cleanText = text.replace(/Q\d+[.．、\s]*/g, '').trim();
+    const cleanText = text
+      .replace(/Q\d+[.．、\s]*/g, '')
+      .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}]/gu, '')
+      .trim();
     const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.lang = 'ja-JP';
     utterance.rate = 0.75;  // よりゆっくり・流ちょうに（高齢者向け）

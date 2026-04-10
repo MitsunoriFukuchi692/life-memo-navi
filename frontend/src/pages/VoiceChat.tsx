@@ -131,7 +131,10 @@ function useTTS() {
   const speak = useCallback((text: string, onEnd?: () => void) => {
     if (!('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
-    const cleanText = text.replace(/Q\d+[.．、\s]*/g, '').trim();
+    const cleanText = text
+      .replace(/Q\d+[.．、\s]*/g, '')
+      .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}]/gu, '')
+      .trim();
     const utter = new SpeechSynthesisUtterance(cleanText);
     utter.lang = 'ja-JP';
     utter.rate = 0.75;
