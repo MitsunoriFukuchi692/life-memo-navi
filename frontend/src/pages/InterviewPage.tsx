@@ -140,12 +140,15 @@ export default function InterviewPage() {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'ja-JP';
-    utterance.rate = 0.9;   // 少しゆっくり（高齢者向け）
-    utterance.pitch = 1.0;
+    utterance.rate = 0.82;  // ゆっくり・流ちょうに（高齢者向け）
+    utterance.pitch = 1.2;  // 柔らかく明るい女性の声に
     utterance.volume = 1.0;
-    // 日本語の音声を優先選択
+    // 柔らかく流ちょうな女性の声を優先選択
     const voices = window.speechSynthesis.getVoices();
-    const jaVoice = voices.find(v => v.lang === 'ja-JP');
+    const femaleKeywords = ['Nanami', 'Haruka', 'Kyoko', 'O-ren', 'Google 日本語', 'ja-JP-Wavenet-A', 'ja-JP-Wavenet-B', 'Female'];
+    const jaVoice =
+      femaleKeywords.map(kw => voices.find(v => v.lang === 'ja-JP' && v.name.includes(kw))).find(Boolean) ||
+      voices.find(v => v.lang === 'ja-JP');
     if (jaVoice) utterance.voice = jaVoice;
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);

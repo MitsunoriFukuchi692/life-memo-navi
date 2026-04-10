@@ -133,12 +133,16 @@ function useTTS() {
     window.speechSynthesis.cancel();
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = 'ja-JP';
-    utter.rate = 0.88;
-    utter.pitch = 1.05;
+    utter.rate = 0.82;
+    utter.pitch = 1.2;
     utter.volume = 1.0;
     const voices = window.speechSynthesis.getVoices();
-    const jaVoice = voices.find(v => v.lang === 'ja-JP' && v.localService) ||
-                    voices.find(v => v.lang === 'ja-JP');
+    // 柔らかく流ちょうな女性の声を優先的に選択
+    const femaleKeywords = ['Nanami', 'Haruka', 'Kyoko', 'O-ren', 'Google 日本語', 'ja-JP-Wavenet-A', 'ja-JP-Wavenet-B', 'Female'];
+    const jaVoice =
+      femaleKeywords.map(kw => voices.find(v => v.lang === 'ja-JP' && v.name.includes(kw))).find(Boolean) ||
+      voices.find(v => v.lang === 'ja-JP' && v.localService) ||
+      voices.find(v => v.lang === 'ja-JP');
     if (jaVoice) utter.voice = jaVoice;
     utter.onstart = () => setIsSpeaking(true);
     utter.onend = () => { setIsSpeaking(false); onEnd?.(); };

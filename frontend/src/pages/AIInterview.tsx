@@ -145,12 +145,16 @@ export default function AIInterview() {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'ja-JP';
-    utterance.rate = 0.9;
-    utterance.pitch = 1.0;
+    utterance.rate = 0.82;
+    utterance.pitch = 1.2;
     utterance.volume = 1.0;
     const doSpeak = () => {
       const voices = window.speechSynthesis.getVoices();
-      const jaVoice = voices.find(v => v.lang === 'ja-JP');
+      // 柔らかく流ちょうな女性の声を優先的に選択
+      const femaleKeywords = ['Nanami', 'Haruka', 'Kyoko', 'O-ren', 'Google 日本語', 'ja-JP-Wavenet-A', 'ja-JP-Wavenet-B', 'Female'];
+      const jaVoice =
+        femaleKeywords.map(kw => voices.find(v => v.lang === 'ja-JP' && v.name.includes(kw))).find(Boolean) ||
+        voices.find(v => v.lang === 'ja-JP');
       if (jaVoice) utterance.voice = jaVoice;
       utterance.onstart = () => setIsSpeaking(true);
       utterance.onend = () => setIsSpeaking(false);
