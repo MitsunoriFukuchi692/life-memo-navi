@@ -146,7 +146,7 @@ export default function AIInterview() {
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'ja-JP';
     utterance.rate = 0.75;
-    utterance.pitch = 1.05;
+    utterance.pitch = 1.35;
     utterance.volume = 1.0;
     const doSpeak = () => {
       const voices = window.speechSynthesis.getVoices();

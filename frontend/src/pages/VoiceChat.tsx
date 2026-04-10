@@ -134,7 +134,7 @@ function useTTS() {
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = 'ja-JP';
     utter.rate = 0.75;
-    utter.pitch = 1.05;
+    utter.pitch = 1.35;
     utter.volume = 1.0;
     const voices = window.speechSynthesis.getVoices();
     // 柔らかく流ちょうな女性の声を優先的に選択
