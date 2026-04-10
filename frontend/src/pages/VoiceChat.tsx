@@ -114,8 +114,6 @@ function getFieldEmoji(fieldType: string) {
 // ============================================================
 // TTS ユーティリティ（OpenAI TTS使用）
 // ============================================================
-const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') ?? '';
-
 function cleanTextForTTS(text: string): string {
   return text
     .replace(/Q\d+[.．、\s]*/g, '')
