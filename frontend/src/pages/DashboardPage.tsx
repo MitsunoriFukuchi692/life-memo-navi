@@ -185,8 +185,8 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {/* ===== メモちゃんとおしゃべり ===== */}
-      <div
+      {/* ===== メモちゃんとおしゃべり（自分史・終活ノートのみ表示） ===== */}
+      {fieldType !== 'kaishaishi' && <div
         className="fade-in"
         onClick={() => navigate(`/voice-chat?fieldType=${fieldType}`)}
         style={{
@@ -241,7 +241,7 @@ export default function DashboardPage() {
         }}>
           🎤 話してみる →
         </div>
-      </div>
+      </div>}
 
       {/* ===== 終活ノート ===== */}
       <div

@@ -129,7 +129,7 @@ const buildSystemPrompt = (
   birthYear?: number,
   foundingYear?: number
 ): string => {
-  const isKaisha = fieldType === '会社史';
+  const isKaisha = fieldType === '会社史' || fieldType === 'kaishaishi';
   const questions = isKaisha ? KAISHAISHI_QUESTIONS : JIBUNSHI_QUESTIONS;
   const question = questions[questionId - 1];
 
@@ -191,7 +191,7 @@ router.post('/', async (req: Request, res: Response) => {
       fieldType = '自分史',  // ← 追加：デフォルトは自分史
     } = req.body;
 
-    const isKaisha = fieldType === '会社史';
+    const isKaisha = fieldType === '会社史' || fieldType === 'kaishaishi';
     const questions = isKaisha ? KAISHAISHI_QUESTIONS : JIBUNSHI_QUESTIONS;
 
     // 最初の質問
