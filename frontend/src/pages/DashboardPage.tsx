@@ -186,7 +186,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ===== メモちゃんとおしゃべり（自分史・終活ノートのみ表示） ===== */}
-      {fieldType !== 'kaishaishi' && <div
+      {fieldType !== 'kaishashi' && fieldType !== 'kaishaishi' && <div
         className="fade-in"
         onClick={() => navigate(`/voice-chat?fieldType=${fieldType}`)}
         style={{
