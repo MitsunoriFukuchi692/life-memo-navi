@@ -138,7 +138,8 @@ export default function InterviewPage() {
   const speakQuestion = (text: string) => {
     if (!ttsSupported) return;
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
+    const cleanText = text.replace(/Q\d+[.．、\s]*/g, '').trim();
+    const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.lang = 'ja-JP';
     utterance.rate = 0.75;  // よりゆっくり・流ちょうに（高齢者向け）
     utterance.pitch = 1.35; // かわいらしい明るい女性の声に

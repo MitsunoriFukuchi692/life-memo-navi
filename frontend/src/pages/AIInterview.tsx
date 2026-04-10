@@ -143,7 +143,8 @@ export default function AIInterview() {
   const speakText = (text: string) => {
     if (!ttsSupported || !autoReadEnabled) return;
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
+    const cleanText = text.replace(/Q\d+[.．、\s]*/g, '').trim();
+    const utterance = new SpeechSynthesisUtterance(cleanText);
     utterance.lang = 'ja-JP';
     utterance.rate = 0.75;
     utterance.pitch = 1.35;
