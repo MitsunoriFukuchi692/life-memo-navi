@@ -335,12 +335,13 @@ export default function DashboardPage() {
             textDecoration: 'none',
             fontWeight: 500,
             fontSize: '1rem',
-            transition: 'background 0.2s',
           }}
         >
-          PDFを生成する
+          📄 PDFをダウンロード
         </a>
       </div>
+
     </Layout>
   );
 }
+

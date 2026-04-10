@@ -265,7 +265,7 @@ router.post('/', async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error('AI Interview error:', error);
-    res.status(500).json({ error: 'AIとの通信に失敗しました' });
+    res.status(500).json({ error: 'AIとの通信に失敗しました。もう一度お試しください。' });
   }
 });
 

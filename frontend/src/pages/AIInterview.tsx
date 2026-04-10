@@ -493,7 +493,7 @@ export default function AIInterview() {
 
   // フェーズ変化時に吹き出しテキストを読み上げ
   useEffect(() => {
-    if (!autoReadEnabled || !ttsSupported) return;
+    if (!autoReadEnabled) return;
     if (phase === 'intro') {
       speakText(isKaisha
         ? 'こんにちは！わたしはメモちゃんです。貴社の大切な歴史を、いっしょに記録しましょう。質問に答えるだけで会社史ができあがりますよ。'
@@ -508,7 +508,7 @@ export default function AIInterview() {
       speakText(`全部答えてくれてありがとう！すてきな${isKaisha ? '会社史' : '自分史'}になりましたね！下のボタンで保存しましょう。`);
     }
     // question フェーズはTypingText完了後（onDone）で読み上げ
-  }, [phase, autoReadEnabled, ttsSupported]);
+  }, [phase, autoReadEnabled]);
 
   const progressPercent = Math.round((currentQuestionId - 1) / 15 * 100);
 
@@ -619,7 +619,7 @@ export default function AIInterview() {
               <div style={styles.bubbleTail} />
             </div>
             {/* 音声読み上げコントロール */}
-            {ttsSupported && phase !== 'loading' && phase !== 'thinking' && (
+            {phase !== 'loading' && phase !== 'thinking' && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '10px', flexWrap: 'wrap' }}>
                 <button
                   onClick={() => {
@@ -974,10 +974,5 @@ const styles: Record<string, React.CSSProperties> = {
 const css = `
   @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
   @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-  .fadeIn { animation: fadeIn 0.4s ease forwards; }
-  .hoverBtn:hover { transform: scale(1.04); filter: brightness(1.05); }
-  textarea:focus { border-color: #e8804a !important; }
-  input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
-  input[type=number] { -moz-appearance: textfield; }
 `;
+
