@@ -25,7 +25,7 @@ router.post('/', async (req: Request, res: Response) => {
       model: 'tts-1',
       voice: 'nova',    // 明るくかわいい女性の声
       input: cleanText,
-      speed: 0.9,       // 少しゆっくり
+      speed: 1.1,       // 少し速め＝声が高く明るくなる
     });
 
     const buffer = Buffer.from(await mp3.arrayBuffer());
