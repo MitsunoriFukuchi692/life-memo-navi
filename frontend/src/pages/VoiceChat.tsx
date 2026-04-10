@@ -242,12 +242,19 @@ export default function VoiceChat() {
   // ============================================================
   useEffect(() => {
     if (phase === 'intro') {
-      const intro = fieldType === 'kaishaishi'
-        ? `こんにちは！わたしはメモちゃんです🏢 これから貴社の大切な会社史を、いっしょに記録していきましょう。15の質問に、思い出しながらお答えください。はじめましょうか？`
-        : fieldType === 'shukatsu'
-          ? `こんにちは！わたしはメモちゃんです📖 これから大切なことを、いっしょに整理していきましょう。ゆっくり、思ったことをそのまま話してください。はじめましょうか？`
-          : `こんにちは！わたしはメモちゃんです🌸 これからあなたの大切な人生の記録を、いっしょに残していきましょう。15の質問に、のんびり答えてくださいね。はじめましょうか？`;
-      memoChanSay(intro);
+      if (fieldType === 'kaishaishi') {
+        const intro = `こんにちは！わたしはメモちゃんです。これから貴社の大切な会社史を、いっしょに記録していきましょう。15の質問に、思い出しながらお答えください。それではさっそく第1問からはじめますね！`;
+        memoChanSay(intro, () => startQuestion(1));
+      } else if (fieldType === 'shukatsu') {
+        const intro = `こんにちは！わたしはメモちゃんです。これから大切なことを、いっしょに整理していきましょう。ゆっくり、思ったことをそのまま話してください。それではさっそく第1問からはじめますね！`;
+        memoChanSay(intro, () => startQuestion(1));
+      } else {
+        // jibunshi：挨拶の後に生まれ年入力を促す
+        const intro = `こんにちは！わたしはメモちゃんです。これからあなたの大切な人生の記録を、いっしょに残していきましょう。15の質問に、のんびり答えてくださいね。まず、あなたは何年生まれですか？昭和・大正・平成・西暦からお選びください。`;
+        memoChanSay(intro, () => {
+          setPhase('birthYear');
+        });
+      }
     }
   }, [phase]);
 
@@ -496,12 +503,12 @@ export default function VoiceChat() {
               <button style={s.startBtn} onClick={() => {
                 stop();
                 setPhase('birthYear');
-                setTimeout(() => memoChanSay('あなたは何年生まれですか？昭和・大正・平成・西暦からお選びください。'), 300);
+                setTimeout(() => memoChanSay('あなたは何年生まれですか？昭和・大正・平成・西暦からお選びください。'), 200);
               }}>
                 🎤 メモちゃんとおしゃべりをはじめる
               </button>
             ) : (
-              <button style={s.startBtn} onClick={() => startQuestion(1)}>
+              <button style={s.startBtn} onClick={() => { stop(); startQuestion(1); }}>
                 🎤 メモちゃんとおしゃべりをはじめる
               </button>
             )}
