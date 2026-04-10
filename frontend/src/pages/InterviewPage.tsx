@@ -140,8 +140,8 @@ export default function InterviewPage() {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = 'ja-JP';
-    utterance.rate = 0.82;  // ゆっくり・流ちょうに（高齢者向け）
-    utterance.pitch = 1.2;  // 柔らかく明るい女性の声に
+    utterance.rate = 0.75;  // よりゆっくり・流ちょうに（高齢者向け）
+    utterance.pitch = 1.05; // 落ち着いた柔らかい女性の声に
     utterance.volume = 1.0;
     // 柔らかく流ちょうな女性の声を優先選択
     const voices = window.speechSynthesis.getVoices();
