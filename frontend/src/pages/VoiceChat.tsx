@@ -125,20 +125,25 @@ function useTTS() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [ttsReady, setTtsReady] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const fetchingRef = useRef(false); // fetch中フラグ（重複防止）
 
   useEffect(() => {
-    return () => { audioRef.current?.pause(); };
+    return () => {
+      audioRef.current?.pause();
+      fetchingRef.current = false;
+    };
   }, []);
 
   const speak = useCallback((text: string, onEnd?: () => void) => {
-    // 再生中なら止める
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current = null;
-    }
+    // 再生中・fetch中なら止めてリセット
+    audioRef.current?.pause();
+    audioRef.current = null;
+    fetchingRef.current = false;
+
     const cleanText = cleanTextForTTS(text);
     if (!cleanText) return;
 
+    fetchingRef.current = true;
     setIsSpeaking(true);
     fetch(`${API_BASE}/api/tts`, {
       method: 'POST',
@@ -147,6 +152,8 @@ function useTTS() {
     })
       .then(res => res.blob())
       .then(blob => {
+        if (!fetchingRef.current) return; // キャンセル済みなら再生しない
+        fetchingRef.current = false;
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
         audioRef.current = audio;
@@ -154,12 +161,13 @@ function useTTS() {
         audio.onerror = () => { setIsSpeaking(false); onEnd?.(); };
         audio.play();
       })
-      .catch(() => setIsSpeaking(false));
+      .catch(() => { fetchingRef.current = false; setIsSpeaking(false); });
   }, []);
 
   const stop = useCallback(() => {
     audioRef.current?.pause();
     audioRef.current = null;
+    fetchingRef.current = false;
     setIsSpeaking(false);
   }, []);
 

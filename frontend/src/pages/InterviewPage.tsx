@@ -118,6 +118,7 @@ export default function InterviewPage() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [autoReadEnabled, setAutoReadEnabled] = useState(true);
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
+  const ttsFetchingRef = useRef(false); // fetch中フラグ（重複防止）
   const API_BASE_TTS = (import.meta.env.VITE_API_URL || 'https://life-memo-navi-backend.onrender.com/api').replace(/\/api$/, '');
 
   // currentの変化をrefに同期
@@ -127,12 +128,16 @@ export default function InterviewPage() {
 
   // 質問を読み上げる関数
   const speakQuestion = (text: string) => {
-    if (ttsAudioRef.current) { ttsAudioRef.current.pause(); ttsAudioRef.current = null; }
+    // 再生中・fetch中をリセット
+    ttsAudioRef.current?.pause();
+    ttsAudioRef.current = null;
+    ttsFetchingRef.current = false;
     const cleanText = text
       .replace(/Q\d+[.．、\s]*/g, '')
       .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}]/gu, '')
       .trim();
     if (!cleanText) return;
+    ttsFetchingRef.current = true;
     setIsSpeaking(true);
     fetch(`${API_BASE_TTS}/api/tts`, {
       method: 'POST',
@@ -141,6 +146,8 @@ export default function InterviewPage() {
     })
       .then(res => res.blob())
       .then(blob => {
+        if (!ttsFetchingRef.current) return;
+        ttsFetchingRef.current = false;
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
         ttsAudioRef.current = audio;
@@ -148,7 +155,7 @@ export default function InterviewPage() {
         audio.onerror = () => setIsSpeaking(false);
         audio.play();
       })
-      .catch(() => setIsSpeaking(false));
+      .catch(() => { ttsFetchingRef.current = false; setIsSpeaking(false); });
   };
 
   // 質問が変わったら自動読み上げ
@@ -159,6 +166,7 @@ export default function InterviewPage() {
     return () => {
       ttsAudioRef.current?.pause();
       ttsAudioRef.current = null;
+      ttsFetchingRef.current = false;
       setIsSpeaking(false);
     };
   }, [current, autoReadEnabled]);

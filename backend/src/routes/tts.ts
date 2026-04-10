@@ -23,7 +23,7 @@ router.post('/', async (req: Request, res: Response) => {
 
     const mp3 = await openai.audio.speech.create({
       model: 'tts-1',
-      voice: 'shimmer', // 自然で柔らかい女性の声
+      voice: 'nova',    // 明るくかわいい女性の声
       input: cleanText,
       speed: 0.9,       // 少しゆっくり
     });

@@ -134,15 +134,20 @@ export default function AIInterview() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [autoReadEnabled, setAutoReadEnabled] = useState(true);
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
+  const ttsFetchingRef = useRef(false); // fetch中フラグ（重複防止）
 
   const speakText = (text: string) => {
     if (!autoReadEnabled) return;
-    if (ttsAudioRef.current) { ttsAudioRef.current.pause(); ttsAudioRef.current = null; }
+    // 再生中・fetch中をリセット
+    ttsAudioRef.current?.pause();
+    ttsAudioRef.current = null;
+    ttsFetchingRef.current = false;
     const cleanText = text
       .replace(/Q\d+[.．、\s]*/g, '')
       .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}]/gu, '')
       .trim();
     if (!cleanText) return;
+    ttsFetchingRef.current = true;
     setIsSpeaking(true);
     fetch(`${API_BASE}/api/tts`, {
       method: 'POST',
@@ -151,6 +156,8 @@ export default function AIInterview() {
     })
       .then(res => res.blob())
       .then(blob => {
+        if (!ttsFetchingRef.current) return;
+        ttsFetchingRef.current = false;
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
         ttsAudioRef.current = audio;
@@ -158,12 +165,13 @@ export default function AIInterview() {
         audio.onerror = () => setIsSpeaking(false);
         audio.play();
       })
-      .catch(() => setIsSpeaking(false));
+      .catch(() => { ttsFetchingRef.current = false; setIsSpeaking(false); });
   };
 
   const stopSpeaking = () => {
     ttsAudioRef.current?.pause();
     ttsAudioRef.current = null;
+    ttsFetchingRef.current = false;
     setIsSpeaking(false);
   };
 
