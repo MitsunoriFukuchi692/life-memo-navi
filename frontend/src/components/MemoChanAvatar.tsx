@@ -21,13 +21,12 @@ export default function MemoChanAvatar({ size = 80, mood = 'normal' }: MemoChanA
       xmlns="http://www.w3.org/2000/svg"
       style={{ display: 'block', filter: 'drop-shadow(0 4px 8px rgba(180,80,40,0.18))' }}
     >
-      {/* ---- 髪（後ろ・ツインテール） ---- */}
-      {/* 左ツインテール */}
-      <ellipse cx="18" cy="72" rx="9" ry="18" fill="#3d1a0a" transform="rotate(-18 18 72)" />
-      {/* 右ツインテール */}
-      <ellipse cx="82" cy="72" rx="9" ry="18" fill="#3d1a0a" transform="rotate(18 82 72)" />
-      {/* 頭の後ろ髪 */}
+      {/* ---- 髪（後ろ・ショートボブ） ---- */}
+      {/* 後ろ髪（丸みのあるボブ） */}
       <ellipse cx="50" cy="40" rx="30" ry="28" fill="#3d1a0a" />
+      {/* 左右の髪が少し広がる（ボブの膨らみ） */}
+      <ellipse cx="22" cy="50" rx="6" ry="10" fill="#3d1a0a" />
+      <ellipse cx="78" cy="50" rx="6" ry="10" fill="#3d1a0a" />
 
       {/* ---- 顔（肌） ---- */}
       <ellipse cx="50" cy="46" rx="26" ry="24" fill="#ffe0c8" />
@@ -131,10 +130,11 @@ export default function MemoChanAvatar({ size = 80, mood = 'normal' }: MemoChanA
       <ellipse cx="38" cy="28" rx="3" ry="2" fill="#ff85a2" opacity="0.8" />
 
       {/* ---- 首・体（ちょこっと） ---- */}
-      <rect x="43" y="68" width="14" height="8" rx="4" fill="#ffe0c8" />
-      {/* 服の襟 */}
-      <path d="M38 76 Q50 80 62 76 Q60 100 50 100 Q40 100 38 76 Z" fill="#ff85a2" />
-      <path d="M50 78 L46 88 L50 86 L54 88 Z" fill="#ffb8cc" />
+      <rect x="44" y="69" width="12" height="7" rx="4" fill="#ffe0c8" />
+      {/* 服（小さめ・胸元だけ） */}
+      <path d="M40 76 Q50 79 60 76 Q59 90 50 90 Q41 90 40 76 Z" fill="#ff85a2" />
+      {/* リボン */}
+      <path d="M50 78 L47 84 L50 82 L53 84 Z" fill="#ffb8cc" />
     </svg>
   );
 }
