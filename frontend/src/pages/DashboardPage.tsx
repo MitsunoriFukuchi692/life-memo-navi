@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { interviewApi, timelineApi, photoApi, pdfApi } from '../api';
+import MemoChanAvatar from '../components/MemoChanAvatar';
 
 const fieldLabels: Record<string, string> = {
   jibunshi: '自分史',
@@ -213,7 +214,7 @@ export default function DashboardPage() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <div style={{ fontSize: '3rem' }}>🌸</div>
+          <MemoChanAvatar size={64} mood="normal" />
           <div>
             <h3 style={{
               fontFamily: "'Noto Serif JP', serif",

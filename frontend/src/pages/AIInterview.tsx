@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import MemoChanAvatar from '../components/MemoChanAvatar';
 
 const API_BASE = (import.meta.env.VITE_API_URL || 'https://life-memo-navi-backend.onrender.com/api').replace(/\/api$/, '');
 
@@ -555,8 +556,11 @@ export default function AIInterview() {
         {/* キャラクター＋吹き出し */}
         <div style={styles.characterArea}>
           <div style={styles.avatarWrap}>
-            <div style={{ ...styles.avatar, ...(phase === 'thinking' ? { animation: 'pulse 1s infinite' } : {}) }}>
-              <span style={styles.avatarEmoji}>{phase === 'thinking' ? '💭' : (isKaisha ? '🏢' : '🌸')}</span>
+            <div style={{ animation: (phase === 'thinking' || isSpeaking) ? 'pulse 1s infinite' : 'none' }}>
+              <MemoChanAvatar
+                size={80}
+                mood={phase === 'thinking' ? 'thinking' : isSpeaking ? 'talking' : 'normal'}
+              />
             </div>
             <div style={styles.characterName}>メモちゃん</div>
           </div>

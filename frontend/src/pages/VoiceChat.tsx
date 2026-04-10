@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import MemoChanAvatar from '../components/MemoChanAvatar';
 import {
   getQuestionHints,
   getEraHintsByBirthYear,
@@ -446,8 +447,11 @@ export default function VoiceChat() {
       <div style={s.chatArea}>
         {/* キャラクター */}
         <div style={s.characterRow}>
-          <div style={{ ...s.avatar, animation: (listening || isSpeaking) ? 'pulse 1s infinite' : 'none' }}>
-            <span style={s.avatarEmoji}>{isSpeaking ? '💬' : listening ? '👂' : fieldEmoji}</span>
+          <div style={{ animation: (listening || isSpeaking) ? 'pulse 1s infinite' : 'none' }}>
+            <MemoChanAvatar
+              size={84}
+              mood={isSpeaking ? 'talking' : listening ? 'listening' : 'normal'}
+            />
           </div>
           <div style={s.characterName}>メモちゃん</div>
         </div>
