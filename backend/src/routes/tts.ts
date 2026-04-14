@@ -1,12 +1,24 @@
 import { Router, Request, Response } from 'express';
-import OpenAI from 'openai';
+import textToSpeech from '@google-cloud/text-to-speech';
 
 const router = Router();
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+// GOOGLE_CREDENTIALS_JSON環境変数からサービスアカウント認証を初期化
+function createTTSClient() {
+  const credJson = process.env.GOOGLE_CREDENTIALS_JSON;
+  if (credJson) {
+    const credentials = JSON.parse(credJson);
+    return new textToSpeech.TextToSpeechClient({ credentials });
+  }
+  // ローカル開発用（GOOGLE_APPLICATION_CREDENTIALSファイルパス）
+  return new textToSpeech.TextToSpeechClient();
+}
+
+const ttsClient = createTTSClient();
 
 // ============================================================
 // POST /api/tts
-// テキストをOpenAI TTSで音声変換して返す
+// テキストをGoogle Cloud TTSで音声変換して返す
 // ============================================================
 router.post('/', async (req: Request, res: Response) => {
   try {
@@ -21,18 +33,31 @@ router.post('/', async (req: Request, res: Response) => {
       .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}]/gu, '')
       .trim();
 
-    const mp3 = await openai.audio.speech.create({
-      model: 'tts-1',
-      voice: 'nova',    // 明るく元気なかわいい女性の声
-      input: cleanText,
-      speed: 0.88,      // 元気よく・でも遅め（高齢者にも聞き取りやすく）
+    if (!cleanText) {
+      return res.status(400).json({ error: 'テキストが空です' });
+    }
+
+    const [response] = await ttsClient.synthesizeSpeech({
+      input: { text: cleanText },
+      voice: {
+        languageCode: 'ja-JP',
+        name: 'ja-JP-Neural2-B',  // 自然な日本語女性音声（Neural2）
+        ssmlGender: 'FEMALE',
+      },
+      audioConfig: {
+        audioEncoding: 'MP3',
+        speakingRate: 0.95,   // 少しゆっくり（高齢者にも聞き取りやすく）
+        pitch: 1.0,
+        volumeGainDb: 1.0,
+      },
     });
 
-    const buffer = Buffer.from(await mp3.arrayBuffer());
+    const audioBuffer = response.audioContent as Buffer;
     res.set('Content-Type', 'audio/mpeg');
-    res.send(buffer);
+    res.send(audioBuffer);
+
   } catch (err) {
-    console.error('TTS エラー:', err);
+    console.error('Google TTS エラー:', err);
     res.status(500).json({ error: 'TTS変換に失敗しました' });
   }
 });
