@@ -3,18 +3,15 @@ import textToSpeech from '@google-cloud/text-to-speech';
 
 const router = Router();
 
-// GOOGLE_CREDENTIALS_JSON環境変数からサービスアカウント認証を初期化
+// リクエスト時にクライアントを生成（起動時エラーを防ぐ）
 function createTTSClient() {
   const credJson = process.env.GOOGLE_CREDENTIALS_JSON;
   if (credJson) {
     const credentials = JSON.parse(credJson);
     return new textToSpeech.TextToSpeechClient({ credentials });
   }
-  // ローカル開発用（GOOGLE_APPLICATION_CREDENTIALSファイルパス）
   return new textToSpeech.TextToSpeechClient();
 }
-
-const ttsClient = createTTSClient();
 
 // ============================================================
 // POST /api/tts
@@ -37,6 +34,7 @@ router.post('/', async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'テキストが空です' });
     }
 
+    const ttsClient = createTTSClient();
     const [response] = await ttsClient.synthesizeSpeech({
       input: { text: cleanText },
       voice: {
