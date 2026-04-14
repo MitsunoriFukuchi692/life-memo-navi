@@ -4,6 +4,8 @@ import { authApi } from '../api';
 
 const API_BASE = (import.meta.env.VITE_API_URL || 'https://life-memo-navi-backend.onrender.com/api').replace('/api', '');
 
+// ↑ API_BASEは団体コード参加(/api/org/join)で使用
+
 const PROJECT_TYPES = [
   { value: 'jibunshi', label: '自分史' },
   { value: 'kaishashi', label: '会社史' },
@@ -24,8 +26,6 @@ export default function RegisterPage() {
   const [orgLoading, setOrgLoading] = useState(false);
   const [orgMessage, setOrgMessage] = useState('');
   const [orgError, setOrgError] = useState('');
-  const [skipLoading, setSkipLoading] = useState(false);
-  const [skipError, setSkipError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,35 +44,9 @@ export default function RegisterPage() {
     }
   };
 
-  const startCheckout = async (code?: string) => {
-    setSkipLoading(true);
-    setSkipError('');
-    try {
-      const user = registeredUser || JSON.parse(localStorage.getItem('user') || '{}');
-      const res = await fetch(`${API_BASE}/api/payment/create-checkout-session`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user.id,
-          userEmail: user.email || form.email,
-          orgCode: code || '',
-        }),
-      });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        // 決済セッションの取得に失敗した場合はエラー表示（ホームへは飛ばない）
-        console.warn('決済セッション取得失敗:', data.error);
-        setSkipError('決済ページへの移動に失敗しました。しばらく待ってから再度お試しください。');
-      }
-    } catch {
-      // ネットワークエラーの場合もエラー表示
-      console.warn('決済サーバー接続エラー');
-      setSkipError('サーバーに接続できませんでした。しばらく待ってから再度お試しください。');
-    } finally {
-      setSkipLoading(false);
-    }
+  // Stripeはアプリ外で管理するため、登録後は直接ホームへ遷移する
+  const goHome = () => {
+    navigate('/home');
   };
 
   const handleOrgJoin = async () => {
@@ -99,14 +73,8 @@ export default function RegisterPage() {
         return;
       }
       setOrgMessage(data.message);
-      // 学会コードの場合はStripe決済へ（14日トライアル付き¥220プラン）
-      const isGakkai = orgCode.trim().toUpperCase() === '120-4967';
       setTimeout(() => {
-        if (isGakkai) {
-          startCheckout(orgCode.trim().toUpperCase());
-        } else {
-          navigate('/home');
-        }
+        navigate('/home');
       }, 1500);
     } catch {
       setOrgError('サーバーに接続できませんでした');
@@ -165,25 +133,19 @@ export default function RegisterPage() {
 
               <button
                 onClick={handleOrgJoin}
-                disabled={orgLoading || skipLoading}
+                disabled={orgLoading}
                 style={{ width: '100%', padding: '16px', background: 'var(--brown-dark)', color: 'var(--cream)', border: 'none', borderRadius: '8px', fontSize: '1.05rem', fontWeight: 500, cursor: 'pointer', marginBottom: '12px' }}
               >
                 {orgLoading ? '確認中...' : '参加する'}
               </button>
 
               <button
-                onClick={() => startCheckout()}
-                disabled={skipLoading || orgLoading}
-                style={{ width: '100%', padding: '14px', background: 'transparent', color: 'var(--text-light)', border: '2px solid var(--cream-dark)', borderRadius: '8px', fontSize: '0.95rem', cursor: skipLoading ? 'not-allowed' : 'pointer', opacity: skipLoading ? 0.7 : 1 }}
+                onClick={goHome}
+                disabled={orgLoading}
+                style={{ width: '100%', padding: '14px', background: 'transparent', color: 'var(--text-light)', border: '2px solid var(--cream-dark)', borderRadius: '8px', fontSize: '0.95rem', cursor: 'pointer' }}
               >
-                {skipLoading ? '移動中...' : 'スキップして通常プランへ（¥380/月）'}
+                スキップして無料体験を始める
               </button>
-
-              {skipError && (
-                <div style={{ background: '#FEE2DC', border: '1px solid var(--accent)', borderRadius: '8px', padding: '12px 16px', marginTop: '12px', color: '#C0392B', fontSize: '0.9rem' }}>
-                  ⚠️ {skipError}
-                </div>
-              )}
             </>
           )}
         </div>
