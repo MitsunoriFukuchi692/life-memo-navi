@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import MemoChanAvatar from '../components/MemoChanAvatar';
+import MemoChanAvatar, { AvatarStyle } from '../components/MemoChanAvatar';
 
 const API_BASE = (import.meta.env.VITE_API_URL || 'https://life-memo-navi-backend.onrender.com/api').replace(/\/api$/, '');
 
@@ -100,6 +100,17 @@ export default function AIInterview() {
   const FIELD_TYPE_KEY = isKaisha ? 'kaishaishi' : 'jibunshi';
 
   const [phase, setPhase] = useState<'loading' | 'intro' | 'resume' | 'birthYear' | 'question' | 'thinking' | 'answered' | 'complete'>('loading');
+
+  // アバタースタイル（localStorageで保存）
+  const [avatarStyle, setAvatarStyle] = useState<AvatarStyle>(
+    () => (localStorage.getItem('memochan_avatar') as AvatarStyle) || 'manga'
+  );
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const handleAvatarSelect = (style: AvatarStyle) => {
+    setAvatarStyle(style);
+    localStorage.setItem('memochan_avatar', style);
+    setShowAvatarPicker(false);
+  };
 
   // 自分史：生まれ年
   const [birthYear, setBirthYear] = useState<number | null>(null);
@@ -556,13 +567,71 @@ export default function AIInterview() {
         {/* キャラクター＋吹き出し */}
         <div style={styles.characterArea}>
           <div style={styles.avatarWrap}>
-            <div style={{ animation: (phase === 'thinking' || isSpeaking) ? 'pulse 1s infinite' : 'none' }}>
+            <div style={{ animation: (phase === 'thinking' || isSpeaking) ? 'pulse 1s infinite' : 'none', position: 'relative' }}>
               <MemoChanAvatar
                 size={80}
                 mood={phase === 'thinking' ? 'thinking' : isSpeaking ? 'talking' : 'normal'}
+                avatarStyle={avatarStyle}
               />
+              {/* 着替えボタン */}
+              <button
+                onClick={() => setShowAvatarPicker(v => !v)}
+                title="メモちゃんを着替える"
+                style={{
+                  position: 'absolute', bottom: -4, right: -4,
+                  width: 24, height: 24, borderRadius: '50%',
+                  background: '#ff85a2', border: '2px solid white',
+                  fontSize: 12, cursor: 'pointer', display: 'flex',
+                  alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
+                }}
+              >👗</button>
             </div>
             <div style={styles.characterName}>メモちゃん</div>
+
+            {/* アバター選択パネル */}
+            {showAvatarPicker && (
+              <div style={{
+                position: 'absolute', zIndex: 100, top: 110, left: 0,
+                background: 'white', borderRadius: 16, padding: '16px',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.18)', border: '1px solid #f0d8c8',
+                minWidth: 260
+              }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#5C4033', marginBottom: 12, textAlign: 'center' }}>
+                  メモちゃんを選んでね 💕
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  {([
+                    { key: 'manga', label: '漫画風', emoji: '🌸' },
+                    { key: 'simple', label: 'シンプル', emoji: '⭐' },
+                    { key: 'wagara', label: '和風', emoji: '🌺' },
+                    { key: 'pop', label: 'ポップ', emoji: '✨' },
+                  ] as { key: AvatarStyle; label: string; emoji: string }[]).map(({ key, label, emoji }) => (
+                    <button
+                      key={key}
+                      onClick={() => handleAvatarSelect(key)}
+                      style={{
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                        padding: '10px 6px', borderRadius: 12, cursor: 'pointer',
+                        border: avatarStyle === key ? '2px solid #ff85a2' : '2px solid #f0d8c8',
+                        background: avatarStyle === key ? '#fff0f5' : 'white',
+                        transition: 'all 0.15s'
+                      }}
+                    >
+                      <MemoChanAvatar size={52} mood="normal" avatarStyle={key} />
+                      <span style={{ fontSize: 12, color: '#5C4033', fontWeight: avatarStyle === key ? 700 : 400 }}>
+                        {emoji} {label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setShowAvatarPicker(false)}
+                  style={{ marginTop: 10, width: '100%', padding: '8px', borderRadius: 8, border: 'none', background: '#f5e8e0', color: '#5C4033', cursor: 'pointer', fontSize: 13 }}
+                >
+                  とじる
+                </button>
+              </div>
+            )}
           </div>
           <div style={styles.bubbleWrap}>
             <div style={styles.bubble}>
@@ -914,7 +983,7 @@ const styles: Record<string, React.CSSProperties> = {
   progressText: { fontSize: '13px', color: '#a07050' },
   body: { maxWidth: '700px', margin: '0 auto', padding: '32px 20px 60px' },
   characterArea: { display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '28px' },
-  avatarWrap: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', flexShrink: 0 },
+  avatarWrap: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', flexShrink: 0, position: 'relative' },
   avatar: { width: '72px', height: '72px', borderRadius: '50%', background: 'linear-gradient(135deg, #ffe0c8, #ffc4a0)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(200,100,50,0.2)', border: '3px solid #fff' },
   avatarEmoji: { fontSize: '34px' },
   characterName: { fontSize: '13px', color: '#c06030', fontWeight: 'bold' },
