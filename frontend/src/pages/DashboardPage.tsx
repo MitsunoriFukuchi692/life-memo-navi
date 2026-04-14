@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import { interviewApi, timelineApi, photoApi, pdfApi } from '../api';
-import MemoChanAvatar from '../components/MemoChanAvatar';
+import MemoChanAvatar, { AvatarStyle } from '../components/MemoChanAvatar';
 
 const fieldLabels: Record<string, string> = {
   jibunshi: '自分史',
@@ -214,7 +214,7 @@ export default function DashboardPage() {
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-          <MemoChanAvatar size={64} mood="normal" />
+          <MemoChanAvatar size={64} mood="normal" avatarStyle={(localStorage.getItem('memochan_avatar') as AvatarStyle) || 'manga'} />
           <div>
             <h3 style={{
               fontFamily: "'Noto Serif JP', serif",
