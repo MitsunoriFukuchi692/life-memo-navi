@@ -34,6 +34,9 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || '*',
   credentials: true
 }));
+
+// 博士論文APIはローカルHTMLファイル（origin: null）からも呼べるようにCORSを個別許可
+app.use('/api/thesis', cors({ origin: '*', credentials: false }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
