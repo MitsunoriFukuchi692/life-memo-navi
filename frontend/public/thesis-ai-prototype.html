@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>博士論文AIアシスタント（老化防止医療専用）</title>
+  <style>
+    :root {
+      --primary: #2d6a4f;
+      --primary-light: #52b788;
+      --primary-dark: #1b4332;
+      --accent: #74c69d;
+      --bg: #f0faf4;
+      --card: #ffffff;
+      --text: #1a1a2e;
+      --text-light: #555;
+      --border: #d8f3dc;
+      --shadow: 0 2px 12px rgba(45,106,79,0.10);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Hiragino Sans', 'Meiryo', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ─── ヘッダー ─── */
+    header {
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+      color: white;
+      padding: 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .header-logo { font-size: 2rem; }
+    .header-title h1 { font-size: 1.4rem; font-weight: 700; }
+    .header-title p { font-size: 0.82rem; opacity: 0.82; margin-top: 2px; }
+
+    /* ─── メインレイアウト ─── */
+    .main-layout {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 20px;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 20px;
+    }
+
+    /* ─── サイドバー（章管理） ─── */
+    .sidebar { display: flex; flex-direction: column; gap: 14px; }
+    .sidebar-card {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+    .sidebar-card h3 {
+      font-size: 0.95rem; color: var(--primary-dark);
+      margin-bottom: 12px; font-weight: 700;
+      border-bottom: 2px solid var(--accent); padding-bottom: 6px;
+    }
+    .chapter-btn {
+      display: block; width: 100%; text-align: left;
+      padding: 9px 12px; margin-bottom: 6px;
+      border: 1px solid var(--border); border-radius: 8px;
+      background: white; cursor: pointer; font-size: 0.86rem;
+      color: var(--text); transition: all 0.15s;
+    }
+    .chapter-btn:hover { background: var(--bg); border-color: var(--primary-light); }
+    .chapter-btn.active {
+      background: var(--primary); color: white;
+      border-color: var(--primary-dark); font-weight: 600;
+    }
+    .chapter-btn .ch-status {
+      float: right; font-size: 0.78rem;
+      opacity: 0.75; margin-left: 6px;
+    }
+    .chapter-btn.active .ch-status { opacity: 0.9; }
+
+    .progress-bar-wrap {
+      background: #e8f5e9; border-radius: 20px; height: 10px;
+      overflow: hidden; margin: 8px 0 4px;
+    }
+    .progress-bar-fill {
+      height: 100%; background: linear-gradient(90deg, var(--primary-light), var(--primary));
+      border-radius: 20px; transition: width 0.4s ease;
+    }
+    .progress-label { font-size: 0.8rem; color: var(--text-light); }
+
+    /* ─── メインコンテンツ ─── */
+    .main-content { display: flex; flex-direction: column; gap: 16px; }
+
+    /* ─── チャットエリア ─── */
+    .chat-card {
+      background: var(--card);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    .chat-header {
+      background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+      color: white; padding: 14px 18px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .ai-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: white; display: flex; align-items: center;
+      justify-content: center; font-size: 1.4rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+      flex-shrink: 0;
+    }
+    .chat-header-info h2 { font-size: 1rem; font-weight: 700; }
+    .chat-header-info p { font-size: 0.78rem; opacity: 0.88; }
+    .chapter-badge {
+      margin-left: auto; background: rgba(255,255,255,0.2);
+      border-radius: 20px; padding: 4px 12px;
+      font-size: 0.8rem; font-weight: 600;
+    }
+
+    /* チャットメッセージ */
+    #chat-messages {
+      flex: 1; min-height: 340px; max-height: 400px;
+      overflow-y: auto; padding: 18px;
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    .msg-row {
+      display: flex; gap: 10px; align-items: flex-start;
+    }
+    .msg-row.user-row { flex-direction: row-reverse; }
+    .msg-avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    }
+    .msg-avatar.ai { background: var(--primary); color: white; }
+    .msg-avatar.user { background: #e3f2fd; }
+    .msg-bubble {
+      max-width: 78%; padding: 10px 14px;
+      border-radius: 14px; font-size: 0.9rem; line-height: 1.65;
+    }
+    .msg-bubble.ai {
+      background: var(--bg); border: 1px solid var(--border);
+      border-top-left-radius: 4px; color: var(--text);
+    }
+    .msg-bubble.user {
+      background: var(--primary); color: white;
+      border-bottom-right-radius: 4px;
+    }
+    .msg-time { font-size: 0.7rem; opacity: 0.55; margin-top: 4px; text-align: right; }
+
+    /* ローディング */
+    .typing-indicator { display: flex; gap: 5px; padding: 8px 0; }
+    .typing-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--primary-light);
+      animation: typing-bounce 1.2s infinite;
+    }
+    .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typing-bounce {
+      0%,80%,100% { transform: translateY(0); opacity:0.5; }
+      40% { transform: translateY(-8px); opacity:1; }
+    }
+
+    /* 入力エリア */
+    .chat-input-area {
+      padding: 14px 18px;
+      border-top: 1px solid var(--border);
+      background: #fafffe;
+    }
+    .input-row { display: flex; gap: 10px; align-items: flex-end; }
+    #user-input {
+      flex: 1; border: 1.5px solid var(--border);
+      border-radius: 10px; padding: 10px 14px;
+      font-size: 0.92rem; resize: none; min-height: 44px; max-height: 120px;
+      font-family: inherit; line-height: 1.5;
+      transition: border-color 0.2s;
+    }
+    #user-input:focus { outline: none; border-color: var(--primary-light); }
+    #send-btn {
+      background: var(--primary); color: white;
+      border: none; border-radius: 10px;
+      padding: 10px 18px; cursor: pointer; font-size: 1rem;
+      font-weight: 700; transition: background 0.15s;
+      white-space: nowrap;
+    }
+    #send-btn:hover:not(:disabled) { background: var(--primary-dark); }
+    #send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .input-hint { font-size: 0.75rem; color: var(--text-light); margin-top: 6px; }
+
+    /* ─── 論文テキストエリア ─── */
+    .draft-card {
+      background: var(--card);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .draft-header {
+      padding: 14px 18px;
+      background: #f8fff9;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .draft-header h3 { font-size: 1rem; font-weight: 700; color: var(--primary-dark); flex: 1; }
+    .draft-actions { display: flex; gap: 8px; }
+    .btn-small {
+      padding: 5px 12px; border-radius: 6px; font-size: 0.82rem;
+      border: 1px solid var(--border); cursor: pointer;
+      background: white; color: var(--primary-dark);
+      font-weight: 600; transition: all 0.15s;
+    }
+    .btn-small:hover { background: var(--bg); }
+    .btn-small.primary {
+      background: var(--primary); color: white; border-color: var(--primary-dark);
+    }
+    .btn-small.primary:hover { background: var(--primary-dark); }
+    #draft-text {
+      width: 100%; min-height: 200px;
+      padding: 18px; border: none; resize: vertical;
+      font-size: 0.92rem; line-height: 1.85;
+      font-family: 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+      color: var(--text); background: transparent;
+    }
+    #draft-text:focus { outline: none; }
+
+    /* ─── 参考文献カード ─── */
+    .ref-card {
+      background: var(--card);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .ref-header {
+      padding: 12px 18px;
+      background: #f8fff9;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .ref-header h3 { font-size: 0.95rem; font-weight: 700; color: var(--primary-dark); flex:1; }
+    .ref-list { padding: 12px 18px; display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
+    .ref-item {
+      display: flex; gap: 8px; align-items: flex-start;
+      background: var(--bg); border-radius: 8px; padding: 9px 12px;
+      font-size: 0.84rem; line-height: 1.5;
+    }
+    .ref-num {
+      color: var(--primary-dark); font-weight: 700;
+      min-width: 24px; font-size: 0.85rem;
+    }
+    .ref-text { flex: 1; color: var(--text); }
+    .ref-del {
+      color: #e57373; cursor: pointer; font-size: 0.8rem;
+      background: none; border: none; padding: 0; opacity: 0.7;
+    }
+    .ref-del:hover { opacity: 1; }
+    .ref-input-row {
+      padding: 10px 18px 14px;
+      display: flex; gap: 8px;
+    }
+    #ref-input {
+      flex: 1; border: 1px solid var(--border); border-radius: 7px;
+      padding: 7px 12px; font-size: 0.85rem; font-family: inherit;
+    }
+    #ref-input:focus { outline: none; border-color: var(--primary-light); }
+    #ref-add-btn {
+      background: var(--accent); color: var(--primary-dark);
+      border: none; border-radius: 7px; padding: 7px 14px;
+      font-size: 0.85rem; font-weight: 700; cursor: pointer;
+    }
+    #ref-add-btn:hover { background: var(--primary-light); color: white; }
+
+    /* ─── モーダル（文章挿入確認） ─── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.45); z-index: 100;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-box {
+      background: white; border-radius: 14px;
+      padding: 26px 28px; max-width: 520px; width: 90%;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    }
+    .modal-box h3 { font-size: 1.05rem; margin-bottom: 10px; color: var(--primary-dark); }
+    .modal-preview {
+      background: var(--bg); border-radius: 8px; padding: 12px;
+      font-size: 0.88rem; line-height: 1.7; margin-bottom: 14px;
+      max-height: 160px; overflow-y: auto;
+      border: 1px solid var(--border);
+      font-family: 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+    }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+    .btn-cancel {
+      padding: 8px 18px; border-radius: 7px; border: 1px solid #ccc;
+      background: white; cursor: pointer; font-size: 0.9rem; color: var(--text-light);
+    }
+    .btn-insert {
+      padding: 8px 18px; border-radius: 7px; border: none;
+      background: var(--primary); color: white; cursor: pointer;
+      font-size: 0.9rem; font-weight: 700;
+    }
+
+    /* ─── トースト通知 ─── */
+    #toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+      background: var(--primary-dark); color: white;
+      padding: 10px 24px; border-radius: 30px;
+      font-size: 0.88rem; font-weight: 600;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s;
+      z-index: 200;
+    }
+    #toast.show { opacity: 1; }
+
+    /* ─── レスポンシブ ─── */
+    @media (max-width: 760px) {
+      .main-layout { grid-template-columns: 1fr; }
+      .sidebar { flex-direction: row; flex-wrap: wrap; }
+      .sidebar-card { flex: 1; min-width: 200px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ヘッダー -->
+<header>
+  <div class="header-inner">
+    <div class="header-logo">🔬</div>
+    <div class="header-title">
+      <h1>博士論文AIアシスタント</h1>
+      <p>老化防止医療研究 ─ AI対話型執筆支援システム（ライフ・メモナビ技術ベース）</p>
+    </div>
+  </div>
+</header>
+
+<!-- メインレイアウト -->
+<div class="main-layout">
+
+  <!-- ─── サイドバー ─── -->
+  <aside class="sidebar">
+
+    <!-- 章選択 -->
+    <div class="sidebar-card">
+      <h3>📋 論文の章構成</h3>
+      <button class="chapter-btn active" onclick="selectChapter(0)" id="ch-btn-0">
+        第１章：序論<span class="ch-status" id="ch-status-0">─</span>
+      </button>
+      <button class="chapter-btn" onclick="selectChapter(1)" id="ch-btn-1">
+        第２章：先行研究<span class="ch-status" id="ch-status-1">─</span>
+      </button>
+      <button class="chapter-btn" onclick="selectChapter(2)" id="ch-btn-2">
+        第３章：研究方法<span class="ch-status" id="ch-status-2">─</span>
+      </button>
+      <button class="chapter-btn" onclick="selectChapter(3)" id="ch-btn-3">
+        第４章：実験・結果<span class="ch-status" id="ch-status-3">─</span>
+      </button>
+      <button class="chapter-btn" onclick="selectChapter(4)" id="ch-btn-4">
+        第５章：考察<span class="ch-status" id="ch-status-4">─</span>
+      </button>
+      <button class="chapter-btn" onclick="selectChapter(5)" id="ch-btn-5">
+        第６章：結論<span class="ch-status" id="ch-status-5">─</span>
+      </button>
+    </div>
+
+    <!-- 進捗 -->
+    <div class="sidebar-card">
+      <h3>📊 執筆進捗</h3>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+      <div class="progress-label" id="progress-label">0 / 6 章完了</div>
+    </div>
+
+    <!-- 研究情報 -->
+    <div class="sidebar-card">
+      <h3>🧬 研究情報</h3>
+      <div style="font-size:0.82rem; color: var(--text-light); line-height:1.9;">
+        <div><b>分野：</b>老化防止医療</div>
+        <div><b>AI：</b>gpt-4o</div>
+        <div><b>言語：</b>日本語</div>
+      </div>
+      <button class="btn-small" style="width:100%;margin-top:10px;" onclick="exportAll()">
+        📄 全文テキスト出力
+      </button>
+    </div>
+
+  </aside>
+
+  <!-- ─── メインコンテンツ ─── -->
+  <main class="main-content">
+
+    <!-- チャットカード -->
+    <div class="chat-card">
+      <div class="chat-header">
+        <div class="ai-avatar">🤖</div>
+        <div class="chat-header-info">
+          <h2>論文AIアシスタント</h2>
+          <p>現在の章を一緒に書き進めましょう</p>
+        </div>
+        <div class="chapter-badge" id="current-chapter-badge">第１章：序論</div>
+      </div>
+
+      <div id="chat-messages"></div>
+
+      <div class="chat-input-area">
+        <div class="input-row">
+          <textarea id="user-input" rows="2"
+            placeholder="研究の内容や考えを自由に話しかけてください…（Shift+Enterで改行）"
+            onkeydown="handleKey(event)"></textarea>
+          <button id="send-btn" onclick="sendMessage()">送信 ➤</button>
+        </div>
+        <div class="input-hint">💡 AIが質問に答えながら論文の文章を生成します。「論文に追加して」と言うと下の草稿に追記されます。</div>
+      </div>
+    </div>
+
+    <!-- 論文草稿エリア -->
+    <div class="draft-card">
+      <div class="draft-header">
+        <h3>✏️ 論文草稿 ─ <span id="draft-chapter-name">第１章：序論</span></h3>
+        <div class="draft-actions">
+          <button class="btn-small" onclick="clearDraft()">クリア</button>
+          <button class="btn-small primary" onclick="copyDraft()">📋 コピー</button>
+        </div>
+      </div>
+      <textarea id="draft-text" placeholder="AIとの対話から生成された文章がここに表示されます。直接編集することもできます。"></textarea>
+    </div>
+
+    <!-- 参考文献 -->
+    <div class="ref-card">
+      <div class="ref-header">
+        <h3>📚 参考文献リスト</h3>
+        <button class="btn-small" onclick="generateRefList()">引用文生成</button>
+      </div>
+      <div class="ref-list" id="ref-list">
+        <div style="font-size:0.83rem; color:var(--text-light); padding: 6px 0;">
+          参考文献をここに追加してください。
+        </div>
+      </div>
+      <div class="ref-input-row">
+        <input type="text" id="ref-input"
+          placeholder="例：田中一郎 (2023). 老化抑制機構の分子生物学的研究. 日本老年医学会雑誌, 60(2), 112-125."
+          onkeydown="if(event.key==='Enter')addRef()">
+        <button id="ref-add-btn" onclick="addRef()">＋追加</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- 文章挿入モーダル -->
+<div class="modal-overlay" id="insert-modal">
+  <div class="modal-box">
+    <h3>✍️ 草稿に追加しますか？</h3>
+    <div class="modal-preview" id="modal-preview-text"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">キャンセル</button>
+      <button class="btn-insert" onclick="confirmInsert()">✅ 草稿に追加</button>
+    </div>
+  </div>
+</div>
+
+<!-- トースト -->
+<div id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────
+// バックエンドURL（既存のライフ・メモナビサーバーを使用）
+// ─────────────────────────────────────────────
+const API_BASE = 'https://life-memo-navi-backend.onrender.com';
+
+// ─────────────────────────────────────────────
+// 定数・状態管理
+// ─────────────────────────────────────────────
+const CHAPTERS = [
+  { name: '第１章：序論',      hint: '研究の背景・目的・意義・論文の構成' },
+  { name: '第２章：先行研究',  hint: '既存の老化防止医療研究のレビューと本研究の位置づけ' },
+  { name: '第３章：研究方法',  hint: '実験デザイン・対象・測定方法・統計解析' },
+  { name: '第４章：実験・結果', hint: '実験結果の記述・図表の説明' },
+  { name: '第５章：考察',      hint: '結果の解釈・先行研究との比較・限界と今後の課題' },
+  { name: '第６章：結論',      hint: '研究の総括・学術的貢献・実用的示唆' },
+];
+
+let currentChapter = 0;
+let chatHistory = [];
+let drafts = ['', '', '', '', '', ''];
+let refs = [];
+let pendingInsertText = '';
+
+// ─────────────────────────────────────────────
+// 初期化
+// ─────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  addAIMessage(
+    `こんにちは！老化防止医療の博士論文執筆をサポートするAIアシスタントです🔬\n\n現在は **${CHAPTERS[0].name}** の執筆をサポートします。\n\n📝 **序論では**、研究の背景・目的・意義などを書いていきます。\n\nまず、**研究の背景や動機**を教えてもらえますか？\n（例：「老化の主要因として○○に着目した理由は…」）`
+  );
+});
+
+// ─────────────────────────────────────────────
+// 章選択
+// ─────────────────────────────────────────────
+function selectChapter(idx) {
+  drafts[currentChapter] = document.getElementById('draft-text').value;
+  currentChapter = idx;
+
+  document.querySelectorAll('.chapter-btn').forEach((b, i) => {
+    b.classList.toggle('active', i === idx);
+  });
+
+  const name = CHAPTERS[idx].name;
+  document.getElementById('current-chapter-badge').textContent = name;
+  document.getElementById('draft-chapter-name').textContent = name;
+  document.getElementById('draft-text').value = drafts[idx];
+
+  chatHistory = [];
+  document.getElementById('chat-messages').innerHTML = '';
+  addAIMessage(
+    `**${name}** の執筆を始めましょう 📖\n\n${CHAPTERS[idx].hint}について、研究内容を教えてください。AIが文章にまとめます。`
+  );
+}
+
+// ─────────────────────────────────────────────
+// チャット送信
+// ─────────────────────────────────────────────
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+async function sendMessage() {
+  const input = document.getElementById('user-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  addUserMessage(text);
+  input.value = '';
+  document.getElementById('send-btn').disabled = true;
+
+  const typingId = showTyping();
+
+  try {
+    chatHistory.push({ role: 'user', content: text });
+
+    // ── バックエンド経由でOpenAI呼び出し ──
+    const res = await fetch(`${API_BASE}/api/thesis/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: chatHistory.slice(-8),
+        userMessage: text,
+        chapterIndex: currentChapter,
+        refs: refs,
+      }),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'サーバーエラー');
+    }
+
+    const data = await res.json();
+    const reply = data.reply;
+    const draftText = data.draftText; // バックエンドが抽出済み
+
+    removeTyping(typingId);
+    chatHistory.push({ role: 'assistant', content: reply });
+    addAIMessage(reply);
+
+    // 論文草稿が含まれていれば自動でモーダル表示
+    if (draftText) {
+      setTimeout(() => showInsertModal(draftText), 600);
+    }
+
+  } catch (e) {
+    removeTyping(typingId);
+    addAIMessage(`❌ エラーが発生しました：${e.message}\n\nサーバーへの接続を確認してください。`);
+  }
+
+  document.getElementById('send-btn').disabled = false;
+}
+
+// ─────────────────────────────────────────────
+// メッセージ描画
+// ─────────────────────────────────────────────
+function addAIMessage(text) {
+  const area = document.getElementById('chat-messages');
+  const row = document.createElement('div');
+  row.className = 'msg-row';
+  row.innerHTML = `
+    <div class="msg-avatar ai">🤖</div>
+    <div>
+      <div class="msg-bubble ai">${formatText(text)}</div>
+      <div class="msg-time">${getTime()}</div>
+    </div>`;
+  area.appendChild(row);
+  area.scrollTop = area.scrollHeight;
+}
+
+function addUserMessage(text) {
+  const area = document.getElementById('chat-messages');
+  const row = document.createElement('div');
+  row.className = 'msg-row user-row';
+  row.innerHTML = `
+    <div class="msg-avatar user">👤</div>
+    <div>
+      <div class="msg-bubble user">${escHtml(text)}</div>
+      <div class="msg-time" style="text-align:left">${getTime()}</div>
+    </div>`;
+  area.appendChild(row);
+  area.scrollTop = area.scrollHeight;
+}
+
+function showTyping() {
+  const area = document.getElementById('chat-messages');
+  const row = document.createElement('div');
+  const id = 'typing-' + Date.now();
+  row.id = id;
+  row.className = 'msg-row';
+  row.innerHTML = `
+    <div class="msg-avatar ai">🤖</div>
+    <div class="msg-bubble ai">
+      <div class="typing-indicator">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    </div>`;
+  area.appendChild(row);
+  area.scrollTop = area.scrollHeight;
+  return id;
+}
+
+function removeTyping(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+// ─────────────────────────────────────────────
+// 草稿操作
+// ─────────────────────────────────────────────
+function showInsertModal(text) {
+  pendingInsertText = text;
+  document.getElementById('modal-preview-text').textContent = text;
+  document.getElementById('insert-modal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('insert-modal').classList.remove('show');
+}
+
+function confirmInsert() {
+  const el = document.getElementById('draft-text');
+  const existing = el.value.trim();
+  el.value = existing ? existing + '\n\n' + pendingInsertText : pendingInsertText;
+  closeModal();
+  updateChapterStatus();
+  showToast('✅ 草稿に追加しました！');
+}
+
+function clearDraft() {
+  if (!confirm('この章の草稿をクリアしますか？')) return;
+  document.getElementById('draft-text').value = '';
+  drafts[currentChapter] = '';
+  updateChapterStatus();
+}
+
+function copyDraft() {
+  const text = document.getElementById('draft-text').value;
+  if (!text) { showToast('⚠️ 草稿が空です'); return; }
+  navigator.clipboard.writeText(text).then(() => showToast('📋 クリップボードにコピーしました'));
+}
+
+function exportAll() {
+  drafts[currentChapter] = document.getElementById('draft-text').value;
+
+  let output = '━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
+  output += '　博士論文草稿（老化防止医療研究）\n';
+  output += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+
+  CHAPTERS.forEach((ch, i) => {
+    if (drafts[i]) {
+      output += `${'─'.repeat(36)}\n${ch.name}\n${'─'.repeat(36)}\n`;
+      output += drafts[i] + '\n\n';
+    }
+  });
+
+  if (refs.length > 0) {
+    output += `${'─'.repeat(36)}\n参考文献\n${'─'.repeat(36)}\n`;
+    refs.forEach((r, i) => { output += `[${i+1}] ${r}\n`; });
+  }
+
+  navigator.clipboard.writeText(output).then(() => {
+    showToast('📄 全章をクリップボードにコピーしました');
+  });
+}
+
+// ─────────────────────────────────────────────
+// 参考文献
+// ─────────────────────────────────────────────
+function addRef() {
+  const input = document.getElementById('ref-input');
+  const text = input.value.trim();
+  if (!text) return;
+  refs.push(text);
+  renderRefList();
+  input.value = '';
+  showToast('📚 参考文献を追加しました');
+}
+
+function removeRef(idx) {
+  refs.splice(idx, 1);
+  renderRefList();
+}
+
+function renderRefList() {
+  const list = document.getElementById('ref-list');
+  if (refs.length === 0) {
+    list.innerHTML = '<div style="font-size:0.83rem;color:var(--text-light);padding:6px 0;">参考文献をここに追加してください。</div>';
+    return;
+  }
+  list.innerHTML = refs.map((r, i) => `
+    <div class="ref-item">
+      <span class="ref-num">[${i+1}]</span>
+      <span class="ref-text">${escHtml(r)}</span>
+      <button class="ref-del" onclick="removeRef(${i})" title="削除">✕</button>
+    </div>`).join('');
+}
+
+async function generateRefList() {
+  if (refs.length === 0) { showToast('⚠️ 参考文献が登録されていません'); return; }
+  showToast('⏳ 引用文を生成中...');
+
+  try {
+    const res = await fetch(`${API_BASE}/api/thesis/refs`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refs }),
+    });
+    const data = await res.json();
+    addAIMessage('📚 **引用文リスト（整形済み）**\n\n' + data.formatted);
+    showToast('✅ 引用文をチャットに表示しました');
+  } catch(e) {
+    showToast('❌ 生成に失敗しました：' + e.message);
+  }
+}
+
+// ─────────────────────────────────────────────
+// 進捗管理
+// ─────────────────────────────────────────────
+function updateChapterStatus() {
+  let completed = 0;
+  CHAPTERS.forEach((_, i) => {
+    const content = i === currentChapter
+      ? document.getElementById('draft-text').value.trim()
+      : drafts[i].trim();
+    const status = document.getElementById(`ch-status-${i}`);
+    if (content) { status.textContent = '✅'; completed++; }
+    else { status.textContent = '─'; }
+  });
+  const pct = Math.round((completed / CHAPTERS.length) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `${completed} / ${CHAPTERS.length} 章完了`;
+}
+
+document.getElementById('draft-text').addEventListener('input', updateChapterStatus);
+
+// ─────────────────────────────────────────────
+// ユーティリティ
+// ─────────────────────────────────────────────
+function formatText(text) {
+  return text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/---論文草稿---/g, '<hr style="border:1px dashed var(--accent);margin:8px 0"><b style="color:var(--primary-dark)">📄 論文草稿</b><hr style="border:1px dashed var(--accent);margin:8px 0">')
+    .replace(/\n/g, '<br>');
+}
+
+function escHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+
+function getTime() {
+  return new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+}
+
+function showToast(msg, duration = 2800) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+</script>
+
+</body>
+</html>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
