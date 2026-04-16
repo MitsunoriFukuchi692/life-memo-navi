@@ -15,6 +15,7 @@ import aiInterviewRoutes from './routes/aiInterview.js';
 import paymentRoutes, { initPaymentTables } from './routes/payment.js'; // ← 追加
 import shukatsuRoutes, { initShukatsuTables } from './routes/shukatsu.js'; // ← 追加
 import ttsRoutes from './routes/tts.js';
+import thesisRoutes from './routes/thesis.js'; // ← 博士論文AI
 
 dotenv.config();
 
@@ -57,6 +58,7 @@ app.use('/api/org', orgRoutes);
 app.use('/api/payment', paymentRoutes); // ← 追加
 app.use('/api/shukatsu', shukatsuRoutes); // ← 追加
 app.use('/api/tts', ttsRoutes);
+app.use('/api/thesis', thesisRoutes); // ← 博士論文AI
 
 // ルートエンドポイント
 app.get('/', (req: Request, res: Response) => {
