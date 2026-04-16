@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import OpenAI from 'openai';
+import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 
 const router = Router();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -69,9 +70,11 @@ router.post('/chat', async (req: Request, res: Response) => {
     const systemPrompt = buildThesisPrompt(Number(chapterIndex), refs);
 
     // 会話履歴（直近8件）＋今回のメッセージ
-    const conversationMessages = [
-      ...(messages as { role: string; content: string }[]).slice(-8),
-      { role: 'user', content: userMessage },
+    const conversationMessages: ChatCompletionMessageParam[] = [
+      ...(messages as { role: 'user' | 'assistant'; content: string }[])
+        .slice(-8)
+        .map(m => ({ role: m.role, content: m.content } as ChatCompletionMessageParam)),
+      { role: 'user' as const, content: userMessage },
     ];
 
     const response = await openai.chat.completions.create({
@@ -79,7 +82,7 @@ router.post('/chat', async (req: Request, res: Response) => {
       max_tokens: 1400,
       temperature: 0.7,
       messages: [
-        { role: 'system', content: systemPrompt },
+        { role: 'system' as const, content: systemPrompt },
         ...conversationMessages,
       ],
     });
@@ -118,7 +121,7 @@ router.post('/refs', async (req: Request, res: Response) => {
       model: 'gpt-4o',
       max_tokens: 600,
       messages: [{
-        role: 'user',
+        role: 'user' as const,
         content: `以下の参考文献リストを、日本語の博士論文スタイル（APA形式または著者・年形式）に整形してください：\n\n${refText}`,
       }],
     });
