@@ -328,7 +328,11 @@ router.post('/webhook', async (req: Request, res: Response) => {
         const trialEnd = subscription.trial_end
           ? new Date(subscription.trial_end * 1000)
           : null;
-        const periodEnd = new Date((subscription.current_period_end as number) * 1000);
+        const currentPeriodEnd = subscription.current_period_end
+          ?? subscription.items?.data?.[0]?.current_period_end;
+        const periodEnd = currentPeriodEnd
+          ? new Date(currentPeriodEnd * 1000)
+          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
         await pool.query(`
           UPDATE subscriptions SET
