@@ -4,7 +4,7 @@ const fields = [
   { key: 'jibunshi', label: '自分史', emoji: '📖', desc: 'あなたの人生の物語を記録しましょう', color: '#C8694A' },
   { key: 'kaishashi', label: '会社史', emoji: '🏢', desc: '会社の歩みと歴史を記録しましょう', color: '#6B9B6B' },
   { key: 'shukatsu', label: '終活ノート', emoji: '🕊️', desc: '大切なことを整理して残しましょう', color: '#7B8FBB' },
-  { key: 'other', label: 'その他', emoji: '📝', desc: '自由に記録・整理しましょう', color: '#A07850' },
+  { key: 'other', label: 'その他', emoji: '📝', desc: '日記帳・営業報告をつくりましょう', color: '#A07850' },
 ];
 
 export default function FieldSelectPage() {
