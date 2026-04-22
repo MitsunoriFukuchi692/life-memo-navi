@@ -8,7 +8,7 @@ const fieldLabels: Record<string, string> = {
   jibunshi: '自分史',
   kaishashi: '会社史',
   shukatsu: '終活ノート',
-  other: 'その他',
+  other: '日記・営業報告',
 };
 
 const fieldDescriptions: Record<string, string> = {
