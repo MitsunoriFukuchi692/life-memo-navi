@@ -4,6 +4,233 @@ import Layout from '../components/Layout';
 import { interviewApi, Interview } from '../api';
 import api from '../api';
 
+// ============================================================
+// 日記帳コンポーネント（「その他」フィールド専用）
+// ============================================================
+interface DiaryEntry {
+  id: number;
+  date: string;      // question_text に "YYYY-MM-DD｜タイトル" 形式で保存
+  title: string;
+  body: string;      // answer_text
+  question_id: number;
+  updated_at: string;
+}
+
+function DiaryPage({ userId }: { userId: number }) {
+  const [entries, setEntries] = useState<DiaryEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState<number | null>(null); // null = 新規
+  const [showForm, setShowForm] = useState(false);
+  const [formDate, setFormDate] = useState(new Date().toISOString().slice(0, 10));
+  const [formTitle, setFormTitle] = useState('');
+  const [formBody, setFormBody] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const [deleting, setDeleting] = useState<number | null>(null);
+
+  // 「その他」フィールドのエントリを取得
+  const fetchEntries = async () => {
+    setLoading(true);
+    try {
+      const res = await interviewApi.getAll(userId, 'other');
+      // question_text = "YYYY-MM-DD｜タイトル" をパース
+      const parsed: DiaryEntry[] = res.data.map(iv => {
+        const parts = iv.question_text?.split('｜') || [];
+        return {
+          id: iv.id,
+          date: parts[0] || '',
+          title: parts[1] || '',
+          body: iv.answer_text || '',
+          question_id: iv.question_id,
+          updated_at: iv.updated_at,
+        };
+      });
+      // 日付降順でソート
+      parsed.sort((a, b) => (b.date > a.date ? 1 : -1));
+      setEntries(parsed);
+    } catch (e) {
+      console.error('日記取得失敗:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchEntries(); }, []);
+
+  const openNew = () => {
+    setEditingId(null);
+    setFormDate(new Date().toISOString().slice(0, 10));
+    setFormTitle('');
+    setFormBody('');
+    setSaveError('');
+    setShowForm(true);
+  };
+
+  const openEdit = (entry: DiaryEntry) => {
+    setEditingId(entry.question_id);
+    setFormDate(entry.date);
+    setFormTitle(entry.title);
+    setFormBody(entry.body);
+    setSaveError('');
+    setShowForm(true);
+  };
+
+  const handleSave = async () => {
+    if (!formBody.trim()) { setSaveError('本文を入力してください。'); return; }
+    setSaving(true);
+    setSaveError('');
+    try {
+      // 新しい question_id を決定（既存最大 + 1、ただし editing 時は既存IDを使用）
+      let qId: number;
+      if (editingId !== null) {
+        qId = editingId;
+      } else {
+        const maxId = entries.reduce((m, e) => Math.max(m, e.question_id), 0);
+        qId = maxId + 1;
+      }
+      // question_text に "YYYY-MM-DD｜タイトル" を格納
+      const questionText = `${formDate}｜${formTitle || '無題'}`;
+      // バックエンドのsaveはquestion_textを自動生成するため、
+      // 直接POSTして question_text を上書きするためにapi.postを利用
+      await api.post('/interviews', {
+        user_id: userId,
+        question_id: qId,
+        answer_text: formBody,
+        field_type: 'other',
+        question_text: questionText,
+      });
+      setShowForm(false);
+      await fetchEntries();
+    } catch (e) {
+      console.error(e);
+      setSaveError('保存に失敗しました。もう一度お試しください。');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (entry: DiaryEntry) => {
+    if (!confirm(`「${entry.title || entry.date}」を削除してよろしいですか？`)) return;
+    setDeleting(entry.question_id);
+    try {
+      await api.delete(`/interviews/entry/${userId}/other/${entry.question_id}`);
+      await fetchEntries();
+    } catch (e) {
+      console.error(e);
+      alert('削除に失敗しました。');
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  const formatDate = (d: string) => {
+    if (!d) return '';
+    const dt = new Date(d);
+    return dt.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+  };
+
+  return (
+    <Layout title="📓 日記・メモ帳">
+      {/* ヘッダー */}
+      <div style={{ background: 'linear-gradient(135deg, #6B4F3A, #A07850)', borderRadius: 'var(--radius)', padding: '32px 40px', color: 'var(--cream)', marginBottom: '32px' }}>
+        <h2 style={{ fontFamily: "'Noto Serif JP', serif", fontSize: '1.8rem', marginBottom: '10px' }}>日記・メモ帳</h2>
+        <p style={{ opacity: 0.85, fontSize: '0.95rem', lineHeight: 1.8 }}>
+          日々の出来事、気づき、アイデアなど何でも自由に記録できます。<br />
+          {entries.length > 0 ? `${entries.length} 件のメモが保存されています。` : 'まだメモがありません。「新しいメモを書く」から始めましょう。'}
+        </p>
+      </div>
+
+      {/* 新規作成ボタン */}
+      <div style={{ marginBottom: '24px', textAlign: 'right' }}>
+        <button onClick={openNew} style={{
+          padding: '12px 28px', background: 'var(--brown-dark)', border: 'none',
+          borderRadius: 'var(--radius-sm)', color: 'var(--cream)', fontSize: '1rem',
+          fontWeight: 600, cursor: 'pointer', fontFamily: "'Noto Sans JP', sans-serif",
+          boxShadow: '0 4px 12px rgba(107,79,58,0.3)',
+        }}>
+          ✏️ 新しいメモを書く
+        </button>
+      </div>
+
+      {/* 入力フォーム */}
+      {showForm && (
+        <div className="fade-in" style={{ background: 'var(--white)', borderRadius: 'var(--radius)', padding: '32px', boxShadow: 'var(--shadow)', border: '2px solid var(--brown-light)', marginBottom: '32px' }}>
+          <h3 style={{ fontFamily: "'Noto Serif JP', serif", fontSize: '1.2rem', color: 'var(--brown-dark)', marginBottom: '24px' }}>
+            {editingId !== null ? '✏️ メモを編集' : '✏️ 新しいメモ'}
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '16px', marginBottom: '16px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-light)', marginBottom: '6px', fontWeight: 600 }}>日付</label>
+              <input type="date" value={formDate} onChange={e => setFormDate(e.target.value)}
+                style={{ width: '100%', padding: '10px 14px', border: '2px solid var(--cream-dark)', borderRadius: 'var(--radius-sm)', fontSize: '1rem', color: 'var(--text)', background: 'var(--cream)', outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-light)', marginBottom: '6px', fontWeight: 600 }}>タイトル（省略可）</label>
+              <input type="text" value={formTitle} onChange={e => setFormTitle(e.target.value)}
+                placeholder="例：今日の気づき、○○との打ち合わせ"
+                style={{ width: '100%', padding: '10px 14px', border: '2px solid var(--cream-dark)', borderRadius: 'var(--radius-sm)', fontSize: '1rem', color: 'var(--text)', background: 'var(--cream)', outline: 'none', boxSizing: 'border-box' }} />
+            </div>
+          </div>
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-light)', marginBottom: '6px', fontWeight: 600 }}>本文</label>
+            <textarea value={formBody} onChange={e => setFormBody(e.target.value)}
+              placeholder="今日の出来事、気づき、アイデア、何でも自由に書いてください..."
+              style={{ width: '100%', minHeight: '220px', padding: '16px', border: '2px solid var(--cream-dark)', borderRadius: 'var(--radius-sm)', fontSize: '1.05rem', lineHeight: 1.8, color: 'var(--text)', background: 'var(--cream)', resize: 'vertical', outline: 'none', fontFamily: "'Noto Sans JP', sans-serif", boxSizing: 'border-box' }}
+              onFocus={e => e.target.style.borderColor = 'var(--brown-light)'}
+              onBlur={e => e.target.style.borderColor = 'var(--cream-dark)'}
+            />
+          </div>
+          {saveError && <p style={{ color: '#C0392B', fontSize: '0.9rem', marginBottom: '12px' }}>⚠️ {saveError}</p>}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+            <button onClick={() => setShowForm(false)} style={{ padding: '10px 24px', background: 'transparent', border: '2px solid var(--cream-dark)', borderRadius: 'var(--radius-sm)', color: 'var(--text-light)', fontSize: '0.95rem', cursor: 'pointer' }}>
+              キャンセル
+            </button>
+            <button onClick={handleSave} disabled={saving} style={{ padding: '10px 28px', background: saving ? '#ccc' : 'var(--brown-dark)', border: 'none', borderRadius: 'var(--radius-sm)', color: 'var(--cream)', fontSize: '0.95rem', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer' }}>
+              {saving ? '保存中...' : '💾 保存する'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* エントリ一覧 */}
+      {loading ? (
+        <p style={{ textAlign: 'center', color: 'var(--text-light)', padding: '40px' }}>読み込み中...</p>
+      ) : entries.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--white)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow)' }}>
+          <div style={{ fontSize: '4rem', marginBottom: '16px' }}>📓</div>
+          <p style={{ color: 'var(--text-light)', fontSize: '1rem' }}>まだメモがありません。<br />上の「新しいメモを書く」ボタンから記録を始めましょう。</p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {entries.map(entry => (
+            <div key={entry.question_id} className="fade-in" style={{ background: 'var(--white)', borderRadius: 'var(--radius)', padding: '28px 32px', boxShadow: 'var(--shadow)', border: '1px solid var(--cream-dark)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                <div>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-light)', marginRight: '12px' }}>📅 {formatDate(entry.date)}</span>
+                  {entry.title && entry.title !== '無題' && (
+                    <span style={{ background: 'var(--cream-dark)', color: 'var(--brown-dark)', padding: '2px 12px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 600 }}>{entry.title}</span>
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button onClick={() => openEdit(entry)} style={{ padding: '6px 16px', background: 'transparent', border: '1px solid var(--brown-light)', borderRadius: '20px', color: 'var(--brown)', fontSize: '0.85rem', cursor: 'pointer' }}>✏️ 編集</button>
+                  <button onClick={() => handleDelete(entry)} disabled={deleting === entry.question_id} style={{ padding: '6px 16px', background: 'transparent', border: '1px solid #e0a0a0', borderRadius: '20px', color: '#c0392b', fontSize: '0.85rem', cursor: 'pointer' }}>
+                    {deleting === entry.question_id ? '削除中...' : '🗑 削除'}
+                  </button>
+                </div>
+              </div>
+              <p style={{ color: 'var(--text)', fontSize: '1rem', lineHeight: 1.8, whiteSpace: 'pre-wrap', margin: 0 }}>{entry.body}</p>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: '12px', textAlign: 'right' }}>
+                最終更新: {new Date(entry.updated_at).toLocaleString('ja-JP')}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+    </Layout>
+  );
+}
+// ============================================================
+
 const JIBUNSHI_QUESTIONS = [
   "あなたの生まれた時代はどんな時代でしたか？",
   "生まれた場所と、幼い頃の思い出は？",
@@ -96,6 +323,12 @@ declare global {
 export default function InterviewPage() {
   const { fieldType = 'jibunshi' } = useParams<{ fieldType: string }>();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  // 「その他」は日記帳UIを表示
+  if (fieldType === 'other') {
+    return <DiaryPage userId={user.id} />;
+  }
+
   const QUESTIONS = getQuestions(fieldType);
 
   const [current, setCurrent] = useState(0);

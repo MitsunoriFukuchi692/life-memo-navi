@@ -17,6 +17,7 @@ import ShukatsuPage from './pages/ShukatsuPage'; // ← 追加
 import PaymentSuccessPage from './pages/PaymentSuccessPage'; // ← 追加
 import ShukatsuLandingPage from './pages/ShukatsuLandingPage'; // ← 追加
 import VoiceChat from './pages/VoiceChat'; // ← 追加
+import SalesReportPage from './pages/SalesReportPage'; // ← 営業日報
 
 function PrivateRoute({ children }: { children: JSX.Element }) {
   const token = localStorage.getItem('token');
@@ -45,6 +46,7 @@ function App() {
         <Route path="/payment-success" element={<PaymentSuccessPage />} /> {/* ← 追加 */}
         <Route path="/shukatsu-lp" element={<ShukatsuLandingPage />} /> {/* ← 追加 */}
         <Route path="/voice-chat" element={<PrivateRoute><VoiceChat /></PrivateRoute>} /> {/* ← 追加 */}
+        <Route path="/field/:fieldType/sales-report" element={<PrivateRoute><SalesReportPage /></PrivateRoute>} /> {/* ← 営業日報 */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

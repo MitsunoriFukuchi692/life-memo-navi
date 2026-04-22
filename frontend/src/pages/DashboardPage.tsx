@@ -15,7 +15,7 @@ const fieldDescriptions: Record<string, string> = {
   jibunshi: 'あなたの人生の記録を少しずつ積み重ねていきましょう。',
   kaishashi: '会社の歩みと大切な出来事を記録していきましょう。',
   shukatsu: '大切なことを整理して、未来に伝えましょう。',
-  other: '自由に記録・整理していきましょう。',
+  other: '日記・メモ帳として自由に記録したり、営業日報を管理できます。',
 };
 
 export default function DashboardPage() {
@@ -51,7 +51,43 @@ export default function DashboardPage() {
   const fieldLabel = fieldLabels[fieldType] || fieldType;
   const fieldDesc = fieldDescriptions[fieldType] || '';
 
-  const cards = [
+  // 「その他」のとき専用カード構成
+  const otherCards = [
+    {
+      to: `/field/${fieldType}/interview`,
+      emoji: '📓',
+      title: '日記・メモ帳',
+      desc: '日々の出来事やアイデアを自由に書き留めましょう',
+      stat: `${stats.interviews} 件のメモ`,
+      color: '#A07850',
+    },
+    {
+      to: `/field/${fieldType}/sales-report`,
+      emoji: '📊',
+      title: '営業日報',
+      desc: '訪問先・商談内容・次回アクションを記録・管理できます',
+      stat: '日報を開く',
+      color: '#2c7bb6',
+    },
+    {
+      to: `/field/${fieldType}/timeline`,
+      emoji: '📅',
+      title: '出来事',
+      desc: '大切な出来事を時系列で整理しましょう',
+      stat: `${stats.timelines} 件の記録`,
+      color: '#6B9B6B',
+    },
+    {
+      to: `/field/${fieldType}/photos`,
+      emoji: '🖼',
+      title: '写真',
+      desc: '大切な写真をデジタルで保管しましょう',
+      stat: `${stats.photos} 枚の写真`,
+      color: '#7B8FBB',
+    },
+  ];
+
+  const cards = fieldType === 'other' ? otherCards : [
     {
       to: `/field/${fieldType}/interview`,
       emoji: '💬',
@@ -109,26 +145,28 @@ export default function DashboardPage() {
           完成したらPDFとして保存・印刷することができます。
         </p>
 
-        {/* 進捗バー */}
-        <div style={{ marginTop: '28px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-            <span style={{ fontSize: '0.85rem', opacity: 0.8 }}>聞き取り進捗</span>
-            <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{completionPercent}%</span>
-          </div>
-          <div style={{
-            background: 'rgba(255,255,255,0.2)',
-            borderRadius: '20px',
-            height: '10px',
-          }}>
+        {/* 進捗バー（その他フィールドでは非表示） */}
+        {fieldType !== 'other' && (
+          <div style={{ marginTop: '28px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <span style={{ fontSize: '0.85rem', opacity: 0.8 }}>聞き取り進捗</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{completionPercent}%</span>
+            </div>
             <div style={{
-              background: 'var(--cream)',
+              background: 'rgba(255,255,255,0.2)',
               borderRadius: '20px',
-              height: '100%',
-              width: `${completionPercent}%`,
-              transition: 'width 1s ease',
-            }} />
+              height: '10px',
+            }}>
+              <div style={{
+                background: 'var(--cream)',
+                borderRadius: '20px',
+                height: '100%',
+                width: `${completionPercent}%`,
+                transition: 'width 1s ease',
+              }} />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* カード */}

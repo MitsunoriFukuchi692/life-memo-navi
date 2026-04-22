@@ -114,15 +114,36 @@ router.get('/:user_id', async (req: Request, res: Response) => {
   }
 });
 
+// DELETE: user_id + field_type + question_id でエントリ削除（日記帳用）
+router.delete('/entry/:user_id/:field_type/:question_id', async (req: Request, res: Response) => {
+  try {
+    const { user_id, field_type, question_id } = req.params;
+    const result = await pool.query(
+      'DELETE FROM interviews WHERE user_id = $1 AND field_type = $2 AND question_id = $3 RETURNING id',
+      [user_id, field_type, question_id]
+    );
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Entry not found' });
+    res.json({ success: true, deleted_id: result.rows[0].id });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // POST: field_type を含めて保存（暗号化して保存）
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { user_id, question_id, answer_text, field_type = 'jibunshi' } = req.body;
-    if (!user_id || !question_id || question_id < 1 || question_id > 15) {
+    const { user_id, question_id, answer_text, field_type = 'jibunshi', question_text: customQuestionText } = req.body;
+    if (!user_id || !question_id || question_id < 1) {
+      return res.status(400).json({ error: 'Invalid question_id' });
+    }
+    // 日記帳モード（other）では question_id が 15 超になる場合があるため上限チェックを緩和
+    // 通常モードでは 1-15 チェック
+    if (field_type !== 'other' && (question_id < 1 || question_id > 15)) {
       return res.status(400).json({ error: 'Invalid question_id (1-15)' });
     }
+    // question_text: 日記帳では customQuestionText を使用、通常は配列から取得
     const questions = getQuestions(field_type);
-    const question_text = questions[question_id - 1];
+    const question_text = customQuestionText || (questions[question_id - 1] ?? `メモ${question_id}`);
 
     // answer_text を暗号化して保存
     const encryptedAnswer = answer_text ? encrypt(answer_text) : answer_text;

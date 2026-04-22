@@ -86,11 +86,19 @@ router.get('/:user_id', async (req, res) => {
         const { user_id } = req.params;
         const field_type = req.query.field_type || 'jibunshi';
         const result = await pool.query('SELECT * FROM interviews WHERE user_id = $1 AND field_type = $2 ORDER BY question_id', [user_id, field_type]);
-        // answer_text を復号して返す
-        const rows = result.rows.map(row => ({
-            ...row,
-            answer_text: row.answer_text ? decrypt(row.answer_text) : row.answer_text,
-        }));
+        // answer_text を復号して返す（復号失敗時は元データを維持）
+        const rows = result.rows.map(row => {
+            try {
+                return {
+                    ...row,
+                    answer_text: row.answer_text ? decrypt(row.answer_text) : row.answer_text,
+                };
+            }
+            catch (e) {
+                console.error(`復号エラー (interview id=${row.id}):`, e);
+                return row;
+            }
+        });
         res.json(rows);
     }
     catch (error) {
@@ -108,11 +116,19 @@ router.post('/', async (req, res) => {
         const question_text = questions[question_id - 1];
         // answer_text を暗号化して保存
         const encryptedAnswer = answer_text ? encrypt(answer_text) : answer_text;
-        const result = await pool.query(`INSERT INTO interviews (user_id, question_id, question_text, answer_text, field_type)
-       VALUES ($1, $2, $3, $4, $5)
-       ON CONFLICT (user_id, question_id, field_type)
-       DO UPDATE SET answer_text = $4, updated_at = NOW()
-       RETURNING *`, [user_id, question_id, question_text, encryptedAnswer, field_type]);
+        // 既存レコードを確認してUPSERT（ON CONFLICTに頼らず安全に処理）
+        const existing = await pool.query('SELECT id FROM interviews WHERE user_id = $1 AND question_id = $2 AND field_type = $3', [user_id, question_id, field_type]);
+        let result;
+        if (existing.rows.length > 0) {
+            // 既存レコードをUPDATE
+            result = await pool.query('UPDATE interviews SET answer_text = $1, question_text = $2, updated_at = NOW() WHERE user_id = $3 AND question_id = $4 AND field_type = $5 RETURNING *', [encryptedAnswer, question_text, user_id, question_id, field_type]);
+        }
+        else {
+            // 新規INSERT
+            result = await pool.query(`INSERT INTO interviews (user_id, question_id, question_text, answer_text, field_type)
+         VALUES ($1, $2, $3, $4, $5)
+         RETURNING *`, [user_id, question_id, question_text, encryptedAnswer, field_type]);
+        }
         // 返すときは復号して返す
         const row = result.rows[0];
         res.status(201).json({
@@ -121,6 +137,7 @@ router.post('/', async (req, res) => {
         });
     }
     catch (error) {
+        console.error('インタビュー保存エラー:', error);
         res.status(500).json({ error: error.message });
     }
 });

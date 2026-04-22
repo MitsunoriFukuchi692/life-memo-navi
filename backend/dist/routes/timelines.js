@@ -2,12 +2,21 @@ import express from 'express';
 import pool from '../db/db.js';
 import { encrypt, decrypt } from '../utils/encryption.js';
 const router = express.Router();
-// 復号ヘルパー関数
-const decryptRow = (row) => ({
-    ...row,
-    event_title: row.event_title ? decrypt(row.event_title) : row.event_title,
-    event_description: row.event_description ? decrypt(row.event_description) : row.event_description,
-});
+// 復号ヘルパー関数（復号に失敗した場合は元データをそのまま返す）
+const decryptRow = (row) => {
+    try {
+        return {
+            ...row,
+            event_title: row.event_title ? decrypt(row.event_title) : row.event_title,
+            event_description: row.event_description ? decrypt(row.event_description) : row.event_description,
+        };
+    }
+    catch (e) {
+        console.error(`復号エラー (timeline id=${row.id}):`, e);
+        // 復号に失敗した場合はそのまま返す（データが消えるよりマシ）
+        return row;
+    }
+};
 // ユーザーの年表一覧取得（field_type対応）
 router.get('/user/:user_id', async (req, res) => {
     try {
