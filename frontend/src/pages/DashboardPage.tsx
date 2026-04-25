@@ -9,6 +9,8 @@ const fieldLabels: Record<string, string> = {
   kaishashi: '会社史',
   shukatsu: '終活ノート',
   other: '日記・営業報告',
+  diary: '日記・メモ帳',
+  salesreport: '営業報告',
 };
 
 const fieldDescriptions: Record<string, string> = {
@@ -16,6 +18,8 @@ const fieldDescriptions: Record<string, string> = {
   kaishashi: '会社の歩みと大切な出来事を記録していきましょう。',
   shukatsu: '大切なことを整理して、未来に伝えましょう。',
   other: '日記・メモ帳として自由に記録したり、営業日報を管理できます。',
+  diary: '日々の出来事やアイデアを自由に書き留めましょう。',
+  salesreport: '訪問先・商談内容・次回アクションを記録・管理できます。',
 };
 
 export default function DashboardPage() {
@@ -51,7 +55,7 @@ export default function DashboardPage() {
   const fieldLabel = fieldLabels[fieldType] || fieldType;
   const fieldDesc = fieldDescriptions[fieldType] || '';
 
-  // 「その他」のとき専用カード構成
+  // 「その他（旧）」のとき専用カード構成
   const otherCards = [
     {
       to: `/field/${fieldType}/interview`,
@@ -87,7 +91,66 @@ export default function DashboardPage() {
     },
   ];
 
-  const cards = fieldType === 'other' ? otherCards : [
+  // 「日記・メモ帳」専用カード構成
+  const diaryCards = [
+    {
+      to: `/field/${fieldType}/interview`,
+      emoji: '📓',
+      title: '日記・メモ帳',
+      desc: '日々の出来事やアイデアを自由に書き留めましょう',
+      stat: `${stats.interviews} 件のメモ`,
+      color: '#A07850',
+    },
+    {
+      to: `/field/${fieldType}/timeline`,
+      emoji: '📅',
+      title: '出来事',
+      desc: '大切な出来事を時系列で整理しましょう',
+      stat: `${stats.timelines} 件の記録`,
+      color: '#6B9B6B',
+    },
+    {
+      to: `/field/${fieldType}/photos`,
+      emoji: '🖼',
+      title: '写真',
+      desc: '大切な写真をデジタルで保管しましょう',
+      stat: `${stats.photos} 枚の写真`,
+      color: '#7B8FBB',
+    },
+  ];
+
+  // 「営業報告」専用カード構成
+  const salesreportCards = [
+    {
+      to: `/field/${fieldType}/sales-report`,
+      emoji: '📊',
+      title: '営業日報',
+      desc: '訪問先・商談内容・次回アクションを記録・管理できます',
+      stat: '日報を開く',
+      color: '#2c7bb6',
+    },
+    {
+      to: `/field/${fieldType}/timeline`,
+      emoji: '📅',
+      title: '出来事',
+      desc: '大切な出来事を時系列で整理しましょう',
+      stat: `${stats.timelines} 件の記録`,
+      color: '#6B9B6B',
+    },
+    {
+      to: `/field/${fieldType}/photos`,
+      emoji: '🖼',
+      title: '写真',
+      desc: '大切な写真をデジタルで保管しましょう',
+      stat: `${stats.photos} 枚の写真`,
+      color: '#7B8FBB',
+    },
+  ];
+
+  const cards = fieldType === 'other' ? otherCards
+    : fieldType === 'diary' ? diaryCards
+    : fieldType === 'salesreport' ? salesreportCards
+    : [
     {
       to: `/field/${fieldType}/interview`,
       emoji: '💬',
@@ -145,8 +208,8 @@ export default function DashboardPage() {
           完成したらPDFとして保存・印刷することができます。
         </p>
 
-        {/* 進捗バー（その他フィールドでは非表示） */}
-        {fieldType !== 'other' && (
+        {/* 進捗バー（その他・日記・営業報告フィールドでは非表示） */}
+        {fieldType !== 'other' && fieldType !== 'diary' && fieldType !== 'salesreport' && (
           <div style={{ marginTop: '28px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
               <span style={{ fontSize: '0.85rem', opacity: 0.8 }}>聞き取り進捗</span>
@@ -224,7 +287,7 @@ export default function DashboardPage() {
       </div>
 
       {/* ===== メモちゃんとおしゃべり（自分史・終活ノートのみ表示） ===== */}
-      {fieldType !== 'kaishashi' && fieldType !== 'kaishaishi' && fieldType !== 'other' && <div
+      {fieldType !== 'kaishashi' && fieldType !== 'kaishaishi' && fieldType !== 'other' && fieldType !== 'diary' && fieldType !== 'salesreport' && <div
         className="fade-in"
         onClick={() => navigate(`/voice-chat?fieldType=${fieldType}`)}
         style={{
