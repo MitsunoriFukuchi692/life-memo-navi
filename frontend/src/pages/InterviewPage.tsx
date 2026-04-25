@@ -16,7 +16,7 @@ interface DiaryEntry {
   question_id: number; updated_at: string;
 }
 
-function DiaryPage({ userId }: { userId: number }) {
+function DiaryPage({ userId, fieldType = 'other' }: { userId: number; fieldType?: string }) {
   const navigate = useNavigate();
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,7 +53,7 @@ function DiaryPage({ userId }: { userId: number }) {
   const fetchEntries = async () => {
     setLoading(true);
     try {
-      const res = await interviewApi.getAll(userId, 'other');
+      const res = await interviewApi.getAll(userId, fieldType);
       const parsed: DiaryEntry[] = res.data.map((iv: Interview) => {
         const parts = (iv.question_text || '').split('｜');
         return { id: iv.id, date: parts[0] || '', title: parts[1] || '',
@@ -83,7 +83,7 @@ function DiaryPage({ userId }: { userId: number }) {
       const questionText = formDate + '｜' + (formTitle || '無題');
       await api.post('/interviews', {
         user_id: userId, question_id: qId, answer_text: formBody,
-        field_type: 'other', question_text: questionText,
+        field_type: fieldType, question_text: questionText,
       });
       setShowForm(false); await fetchEntries();
     } catch (e) { console.error(e); setSaveError('保存に失敗しました。もう一度お試しください。'); }
@@ -94,7 +94,7 @@ function DiaryPage({ userId }: { userId: number }) {
     if (!window.confirm('「' + (entry.title || entry.date) + '」を削除してよろしいですか？')) return;
     setDeleting(entry.question_id);
     try {
-      await api.delete('/interviews/entry/' + userId + '/other/' + entry.question_id);
+      await api.delete('/interviews/entry/' + userId + '/' + fieldType + '/' + entry.question_id);
       await fetchEntries();
     } catch (e) { console.error(e); window.alert('削除に失敗しました。'); }
     finally { setDeleting(null); }
@@ -132,7 +132,7 @@ function DiaryPage({ userId }: { userId: number }) {
                 : 'まだメモがありません。「新しいメモを書く」から始めましょう。'}
             </p>
           </div>
-          <button onClick={() => navigate('/field/other')}
+          <button onClick={() => navigate('/field/' + fieldType)}
             style={{ padding: '10px 20px', background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.5)', borderRadius: 'var(--radius-sm)', color: '#ffffff', fontSize: '0.9rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
             ← その他に戻る
           </button>
@@ -303,7 +303,7 @@ export default function InterviewPage() {
   const { fieldType = 'jibunshi' } = useParams<{ fieldType: string }>();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-  if (fieldType === 'other') return <DiaryPage userId={user.id} />;
+  if (fieldType === 'other' || fieldType === 'diary') return <DiaryPage userId={user.id} fieldType={fieldType} />;
 
   const QUESTIONS = getQuestions(fieldType);
   const [current, setCurrent]           = useState(0);
