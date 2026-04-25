@@ -17,6 +17,7 @@ import shukatsuRoutes, { initShukatsuTables } from './routes/shukatsu.js'; // �
 import ttsRoutes from './routes/tts.js';
 import thesisRoutes from './routes/thesis.js'; // ← 博士論文AI
 import salesReportRoutes, { initSalesReportTable } from './routes/salesReports.js'; // ← 営業日報
+import faceHappinessRoutes from './routes/faceHappiness.js'; // ← 顔幸福度判定
 
 dotenv.config();
 
@@ -64,6 +65,7 @@ app.use('/api/shukatsu', shukatsuRoutes); // ← 追加
 app.use('/api/tts', ttsRoutes);
 app.use('/api/thesis', thesisRoutes); // ← 博士論文AI
 app.use('/api/sales-reports', salesReportRoutes); // ← 営業日報
+app.use('/api/face-happiness', faceHappinessRoutes); // ← 顔幸福度判定
 
 // ルートエンドポイント
 app.get('/', (req: Request, res: Response) => {
