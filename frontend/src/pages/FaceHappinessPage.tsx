@@ -15,24 +15,39 @@ type HappinessResult = {
 // 表情スコア → 幸福度5段階変換
 // face-api.js が返す表情: neutral, happy, sad, angry, fearful, disgusted, surprised
 function expressionToHappiness(expressions: Record<string, number>): HappinessResult {
-  const happy      = expressions.happy      || 0;
-  const neutral    = expressions.neutral    || 0;
-  const surprised  = expressions.surprised  || 0;
-  const sad        = expressions.sad        || 0;
-  const angry      = expressions.angry      || 0;
-  const fearful    = expressions.fearful    || 0;
-  const disgusted  = expressions.disgusted  || 0;
+  const happy     = expressions.happy     || 0;
+  const neutral   = expressions.neutral   || 0;
+  const surprised = expressions.surprised || 0;
+  const sad       = expressions.sad       || 0;
+  const angry     = expressions.angry     || 0;
+  const fearful   = expressions.fearful   || 0;
+  const disgusted = expressions.disgusted || 0;
 
-  // ポジティブ度のスコア（0〜1）
-  const positiveScore = happy + surprised * 0.5 + neutral * 0.3;
+  // ネガティブ感情の合計
   const negativeScore = sad + angry + fearful + disgusted;
 
-  // 0〜5スケールに変換
-  let raw = positiveScore - negativeScore * 0.5;
-  raw = Math.max(0, Math.min(1, raw));
-
-  // 1〜5の整数に
-  let score = Math.round(raw * 4) + 1;
+  // スコア判定（緩やかな基準）
+  // ・笑顔が強い(happy>0.5)        → 5
+  // ・笑顔がある(happy>0.2)        → 4
+  // ・neutral が支配的             → 3
+  // ・surprised が強い             → 3
+  // ・ネガティブが少しある          → 2
+  // ・ネガティブが強い              → 1
+  let score: number;
+  if (happy > 0.5) {
+    score = 5;
+  } else if (happy > 0.2) {
+    score = 4;
+  } else if (neutral > 0.4 || surprised > 0.3) {
+    score = 3;
+  } else if (negativeScore > 0.5) {
+    score = 1;
+  } else if (negativeScore > 0.2) {
+    score = 2;
+  } else {
+    // どれも低い＝判定曖昧な場合は普通扱い
+    score = 3;
+  }
   score = Math.max(1, Math.min(5, score));
 
   const config: Record<number, Omit<HappinessResult, 'score'>> = {
