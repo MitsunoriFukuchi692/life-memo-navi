@@ -1,4 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // face-api.js を動的インポート（CDNのモデルを使用）
 declare const faceapi: any;
@@ -74,6 +75,7 @@ export default function FaceHappinessPage() {
   const overlayRef = useRef<HTMLCanvasElement>(null);
   const streamRef  = useRef<MediaStream | null>(null);
 
+  const navigate = useNavigate();
   const [modelLoaded, setModelLoaded]   = useState(false);
   const [modelLoading, setModelLoading] = useState(false);
   const [cameraOn, setCameraOn]         = useState(false);
@@ -201,6 +203,17 @@ export default function FaceHappinessPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#fdf6ec', padding: '40px 24px', fontFamily: "'Noto Sans JP', sans-serif" }}>
       <div style={{ maxWidth: '680px', margin: '0 auto' }}>
+
+        {/* 戻るボタン */}
+        <div style={{ marginBottom: '16px' }}>
+          <button onClick={() => navigate('/home')} style={{
+            background: 'transparent', border: 'none',
+            color: '#A07850', fontSize: '0.95rem', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: '6px', padding: '4px 0',
+          }}>
+            ← ホームに戻る
+          </button>
+        </div>
 
         {/* ヘッダー */}
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
