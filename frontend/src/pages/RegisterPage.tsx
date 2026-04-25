@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { authApi } from '../api';
 
 const API_BASE = (import.meta.env.VITE_API_URL || 'https://life-memo-navi-backend.onrender.com/api').replace('/api', '');
@@ -15,6 +15,10 @@ const PROJECT_TYPES = [
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const planFromUrl = searchParams.get('plan') || 'standard'; // URLパラメータからplanを取得
+  const isPublisherMode = planFromUrl === 'publisher';
+
   const [form, setForm] = useState({ name: '', age: '', email: '', password: '', project_type: 'jibunshi' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -32,11 +36,16 @@ export default function RegisterPage() {
     setError('');
     setLoading(true);
     try {
-      const res = await authApi.register({ ...form, age: Number(form.age) });
+      const res = await authApi.register({ ...form, age: Number(form.age), plan: planFromUrl });
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('user', JSON.stringify(res.data));
       setRegisteredUser(res.data);
-      setStep('orgCode'); // 登録完了後に団体コード画面へ
+      // 出版社モードは団体コード画面をスキップしてホームへ
+      if (isPublisherMode) {
+        navigate('/home');
+      } else {
+        setStep('orgCode');
+      }
     } catch (err: any) {
       setError(err.response?.data?.error || 'Registration failed');
     } finally {
@@ -160,8 +169,15 @@ export default function RegisterPage() {
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, var(--cream) 0%, var(--cream-dark) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
       <div style={{ background: 'var(--white)', borderRadius: '24px', padding: '48px', width: '100%', maxWidth: '500px', boxShadow: 'var(--shadow-lg)' }}>
         <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+          {isPublisherMode && (
+            <div style={{ background: '#fff8e1', border: '1px solid #ffe082', borderRadius: '8px', padding: '10px 16px', marginBottom: '20px', fontSize: '0.85rem', color: '#a06020' }}>
+              📖 自分史アプリ 出版社プラン
+            </div>
+          )}
           <h1 style={{ fontFamily: "'Noto Serif JP', serif", fontSize: '1.6rem' }}>新規登録</h1>
-          <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginTop: '8px' }}>あなたの大切な物語を始めましょう</p>
+          <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginTop: '8px' }}>
+            {isPublisherMode ? '自分史の記録を始めましょう' : 'あなたの大切な物語を始めましょう'}
+          </p>
         </div>
         {error && (
           <div style={{ background: '#FEE2DC', border: '1px solid var(--accent)', borderRadius: '8px', padding: '12px 16px', marginBottom: '24px', color: '#C0392B' }}>
@@ -169,26 +185,29 @@ export default function RegisterPage() {
           </div>
         )}
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '20px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--brown)', fontWeight: 500 }}>記録の種類</label>
-            {PROJECT_TYPES.map(pt => (
-              <label key={pt.value} style={{
-                display: 'flex', alignItems: 'center', gap: '10px',
-                padding: '10px 16px', marginBottom: '8px',
-                border: `2px solid ${form.project_type === pt.value ? 'var(--accent)' : 'var(--cream-dark)'}`,
-                borderRadius: '8px', cursor: 'pointer',
-                background: form.project_type === pt.value ? 'rgba(200,105,74,0.06)' : 'transparent'
-              }}>
-                <input
-                  type="radio" value={pt.value}
-                  checked={form.project_type === pt.value}
-                  onChange={e => setForm({ ...form, project_type: e.target.value })}
-                  style={{ accentColor: 'var(--accent)' }}
-                />
-                <span style={{ fontSize: '0.9rem' }}>{pt.label}</span>
-              </label>
-            ))}
-          </div>
+          {/* 出版社モードでは記録の種類選択を非表示 */}
+          {!isPublisherMode && (
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'block', marginBottom: '8px', color: 'var(--brown)', fontWeight: 500 }}>記録の種類</label>
+              {PROJECT_TYPES.map(pt => (
+                <label key={pt.value} style={{
+                  display: 'flex', alignItems: 'center', gap: '10px',
+                  padding: '10px 16px', marginBottom: '8px',
+                  border: `2px solid ${form.project_type === pt.value ? 'var(--accent)' : 'var(--cream-dark)'}`,
+                  borderRadius: '8px', cursor: 'pointer',
+                  background: form.project_type === pt.value ? 'rgba(200,105,74,0.06)' : 'transparent'
+                }}>
+                  <input
+                    type="radio" value={pt.value}
+                    checked={form.project_type === pt.value}
+                    onChange={e => setForm({ ...form, project_type: e.target.value })}
+                    style={{ accentColor: 'var(--accent)' }}
+                  />
+                  <span style={{ fontSize: '0.9rem' }}>{pt.label}</span>
+                </label>
+              ))}
+            </div>
+          )}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
             <div>
               <label style={{ display: 'block', marginBottom: '8px', color: 'var(--brown)', fontWeight: 500 }}>お名前</label>

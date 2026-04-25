@@ -43,13 +43,15 @@ export async function initPlanColumn() {
 // ========== ユーザー登録 ==========
 router.post('/register', async (req: Request, res: Response) => {
   try {
-    const { name, age, email, password, project_type } = req.body;
+    const { name, age, email, password, project_type, plan } = req.body;
+    // planはpublisherかstandardのみ許可（不正な値はstandardに）
+    const safePlan = plan === 'publisher' ? 'publisher' : 'standard';
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
       `INSERT INTO users (name, age, email, password_hash, project_type, trial_expires_at, plan)
-       VALUES ($1, $2, $3, $4, $5, NOW() + INTERVAL '30 days', 'standard')
+       VALUES ($1, $2, $3, $4, $5, NOW() + INTERVAL '30 days', $6)
        RETURNING id, name, age, email, project_type, trial_expires_at, plan`,
-      [name, age, email, hashedPassword, project_type || 'jibunshi']
+      [name, age, email, hashedPassword, project_type || 'jibunshi', safePlan]
     );
     const user = result.rows[0];
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
