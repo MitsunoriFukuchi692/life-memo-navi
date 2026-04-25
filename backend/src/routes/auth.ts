@@ -28,20 +28,32 @@ function authMiddleware(req: any, res: Response, next: Function) {
   }
 }
 
+// ========== planカラム自動追加（初回起動時マイグレーション） ==========
+export async function initPlanColumn() {
+  try {
+    await pool.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS plan VARCHAR(20) NOT NULL DEFAULT 'standard'
+    `);
+    console.log('✅ users.plan カラムを確認しました');
+  } catch (e) {
+    console.error('planカラム追加エラー:', e);
+  }
+}
+
 // ========== ユーザー登録 ==========
 router.post('/register', async (req: Request, res: Response) => {
   try {
     const { name, age, email, password, project_type } = req.body;
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
-      `INSERT INTO users (name, age, email, password_hash, project_type, trial_expires_at)
-       VALUES ($1, $2, $3, $4, $5, NOW() + INTERVAL '30 days')
-       RETURNING id, name, age, email, project_type, trial_expires_at`,
+      `INSERT INTO users (name, age, email, password_hash, project_type, trial_expires_at, plan)
+       VALUES ($1, $2, $3, $4, $5, NOW() + INTERVAL '30 days', 'standard')
+       RETURNING id, name, age, email, project_type, trial_expires_at, plan`,
       [name, age, email, hashedPassword, project_type || 'jibunshi']
     );
     const user = result.rows[0];
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
-    res.status(201).json({ id: user.id, name: user.name, age: user.age, email: user.email, project_type: user.project_type, token });
+    res.status(201).json({ id: user.id, name: user.name, age: user.age, email: user.email, project_type: user.project_type, plan: user.plan, token });
   } catch (error: any) {
     console.error('Register error:', error);
     res.status(500).json({ error: error.message });
@@ -71,7 +83,7 @@ router.post('/login', async (req: Request, res: Response) => {
       }
     }
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
-    res.json({ id: user.id, name: user.name, age: user.age, email: user.email, project_type: user.project_type, token });
+    res.json({ id: user.id, name: user.name, age: user.age, email: user.email, project_type: user.project_type, plan: user.plan || 'standard', token });
   } catch (error: any) {
     console.error('Login error:', error);
     res.status(500).json({ error: error.message });
@@ -190,7 +202,7 @@ router.delete('/delete-account', authMiddleware, async (req: any, res: Response)
 router.get('/me', authMiddleware, async (req: any, res: Response) => {
   try {
     const result = await pool.query(
-      'SELECT id, name, age, email, project_type, trial_expires_at FROM users WHERE id = $1',
+      'SELECT id, name, age, email, project_type, trial_expires_at, plan FROM users WHERE id = $1',
       [req.user.id]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'ユーザーが見つかりません' });

@@ -18,6 +18,7 @@ import ttsRoutes from './routes/tts.js';
 import thesisRoutes from './routes/thesis.js'; // ← 博士論文AI
 import salesReportRoutes, { initSalesReportTable } from './routes/salesReports.js'; // ← 営業日報
 import faceHappinessRoutes from './routes/faceHappiness.js'; // ← 顔幸福度判定
+import authRoutesFull, { initPlanColumn } from './routes/auth.js'; // ← planカラム初期化
 
 dotenv.config();
 
@@ -124,6 +125,7 @@ app.listen(PORT, async () => {
   await initPaymentTables(); // ← 追加
   await initShukatsuTables(); // ← 追加
   await initSalesReportTable(); // ← 営業日報
+  await initPlanColumn(); // ← planカラム
   console.log(`
 ╔═════════════════════════════════════════╗
 ║   🌸 ライフメモナビ バックエンド       ║
