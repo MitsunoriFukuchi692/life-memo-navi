@@ -65,28 +65,33 @@ export default function FaceHappinessPage() {
     setCapturing(true);
     setError('');
 
-    // キャンバスに映像を描画
+    // キャンバスに映像を描画（640px以内に縮小して転送量を削減）
     const canvas = canvasRef.current;
     const video = videoRef.current;
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    const MAX_W = 640;
+    const scale = Math.min(1, MAX_W / video.videoWidth);
+    canvas.width = Math.round(video.videoWidth * scale);
+    canvas.height = Math.round(video.videoHeight * scale);
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    ctx.drawImage(video, 0, 0);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    // プレビュー用URL（表示だけ、サーバー保存なし）
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    // プレビュー用URL（表示だけ、サーバー保存なし）、品質0.7に下げてサイズ削減
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
     setPreviewUrl(dataUrl);
     setCapturing(false);
     setAnalyzing(true);
 
     try {
-      const res = await api.post('/face-happiness', { image: dataUrl });
+      const res = await api.post('/face-happiness', { image: dataUrl }, { timeout: 30000 });
       const result: HappinessResult = res.data;
       setResults(prev => [...prev, result]);
       setShotCount(prev => prev + 1);
     } catch (e: any) {
-      setError('判定に失敗しました。もう一度お試しください。');
+      const detail = e?.response?.data?.detail || e?.response?.data?.error || e?.message || '不明なエラー';
+      const status = e?.response?.status || 'ネットワークエラー';
+      setError(`判定に失敗しました（${status}）: ${detail}`);
+      console.error('face-happiness error:', e?.response?.data || e);
     } finally {
       setAnalyzing(false);
       // プレビューは3秒後に消す（写真を残さない）
