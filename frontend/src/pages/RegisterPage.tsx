@@ -179,7 +179,7 @@ export default function RegisterPage() {
             {isPublisherMode ? '自分史の記録を始めましょう' : (
               <>
                 あなたの大切な物語を始めましょう<br />
-                <span style={{ fontSize: '0.85rem' }}>初めての方：お名前・年齢・Email・パスワードを入れてください。</span>
+                <span style={{ fontSize: '1rem' }}>初めての方：お名前・年齢・Email・パスワードを入れてください。</span>
               </>
             )}
           </p>
@@ -254,7 +254,7 @@ export default function RegisterPage() {
             {loading ? '登録中...' : '登録する'}
           </button>
         </form>
-        <p style={{ textAlign: 'center', marginTop: '24px', color: 'var(--text-light)', fontSize: '0.9rem' }}>
+        <p style={{ textAlign: 'center', marginTop: '24px', color: 'var(--text-light)', fontSize: '1rem' }}>
           2回目以降の方はこちらで{' '}
           <Link to="/login" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>ログイン</Link>
         </p>
