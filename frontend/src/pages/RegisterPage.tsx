@@ -254,7 +254,7 @@ export default function RegisterPage() {
             {loading ? '登録中...' : '登録する'}
           </button>
         </form>
-        <p style={{ textAlign: 'center', marginTop: '24px', color: 'var(--text-light)', fontSize: '1rem' }}>
+        <p style={{ textAlign: 'center', marginTop: '24px', color: 'var(--text-light)', fontSize: '1.2rem' }}>
           2回目以降の方はこちらで{' '}
           <Link to="/login" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>ログイン</Link>
         </p>
