@@ -49,7 +49,7 @@ router.post('/register', async (req: Request, res: Response) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
       `INSERT INTO users (name, age, email, password_hash, project_type, trial_expires_at, plan)
-       VALUES ($1, $2, $3, $4, $5, NOW() + INTERVAL '30 days', $6)
+       VALUES ($1, $2, $3, $4, $5, NOW() + INTERVAL '14 days', $6)
        RETURNING id, name, age, email, project_type, trial_expires_at, plan`,
       [name, age, email, hashedPassword, project_type || 'jibunshi', safePlan]
     );
