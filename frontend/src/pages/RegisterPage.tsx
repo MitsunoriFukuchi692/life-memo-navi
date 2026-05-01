@@ -10,7 +10,7 @@ const PROJECT_TYPES = [
   { value: 'jibunshi', label: '自分史' },
   { value: 'kaishashi', label: '会社史' },
   { value: 'shukatsu', label: '終活ノート' },
-  { value: 'other', label: 'その他' },
+  { value: 'other', label: '日記帳・営業日報作成' },
 ];
 
 export default function RegisterPage() {
@@ -175,8 +175,13 @@ export default function RegisterPage() {
             </div>
           )}
           <h1 style={{ fontFamily: "'Noto Serif JP', serif", fontSize: '1.6rem' }}>新規登録</h1>
-          <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginTop: '8px' }}>
-            {isPublisherMode ? '自分史の記録を始めましょう' : 'あなたの大切な物語を始めましょう'}
+          <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginTop: '8px', lineHeight: '1.8' }}>
+            {isPublisherMode ? '自分史の記録を始めましょう' : (
+              <>
+                あなたの大切な物語を始めましょう<br />
+                <span style={{ fontSize: '0.85rem' }}>初めての方：お名前・年齢・Email・パスワードを入れてください。</span>
+              </>
+            )}
           </p>
         </div>
         {error && (
@@ -250,7 +255,7 @@ export default function RegisterPage() {
           </button>
         </form>
         <p style={{ textAlign: 'center', marginTop: '24px', color: 'var(--text-light)', fontSize: '0.9rem' }}>
-          すでにアカウントをお持ちの方は{' '}
+          2回目以降の方はこちらで{' '}
           <Link to="/login" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>ログイン</Link>
         </p>
       </div>
