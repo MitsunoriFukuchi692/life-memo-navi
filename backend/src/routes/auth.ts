@@ -48,9 +48,9 @@ router.post('/register', async (req: Request, res: Response) => {
     const safePlan = plan === 'publisher' ? 'publisher' : 'standard';
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
-      `INSERT INTO users (name, age, email, password_hash, project_type, trial_expires_at, plan)
-       VALUES ($1, $2, $3, $4, $5, NOW() + INTERVAL '14 days', $6)
-       RETURNING id, name, age, email, project_type, trial_expires_at, plan`,
+      `INSERT INTO users (name, age, email, password_hash, project_type, plan)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id, name, age, email, project_type, plan`,
       [name, age, email, hashedPassword, project_type || 'jibunshi', safePlan]
     );
     const user = result.rows[0];
@@ -74,15 +74,6 @@ router.post('/login', async (req: Request, res: Response) => {
     const passwordMatch = await bcrypt.compare(password, user.password_hash);
     if (!passwordMatch) {
       return res.status(401).json({ error: 'メールアドレスまたはパスワードが正しくありません' });
-    }
-    if (user.trial_expires_at) {
-      const now = new Date();
-      const expires = new Date(user.trial_expires_at);
-      if (now > expires) {
-        return res.status(403).json({
-          error: 'トライアル期間が終了しました。ご利用を継続するには管理者までご連絡ください。\n\nmitsunorif@robostudy.jp'
-        });
-      }
     }
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
     res.json({ id: user.id, name: user.name, age: user.age, email: user.email, project_type: user.project_type, plan: user.plan || 'standard', token });
