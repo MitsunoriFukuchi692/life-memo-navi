@@ -28,7 +28,7 @@ function authMiddleware(req: any, res: Response, next: Function) {
   }
 }
 
-// ========== planカラム自動追加（初回起動時マイグレーション） ==========
+// ========== planカラム・password_reset_tokensテーブル 自動作成 ==========
 export async function initPlanColumn() {
   try {
     await pool.query(`
@@ -37,6 +37,18 @@ export async function initPlanColumn() {
     console.log('✅ users.plan カラムを確認しました');
   } catch (e) {
     console.error('planカラム追加エラー:', e);
+  }
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS password_reset_tokens (
+        user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        token VARCHAR(255) NOT NULL,
+        expires_at TIMESTAMP NOT NULL
+      )
+    `);
+    console.log('✅ password_reset_tokens テーブルを確認しました');
+  } catch (e) {
+    console.error('password_reset_tokensテーブル作成エラー:', e);
   }
 }
 
@@ -109,7 +121,7 @@ router.post('/forgot-password', async (req: Request, res: Response) => {
     // リセットメール送信
     const resetUrl = `https://memo.robostudy.jp/reset-password?token=${token}`;
     await transporter.sendMail({
-      from: 'mfukuchi6@gmail.com',
+      from: process.env.GMAIL_USER,
       to: email,
       subject: '【ライフメモナビ】パスワードリセットのご案内',
       html: `
