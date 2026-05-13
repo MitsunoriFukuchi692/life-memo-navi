@@ -24,7 +24,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
 
   // 団体コード入力ステップ用
-  const [step, setStep] = useState<'register' | 'orgCode'>('register');
+  const [step, setStep] = useState<'register' | 'orgCode' | 'verifyEmail'>('register');
   const [registeredUser, setRegisteredUser] = useState<any>(null);
   const [orgCode, setOrgCode] = useState('');
   const [orgLoading, setOrgLoading] = useState(false);
@@ -37,15 +37,10 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const res = await authApi.register({ ...form, age: Number(form.age), plan: planFromUrl });
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data));
+      // バックエンドはメール認証後にログイン可能になるため、tokenは返さない
+      // → 確認メール送信画面を表示する
       setRegisteredUser(res.data);
-      // 出版社モードは団体コード画面をスキップしてホームへ
-      if (isPublisherMode) {
-        navigate('/home');
-      } else {
-        setStep('orgCode');
-      }
+      setStep('verifyEmail');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Registration failed');
     } finally {
@@ -97,6 +92,40 @@ export default function RegisterPage() {
     border: '2px solid var(--cream-dark)', borderRadius: '8px',
     fontSize: '1rem', background: 'var(--cream)', outline: 'none'
   };
+
+  // ========================================
+  // メール確認案内画面
+  // ========================================
+  if (step === 'verifyEmail') {
+    return (
+      <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, var(--cream) 0%, var(--cream-dark) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 24px' }}>
+        <div style={{ background: 'var(--white)', borderRadius: '24px', padding: '48px', width: '100%', maxWidth: '500px', boxShadow: 'var(--shadow-lg)', textAlign: 'center' }}>
+          <div style={{ fontSize: '64px', marginBottom: '20px' }}>📧</div>
+          <h2 style={{ fontFamily: "'Noto Serif JP', serif", fontSize: '1.4rem', marginBottom: '16px' }}>
+            確認メールをお送りしました
+          </h2>
+          <p style={{ color: 'var(--text-light)', lineHeight: '1.8', marginBottom: '24px' }}>
+            <strong>{form.email}</strong> に確認メールを送りました。<br />
+            メール内のリンクをクリックして、<br />
+            登録を完了してください。
+          </p>
+          <div style={{ background: '#FFF8E1', border: '1px solid #FFE082', borderRadius: '8px', padding: '14px 18px', marginBottom: '28px', fontSize: '0.88rem', color: '#7A5A00', textAlign: 'left' }}>
+            📌 メールが届かない場合は、迷惑メールフォルダもご確認ください。<br />
+            それでも届かない場合は、下のボタンから再送できます。
+          </div>
+          <button
+            onClick={() => navigate('/login')}
+            style={{ width: '100%', padding: '16px', background: 'var(--brown-dark)', color: 'var(--cream)', border: 'none', borderRadius: '8px', fontSize: '1.05rem', fontWeight: 500, cursor: 'pointer', marginBottom: '12px' }}
+          >
+            ログイン画面へ
+          </button>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-light)' }}>
+            メールが届かない場合はログイン画面から再送できます
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // ========================================
   // 団体コード入力画面
