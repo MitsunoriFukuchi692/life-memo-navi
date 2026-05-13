@@ -98,7 +98,7 @@ router.post('/register', async (req: Request, res: Response) => {
     );
 
     // 確認メール送信
-    const verifyUrl = `https://memo.robostudy.jp/verify-email?token=${verifyToken}`;
+    const verifyUrl = `https://life-memo-navi-backend.onrender.com/api/auth/verify-email?token=${verifyToken}`;
     try {
       await transporter.sendMail({
         from: process.env.GMAIL_USER,
@@ -215,7 +215,7 @@ router.post('/resend-verification', async (req: Request, res: Response) => {
        ON CONFLICT (user_id) DO UPDATE SET token = $2, expires_at = $3`,
       [user.id, verifyToken, verifyExpires]
     );
-    const verifyUrl = `https://memo.robostudy.jp/verify-email?token=${verifyToken}`;
+    const verifyUrl = `https://life-memo-navi-backend.onrender.com/api/auth/verify-email?token=${verifyToken}`;
     await transporter.sendMail({
       from: process.env.GMAIL_USER,
       to: email,
