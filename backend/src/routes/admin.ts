@@ -36,4 +36,31 @@ router.get('/users', adminAuth, async (req: Request, res: Response) => {
   }
 });
 
+// ✅ ユーザー削除
+// DELETE /api/admin/users/:id?key=YOUR_SECRET_KEY
+router.delete('/users/:id', adminAuth, async (req: Request, res: Response) => {
+  const userId = parseInt(req.params.id);
+  if (isNaN(userId)) {
+    return res.status(400).json({ error: '無効なユーザーIDです' });
+  }
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query('DELETE FROM interviews WHERE user_id = $1', [userId]);
+    await client.query('DELETE FROM timelines WHERE user_id = $1', [userId]);
+    await client.query('DELETE FROM photos WHERE user_id = $1', [userId]);
+    await client.query('DELETE FROM email_verification_tokens WHERE user_id = $1', [userId]);
+    await client.query('DELETE FROM password_reset_tokens WHERE user_id = $1', [userId]);
+    await client.query('DELETE FROM users WHERE id = $1', [userId]);
+    await client.query('COMMIT');
+    res.json({ message: `ユーザーID ${userId} を削除しました` });
+  } catch (error: any) {
+    await client.query('ROLLBACK');
+    console.error('Admin delete user error:', error);
+    res.status(500).json({ error: 'ユーザー削除に失敗しました' });
+  } finally {
+    client.release();
+  }
+});
+
 export default router;
