@@ -137,6 +137,10 @@ router.post('/register', async (req: Request, res: Response) => {
     });
   } catch (error: any) {
     console.error('Register error:', error);
+    // メールアドレス重複エラーを日本語で返す
+    if (error.code === '23505' && error.constraint === 'users_email_key') {
+      return res.status(409).json({ error: 'このメールアドレスはすでに登録されています。ログイン画面からログインしてください。' });
+    }
     res.status(500).json({ error: error.message });
   }
 });
