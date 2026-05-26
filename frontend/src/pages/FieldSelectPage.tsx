@@ -1,20 +1,32 @@
 import { useNavigate } from 'react-router-dom';
 
 // 通常プランのカテゴリー
-const standardFields = [
+const standardFieldsJa = [
+  { key: 'jibunshi', label: '自分史', emoji: '📖', desc: '人生の歩みを質問に答えながら記録します', color: '#C8694A' },
+  { key: 'kaishashi', label: '会社史', emoji: '🏢', desc: '創業の物語、節目、価値観を会社の記録として残します', color: '#6B9B6B' },
+];
+
+const standardFieldsEn = [
   { key: 'jibunshi', label: 'Life Story', emoji: '📖', desc: 'Record the story of a persons life in a guided format', color: '#C8694A' },
   { key: 'kaishashi', label: 'Company History', emoji: '🏢', desc: 'Preserve the founding story, milestones, and values of a company', color: '#6B9B6B' },
 ];
 
 // 出版社プランのカテゴリー（自分史のみ）
-const publisherFields = [
+const publisherFieldsJa = [
+  { key: 'jibunshi', label: '自分史', emoji: '📖', desc: '人生の歩みを質問に答えながら記録します', color: '#C8694A' },
+];
+
+const publisherFieldsEn = [
   { key: 'jibunshi', label: 'Life Story', emoji: '📖', desc: 'Record the story of a persons life in a guided format', color: '#C8694A' },
 ];
 
 export default function FieldSelectPage() {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isEnglish = localStorage.getItem('lm_lang') === 'en';
   const isPublisher = user.plan === 'publisher';
+  const standardFields = isEnglish ? standardFieldsEn : standardFieldsJa;
+  const publisherFields = isEnglish ? publisherFieldsEn : publisherFieldsJa;
   const fields = isPublisher ? publisherFields : standardFields;
 
   const handleLogout = () => {
@@ -33,7 +45,7 @@ export default function FieldSelectPage() {
         position: 'sticky', top: 0, zIndex: 100,
       }}>
         <h1 style={{ fontFamily: "'Noto Serif JP', serif", color: 'var(--cream)', fontSize: '1.2rem', fontWeight: 600 }}>
-          {isPublisher ? 'Life Story App' : 'Life Memo Navi'}
+          {isEnglish ? (isPublisher ? 'Life Story App' : 'Life Memo Navi') : 'ライフメモナビ'}
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{ color: 'var(--brown-light)', fontSize: '0.9rem' }}>{user.name}</span>
@@ -53,14 +65,14 @@ export default function FieldSelectPage() {
             background: 'transparent', border: '1px solid var(--brown-light)',
             color: 'var(--brown-light)', padding: '6px 16px', borderRadius: '20px', fontSize: '0.85rem',
             cursor: 'pointer',
-          }}>logout</button>
+          }}>{isEnglish ? 'logout' : 'ログアウト'}</button>
         </div>
       </header>
 
       {/* メインコンテンツ */}
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 24px' }}>
         <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <p style={{ color: 'var(--text-light)', fontSize: '0.95rem', marginBottom: '8px' }}>Welcome</p>
+          <p style={{ color: 'var(--text-light)', fontSize: '0.95rem', marginBottom: '8px' }}>{isEnglish ? 'Welcome' : 'ようこそ'}</p>
           <h2 style={{
             fontFamily: "'Noto Serif JP', serif",
             fontSize: '2rem', color: 'var(--brown-dark)', marginBottom: '16px',
@@ -68,7 +80,9 @@ export default function FieldSelectPage() {
             {user.name}
           </h2>
           <p style={{ color: 'var(--text-light)', fontSize: '1rem', lineHeight: 1.8 }}>
-            {isPublisher ? 'Start your life story' : 'Choose what you want to preserve'}
+            {isPublisher
+              ? (isEnglish ? 'Start your life story' : '自分史の記録を始めましょう')
+              : (isEnglish ? 'Choose what you want to preserve' : '記録したいものを選んでください')}
           </p>
         </div>
 
@@ -120,7 +134,7 @@ export default function FieldSelectPage() {
                 background: `${field.color}20`, color: field.color,
                 padding: '6px 20px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 500,
               }}>
-                Open →
+                {isEnglish ? 'Open →' : '開く →'}
               </div>
             </div>
           ))}
@@ -157,10 +171,10 @@ export default function FieldSelectPage() {
               fontFamily: "'Noto Serif JP', serif",
               fontSize: '1.3rem', color: '#a06020', marginBottom: '8px',
             }}>
-              Mood Check
+              {isEnglish ? 'Mood Check' : '表情チェック'}
             </h3>
             <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '16px' }}>
-              Use the camera to check today`s expression on a five-step scale.
+              {isEnglish ? 'Use the camera to check today`s expression on a five-step scale.' : 'カメラで今日の表情を5段階で確認します。'}
             </p>
             <div style={{
               display: 'inline-block',
@@ -168,7 +182,7 @@ export default function FieldSelectPage() {
               color: 'white', padding: '10px 28px',
               borderRadius: '50px', fontWeight: 600, fontSize: '0.95rem',
             }}>
-              😊 Check →
+              {isEnglish ? '😊 Check →' : '😊 チェック →'}
             </div>
           </div>
         )}

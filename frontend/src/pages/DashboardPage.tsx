@@ -4,7 +4,16 @@ import Layout from '../components/Layout';
 import { interviewApi, timelineApi, photoApi, pdfApi } from '../api';
 import MemoChanAvatar, { AvatarStyle } from '../components/MemoChanAvatar';
 
-const fieldLabels: Record<string, string> = {
+const fieldLabelsJa: Record<string, string> = {
+  jibunshi: '人生の話',
+  kaishashi: '会社沿革',
+  shukatsu: '終活ノート',
+  other: 'その他',
+  diary: '日記帳',
+  salesreport: '営業日報',
+};
+
+const fieldLabelsEn: Record<string, string> = {
   jibunshi: 'Life Story',
   kaishashi: 'Company History',
   shukatsu: 'Legacy Notes',
@@ -13,19 +22,29 @@ const fieldLabels: Record<string, string> = {
   salesreport: 'Sales Reports',
 };
 
-const fieldDescriptions: Record<string, string> = {
-  jibunshi: 'Build a thoughtful record of a persons life, one answer at a time.',
-  kaishashi: 'Capture the companys journey, turning points, people, and values.',
+const fieldDescriptionsJa: Record<string, string> = {
+  jibunshi: '一つずつ回答を記入していくことで、その人の人生を丁寧に記録できます。',
+  kaishashi: '会社の歩み、転換点、人物、そして価値観を記録しましょう。',
   shukatsu: '大切なことを整理して、未来に伝えましょう。',
   other: '日記・メモ帳として自由に記録したり、営業日報を管理できます。',
-  diary: '日々のTimelineやアイデアを自由に書き留めましょう。',
+  diary: '日々の出来事やアイデアを自由に書き留めましょう。',
   salesreport: '訪問先・商談内容・次回アクションを記録・管理できます。',
+};
+
+const fieldDescriptionsEn: Record<string, string> = {
+  jibunshi: 'Build a thoughtful record of a persons life, one answer at a time.',
+  kaishashi: 'Capture the companys journey, turning points, people, and values.',
+  shukatsu: 'Organize important matters and pass them on to the future.',
+  other: 'Keep free notes, journals, or sales reports.',
+  diary: 'Write down daily events and ideas freely.',
+  salesreport: 'Record visits, meeting details, and next actions.',
 };
 
 export default function DashboardPage() {
   const { fieldType = 'jibunshi' } = useParams<{ fieldType: string }>();
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isEnglish = localStorage.getItem('lm_lang') === 'en';
   const [stats, setStats] = useState({ interviews: 0, timelines: 0, photos: 0 });
   const [loading, setLoading] = useState(true);
 
@@ -52,6 +71,8 @@ export default function DashboardPage() {
   }, [user.id]);
 
   const completionPercent = Math.round((stats.interviews / 15) * 100);
+  const fieldLabels = isEnglish ? fieldLabelsEn : fieldLabelsJa;
+  const fieldDescriptions = isEnglish ? fieldDescriptionsEn : fieldDescriptionsJa;
   const fieldLabel = fieldLabels[fieldType] || fieldType;
   const fieldDesc = fieldDescriptions[fieldType] || '';
 
@@ -76,17 +97,17 @@ export default function DashboardPage() {
     {
       to: `/field/${fieldType}/timeline`,
       emoji: '📅',
-      title: 'Timeline',
-      desc: 'Organize important events in chronological order',
-      stat: `${stats.timelines} events`,
+      title: isEnglish ? 'Timeline' : 'タイムライン',
+      desc: isEnglish ? 'Organize important events in chronological order' : '重要な出来事を時系列順に整理する',
+      stat: isEnglish ? `${stats.timelines} events` : `${stats.timelines}つのイベント`,
       color: '#6B9B6B',
     },
     {
       to: `/field/${fieldType}/photos`,
       emoji: '🖼',
-      title: 'Photos',
-      desc: '大切なPhotosをデジタルで保管しましょう',
-      stat: `${stats.photos} 枚のPhotos`,
+      title: isEnglish ? 'Photos' : '写真',
+      desc: isEnglish ? 'Preserve important photos digitally' : '大切な写真をデジタルで保管しましょう',
+      stat: isEnglish ? `${stats.photos} photos` : `${stats.photos}枚の写真`,
       color: '#7B8FBB',
     },
   ];
@@ -104,17 +125,17 @@ export default function DashboardPage() {
     {
       to: `/field/${fieldType}/timeline`,
       emoji: '📅',
-      title: 'Timeline',
-      desc: 'Organize important events in chronological order',
-      stat: `${stats.timelines} events`,
+      title: isEnglish ? 'Timeline' : 'タイムライン',
+      desc: isEnglish ? 'Organize important events in chronological order' : '重要な出来事を時系列順に整理する',
+      stat: isEnglish ? `${stats.timelines} events` : `${stats.timelines}つのイベント`,
       color: '#6B9B6B',
     },
     {
       to: `/field/${fieldType}/photos`,
       emoji: '🖼',
-      title: 'Photos',
-      desc: '大切なPhotosをデジタルで保管しましょう',
-      stat: `${stats.photos} 枚のPhotos`,
+      title: isEnglish ? 'Photos' : '写真',
+      desc: isEnglish ? 'Preserve important photos digitally' : '大切な写真をデジタルで保管しましょう',
+      stat: isEnglish ? `${stats.photos} photos` : `${stats.photos}枚の写真`,
       color: '#7B8FBB',
     },
   ];
@@ -132,17 +153,17 @@ export default function DashboardPage() {
     {
       to: `/field/${fieldType}/timeline`,
       emoji: '📅',
-      title: 'Timeline',
-      desc: 'Organize important events in chronological order',
-      stat: `${stats.timelines} events`,
+      title: isEnglish ? 'Timeline' : 'タイムライン',
+      desc: isEnglish ? 'Organize important events in chronological order' : '重要な出来事を時系列順に整理する',
+      stat: isEnglish ? `${stats.timelines} events` : `${stats.timelines}つのイベント`,
       color: '#6B9B6B',
     },
     {
       to: `/field/${fieldType}/photos`,
       emoji: '🖼',
-      title: 'Photos',
-      desc: '大切なPhotosをデジタルで保管しましょう',
-      stat: `${stats.photos} 枚のPhotos`,
+      title: isEnglish ? 'Photos' : '写真',
+      desc: isEnglish ? 'Preserve important photos digitally' : '大切な写真をデジタルで保管しましょう',
+      stat: isEnglish ? `${stats.photos} photos` : `${stats.photos}枚の写真`,
       color: '#7B8FBB',
     },
   ];
@@ -154,25 +175,25 @@ export default function DashboardPage() {
     {
       to: `/field/${fieldType}/interview`,
       emoji: '💬',
-      title: 'Interview',
-      desc: 'Answer 15 guided questions to shape the story',
-      stat: `${stats.interviews} / 15 complete`,
+      title: isEnglish ? 'Interview' : 'インタビュー',
+      desc: isEnglish ? 'Answer 15 guided questions to shape the story' : 'ストーリーを形作るための15の質問に答えてください',
+      stat: isEnglish ? `${stats.interviews} / 15 complete` : `${stats.interviews} / 15完了`,
       color: '#E8956D',
     },
     {
       to: `/field/${fieldType}/timeline`,
       emoji: '📅',
-      title: 'Timeline',
-      desc: 'Organize important events in chronological order',
-      stat: `${stats.timelines} events`,
+      title: isEnglish ? 'Timeline' : 'タイムライン',
+      desc: isEnglish ? 'Organize important events in chronological order' : '重要な出来事を時系列順に整理する',
+      stat: isEnglish ? `${stats.timelines} events` : `${stats.timelines}つのイベント`,
       color: '#6B9B6B',
     },
     {
       to: `/field/${fieldType}/photos`,
       emoji: '🖼',
-      title: 'Photos',
-      desc: '大切なPhotosをデジタルで保管しましょう',
-      stat: `${stats.photos} 枚のPhotos`,
+      title: isEnglish ? 'Photos' : '写真',
+      desc: isEnglish ? 'Preserve important photos digitally' : '大切な写真をデジタルで保管しましょう',
+      stat: isEnglish ? `${stats.photos} photos` : `${stats.photos}枚の写真`,
       color: '#7B8FBB',
     },
   ];
@@ -201,18 +222,18 @@ export default function DashboardPage() {
           fontSize: '2rem', color: 'var(--cream)',
           marginBottom: '16px',
         }}>
-          {user.name}s {fieldLabel}
+          {isEnglish ? `${user.name}s ${fieldLabel}` : `${user.name}の${fieldType === 'jibunshi' ? 'ライフストーリー' : fieldType === 'kaishashi' ? '沿革' : fieldLabel}`}
         </h2>
         <p style={{ opacity: 0.85, fontSize: '1rem', lineHeight: 1.8 }}>
           {fieldDesc}<br />
-          When finished, you can save and print it as a PDF.
+          {isEnglish ? 'When finished, you can save and print it as a PDF.' : '完成したら、PDFファイルとして保存・印刷できます。'}
         </p>
 
         {/* 進捗バー（その他・日記・営業報告フィールドでは非表示） */}
         {fieldType !== 'other' && fieldType !== 'diary' && fieldType !== 'salesreport' && (
           <div style={{ marginTop: '28px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ fontSize: '0.85rem', opacity: 0.8 }}>Interview progress</span>
+              <span style={{ fontSize: '0.85rem', opacity: 0.8 }}>{isEnglish ? 'Interview progress' : '面接の進捗状況'}</span>
               <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{completionPercent}%</span>
             </div>
             <div style={{
@@ -323,10 +344,10 @@ export default function DashboardPage() {
               color: '#a06020',
               marginBottom: '8px',
             }}>
-              Talk with Memo-chan
+              {isEnglish ? 'Talk with Memo-chan' : 'メモちゃんと話そう'}
             </h3>
             <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', lineHeight: 1.6 }}>
-              A voice-guided interview mode with gentle prompts and memory cues.
+              {isEnglish ? 'A voice-guided interview mode with gentle prompts and memory cues.' : '音声ガイドによる面接モードで、穏やかな指示と記憶の手がかりを提供します。'}
             </p>
           </div>
         </div>
@@ -339,7 +360,7 @@ export default function DashboardPage() {
           fontSize: '1rem',
           whiteSpace: 'nowrap',
         }}>
-          🎤 Start talking →
+          {isEnglish ? '🎤 Start talking →' : '🎤 話し始めましょう→'}
         </div>
       </div>}
       {/* PDF output */}
@@ -357,10 +378,10 @@ export default function DashboardPage() {
       }}>
         <div>
           <h3 style={{ fontFamily: "'Noto Serif JP', serif", fontSize: '1.2rem', marginBottom: '8px' }}>
-            📄 Save as PDF
+            {isEnglish ? '📄 Save as PDF' : '📄 PDFとして保存'}
           </h3>
           <p style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>
-            Generate a PDF that combines the interview answers and timeline events.
+            {isEnglish ? 'Generate a PDF that combines the interview answers and timeline events.' : 'インタビューの回答と時系列イベントを組み合わせたPDFファイルを作成します。'}
           </p>
         </div>
         <a
@@ -378,7 +399,7 @@ export default function DashboardPage() {
             fontSize: '1rem',
           }}
         >
-          📄 Download PDF
+          {isEnglish ? '📄 Download PDF' : '📄 PDFをダウンロード'}
         </a>
       </div>
 
