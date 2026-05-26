@@ -25,7 +25,7 @@ export interface Interview { id: number; user_id: number; question_id: number; q
 export interface Timeline { id: number; user_id: number; year: number; month?: number; event_title: string; event_description?: string; }
 export interface Photo { id: number; user_id: number; photo_url: string; caption?: string; uploaded_at: string; }
 export const authApi = {
-  register: (data: { name: string; age: number; email: string; password: string; project_type?: string }) =>
+  register: (data: { name: string; age: number; email: string; password: string; project_type?: string; plan?: string | null }) =>
     api.post<User>('/auth/register', data),
   login: (data: { email: string; password: string }) =>
     api.post<User>('/auth/login', data),

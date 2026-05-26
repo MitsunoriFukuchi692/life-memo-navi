@@ -1,13 +1,13 @@
-﻿import { ReactNode, useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 
 interface LayoutProps { children: ReactNode; title?: string; }
 
 const fieldLabels: Record<string, string> = {
-  jibunshi: '自分史',
-  kaishashi: '会社史',
-  shukatsu: '終活ノート',
-  other: '日記・営業報告',
+  jibunshi: 'Life Story',
+  kaishashi: 'Company History',
+  shukatsu: 'Legacy Notes',
+  other: 'Notes',
 };
 
 // fieldType → AIインタビューのURLパラメータ対応表
@@ -30,9 +30,9 @@ export default function Layout({ children, title }: LayoutProps) {
   };
 
   const fieldNavItems = fieldType ? [
-    { path: `/field/${fieldType}/interview`, label: '聞き取り' },
-    { path: `/field/${fieldType}/timeline`, label: '出来事' },
-    { path: `/field/${fieldType}/photos`, label: '写真' },
+    { path: `/field/${fieldType}/interview`, label: 'Interview' },
+    { path: `/field/${fieldType}/timeline`, label: 'Timeline' },
+    { path: `/field/${fieldType}/photos`, label: 'Photos' },
   ] : [];
 
   const fieldLabel = fieldType ? fieldLabels[fieldType] || fieldType : '';
@@ -138,7 +138,7 @@ export default function Layout({ children, title }: LayoutProps) {
             style={navLinkStyle('/ai-interview')}
             onClick={() => setMenuOpen(false)}
           >
-            🎤 AIインタビュー
+            🎤 AI Interview
           </Link>
         )}
 
@@ -155,7 +155,7 @@ export default function Layout({ children, title }: LayoutProps) {
             width: '100%', textAlign: 'left',
           }}
         >
-          ← 戻る
+          ← Back
         </button>
       </nav>
 

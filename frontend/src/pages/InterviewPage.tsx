@@ -37,7 +37,7 @@ function DiaryPage({ userId, fieldType = 'other' }: { userId: number; fieldType?
     if (!SR) return;
     setVoiceSupported(true);
     const r = new SR();
-    r.lang = 'ja-JP'; r.continuous = true; r.interimResults = false;
+    r.lang = 'en-US'; r.continuous = true; r.interimResults = false;
     r.onresult = (e: any) => {
       const t = Array.from(e.results).map((x: any) => x[0].transcript).join('');
       setFormBody((prev: string) => prev + t);
@@ -86,7 +86,7 @@ function DiaryPage({ userId, fieldType = 'other' }: { userId: number; fieldType?
         field_type: fieldType, question_text: questionText,
       });
       setShowForm(false); await fetchEntries();
-    } catch (e) { console.error(e); setSaveError('保存に失敗しました。もう一度お試しください。'); }
+    } catch (e) { console.error(e); setSaveError('Could not save. Please try again.'); }
     finally { setSaving(false); }
   };
 
@@ -102,7 +102,7 @@ function DiaryPage({ userId, fieldType = 'other' }: { userId: number; fieldType?
 
   const formatDate = (d: string) => {
     if (!d) return '';
-    return new Date(d).toLocaleDateString('ja-JP',
+    return new Date(d).toLocaleDateString('en-US',
       { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
   };
 
@@ -128,7 +128,7 @@ function DiaryPage({ userId, fieldType = 'other' }: { userId: number; fieldType?
             <p style={{ color: '#ffffff', opacity: 0.9, fontSize: '0.95rem', lineHeight: 1.8 }}>
               日々の出来事、気づき、アイデアなど何でも自由に記録できます。<br />
               {entries.length > 0
-                ? entries.length + ' 件のメモが保存されています。'
+                ? entries.length + ' 件のメモがSaveされています。'
                 : 'まだメモがありません。「新しいメモを書く」から始めましょう。'}
             </p>
           </div>
@@ -177,10 +177,10 @@ function DiaryPage({ userId, fieldType = 'other' }: { userId: number; fieldType?
               <button onMouseDown={handleVoiceStart} onMouseUp={handleVoiceStop}
                 onTouchStart={handleVoiceStart} onTouchEnd={handleVoiceStop}
                 style={voiceBtn(isListening)}>
-                {isListening ? '🔴 話してください...' : '🎤 押している間だけ録音'}
+                {isListening ? '🔴 Speak now...' : '🎤 Hold to record'}
               </button>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-light)', marginTop: '8px' }}>
-                {isListening ? '※ ボタンを離すと録音が終わります' : '※ ボタンを押している間、話した内容が自動でテキストになります'}
+                {isListening ? 'Release the button to stop recording.' : 'Hold the button and your speech will be transcribed automatically.'}
               </p>
             </div>
           )}
@@ -192,7 +192,7 @@ function DiaryPage({ userId, fieldType = 'other' }: { userId: number; fieldType?
             </button>
             <button onClick={handleSave} disabled={saving}
               style={{ padding: '10px 28px', background: saving ? '#ccc' : 'var(--brown-dark)', border: 'none', borderRadius: 'var(--radius-sm)', color: 'var(--cream)', fontSize: '0.95rem', fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer' }}>
-              {saving ? '保存中...' : '💾 保存する'}
+              {saving ? 'Saving...' : '💾 Saveする'}
             </button>
           </div>
         </div>
@@ -230,7 +230,7 @@ function DiaryPage({ userId, fieldType = 'other' }: { userId: number; fieldType?
               </div>
               <p style={{ color: 'var(--text)', fontSize: '1rem', lineHeight: 1.8, whiteSpace: 'pre-wrap', margin: 0 }}>{entry.body}</p>
               <p style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: '12px', textAlign: 'right' }}>
-                最終更新: {new Date(entry.updated_at).toLocaleString('ja-JP')}
+                最終更新: {new Date(entry.updated_at).toLocaleString('en-US')}
               </p>
             </div>
           ))}
@@ -241,38 +241,38 @@ function DiaryPage({ userId, fieldType = 'other' }: { userId: number; fieldType?
 }
 
 const JIBUNSHI_QUESTIONS = [
-  "あなたの生まれた時代はどんな時代でしたか？",
-  "生まれた場所と、幼い頃の思い出は？",
-  "家族について教えてください",
-  "学生時代の思い出は？",
-  "最初の職場での経験は？",
-  "人生での大きな決断は？",
-  "仕事でやりがいを感じたことは？",
-  "人生で出会った大切な人は？",
-  "趣味や好きなことは？",
-  "人生での失敗や試練は？",
-  "それらからどう学びましたか？",
-  "今、大切にしていることは？",
-  "家族や後の世代に伝えたいことは？",
-  "人生で一番幸せだった時は？",
-  "未来へのメッセージは？",
+  'What was the world like when you were born?',
+  'Where were you born, and what do you remember from early childhood?',
+  'Tell us about your family.',
+  'What memories stand out from your school years?',
+  'What was your first workplace or first job like?',
+  'What major decisions shaped your life?',
+  'What moments made your work feel meaningful?',
+  'Who were the important people you met in your life?',
+  'What hobbies or interests have brought you joy?',
+  'What failures or hardships did you face?',
+  'What did you learn from those experiences?',
+  'What matters most to you now?',
+  'What would you like to pass on to your family or future generations?',
+  'When were you happiest?',
+  'What message would you like to leave for the future?',
 ];
 const KAISHASHI_QUESTIONS = [
-  "創業のきっかけは何でしたか？",
-  "創業当時の社会状況や業界の様子は？",
-  "会社名の由来や理念は？",
-  "創業メンバーや初期の苦労は？",
-  "最初の商品・サービスは？",
-  "事業拡大の転機は何でしたか？",
-  "大きな失敗や危機はありましたか？",
-  "それをどう乗り越えましたか？",
-  "印象に残る顧客や取引先との出来事は？",
-  "社員との思い出や組織づくりで大切にしたことは？",
-  "技術やサービスでこだわった点は？",
-  "社会にどんな価値を提供してきましたか？",
-  "自社の強みは何だと思いますか？",
-  "後継者や次世代へ伝えたい経営の考え方は？",
-  "未来の会社に望むことは？",
+  'What inspired the founding of the company?',
+  'What was society and the industry like at the time?',
+  'What is the origin of the company name and philosophy?',
+  'Who were the founding members, and what early struggles did they face?',
+  'What were the first products or services?',
+  'What turning points helped the business grow?',
+  'Were there major failures or crises?',
+  'How did the company overcome them?',
+  'What memorable stories involve customers or business partners?',
+  'What memories with employees shaped the organization?',
+  'What standards or commitments guided the technology or service?',
+  'What value has the company provided to society?',
+  'What do you see as the companys greatest strengths?',
+  'What management beliefs should be passed to successors?',
+  'What do you hope for the companys future?',
 ];
 const SHUKATSU_QUESTIONS = [
   "現在の健康状態について",
@@ -360,7 +360,7 @@ export default function InterviewPage() {
     if (!SR) return;
     setVoiceSupported(true);
     const recognition = new SR();
-    recognition.lang = 'ja-JP'; recognition.continuous = true; recognition.interimResults = false;
+    recognition.lang = 'en-US'; recognition.continuous = true; recognition.interimResults = false;
     recognition.onresult = (event: any) => {
       const transcript = Array.from(event.results).map((r: any) => r[0].transcript).join('');
       const qId = currentRef.current + 1;
@@ -396,7 +396,7 @@ export default function InterviewPage() {
     try {
       await interviewApi.save({ user_id: user.id, question_id: current + 1, answer_text: answerText, field_type: fieldType });
       setSaved(prev => ({ ...prev, [current + 1]: true }));
-    } catch (e) { console.error(e); setSaveError('保存に失敗しました。もう一度お試しください。'); }
+    } catch (e) { console.error(e); setSaveError('Could not save. Please try again.'); }
     finally { setSaving(false); }
   };
 
@@ -408,7 +408,7 @@ export default function InterviewPage() {
       const res = await api.post('/interviews/ai-edit', { question_text: QUESTIONS[current], answer_text: answerText });
       setAnswers(prev => ({ ...prev, [current + 1]: res.data.edited_text }));
       setSaved(prev => ({ ...prev, [current + 1]: false }));
-    } catch (e) { console.error(e); window.alert('AI編集に失敗しました。もう一度お試しください。'); }
+    } catch (e) { console.error(e); window.alert('AI editing failed. Please try again.'); }
     finally { setAiEditing(false); }
   };
 
@@ -416,8 +416,8 @@ export default function InterviewPage() {
     const answersToEdit = Object.entries(answers)
       .filter(([, text]) => text?.trim())
       .map(([qId, text]) => ({ question_id: Number(qId), question_text: QUESTIONS[Number(qId) - 1], answer_text: text }));
-    if (answersToEdit.length === 0) { window.alert('回答がありません。先に回答を入力してください。'); return; }
-    if (!window.confirm(answersToEdit.length + '問の回答をまとめてAI編集します。よろしいですか？')) return;
+    if (answersToEdit.length === 0) { window.alert('There are no answers yet. Please enter an answer first.'); return; }
+    if (!window.confirm(answersToEdit.length + ' answers will be polished with AI. Continue?')) return;
     setAiEditingAll(true);
     try {
       const res = await api.post('/interviews/ai-edit-all', { answers: answersToEdit });
@@ -427,8 +427,8 @@ export default function InterviewPage() {
       const newSaved = { ...saved };
       answersToEdit.forEach(a => { newSaved[a.question_id] = false; });
       setSaved(newSaved);
-      window.alert(answersToEdit.length + '問のAI編集が完了しました！内容を確認して保存してください。');
-    } catch (e) { console.error(e); window.alert('AI編集に失敗しました。もう一度お試しください。'); }
+      window.alert(answersToEdit.length + '問のAI編集が完了しました！内容を確認してSaveしてください。');
+    } catch (e) { console.error(e); window.alert('AI editing failed. Please try again.'); }
     finally { setAiEditingAll(false); }
   };
 
@@ -439,16 +439,16 @@ export default function InterviewPage() {
   const progress = (completedCount / 15) * 100;
 
   return (
-    <Layout title="💬 聞き取り">
+    <Layout title="💬 Interview">
       {fetchError && (
         <div style={{ background: '#FEE2DC', border: '2px solid #C0392B', borderRadius: 'var(--radius)', padding: '24px', marginBottom: '24px', textAlign: 'center' }}>
-          <p style={{ color: '#C0392B', fontSize: '1rem', marginBottom: '12px' }}>⚠️ 回答データの取得に失敗しました。ページを再読み込みしてください。</p>
-          <button onClick={() => window.location.reload()} style={{ padding: '10px 24px', background: '#C0392B', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>再読み込み</button>
+          <p style={{ color: '#C0392B', fontSize: '1rem', marginBottom: '12px' }}>⚠️ 回答データの取得に失敗しました。ページをReloadしてください。</p>
+          <button onClick={() => window.location.reload()} style={{ padding: '10px 24px', background: '#C0392B', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Reload</button>
         </div>
       )}
       <div style={{ background: 'var(--white)', borderRadius: 'var(--radius)', padding: '24px', marginBottom: '32px', boxShadow: 'var(--shadow)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-          <span style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>{completedCount} / 15 問完了</span>
+          <span style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>{completedCount} / 15 complete</span>
           <span style={{ fontWeight: 600, color: 'var(--accent)' }}>{Math.round(progress)}%</span>
         </div>
         <div style={{ background: 'var(--cream-dark)', borderRadius: '20px', height: '8px' }}>
@@ -462,7 +462,7 @@ export default function InterviewPage() {
         {answeredCount > 0 && (
           <div style={{ marginTop: '20px', textAlign: 'center' }}>
             <button onClick={handleAiEditAll} disabled={aiEditingAll} style={{ padding: '12px 32px', background: aiEditingAll ? '#ccc' : 'linear-gradient(135deg,#5B3A8A,#7B5EA7)', border: 'none', borderRadius: 'var(--radius-sm)', color: 'white', fontSize: '1rem', fontWeight: 600, cursor: aiEditingAll ? 'not-allowed' : 'pointer', fontFamily: "'Noto Sans JP',sans-serif" }}>
-              {aiEditingAll ? '✨ AI編集中...' : '✨ 全' + answeredCount + '問まとめてAI編集'}
+              {aiEditingAll ? '✨ Polishing...' : '✨ Polish all ' + answeredCount + ' answers'}
             </button>
           </div>
         )}
@@ -470,25 +470,25 @@ export default function InterviewPage() {
 
       <div className="fade-in" style={{ background: 'var(--white)', borderRadius: 'var(--radius)', padding: '40px', boxShadow: 'var(--shadow)', border: '1px solid var(--cream-dark)' }}>
         <div style={{ marginBottom: '8px' }}>
-          <span style={{ background: 'var(--brown-dark)', color: 'var(--cream)', padding: '4px 14px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600 }}>質問 {current + 1} / 15</span>
-          {saved[current + 1] && <span style={{ background: '#E8F5E9', color: '#388E3C', padding: '4px 14px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, marginLeft: '8px' }}>✓ 保存済み</span>}
+          <span style={{ background: 'var(--brown-dark)', color: 'var(--cream)', padding: '4px 14px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600 }}>Question {current + 1} / 15</span>
+          {saved[current + 1] && <span style={{ background: '#E8F5E9', color: '#388E3C', padding: '4px 14px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600, marginLeft: '8px' }}>✓ Save済み</span>}
         </div>
         <h3 style={{ fontFamily: "'Noto Serif JP',serif", fontSize: '1.4rem', color: 'var(--brown-dark)', margin: '20px 0 12px', lineHeight: 1.6 }}>{QUESTIONS[current]}</h3>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
           <button
             onClick={() => { if (isSpeaking) { ttsAudioRef.current?.pause(); ttsAudioRef.current = null; setIsSpeaking(false); } else { speakQuestion(QUESTIONS[current]); } }}
             style={{ padding: '8px 20px', background: isSpeaking ? 'linear-gradient(135deg,#e53935,#ef5350)' : 'linear-gradient(135deg,#388E3C,#66BB6A)', border: 'none', borderRadius: '50px', color: 'white', fontSize: '0.95rem', fontWeight: 600, cursor: 'pointer', fontFamily: "'Noto Sans JP',sans-serif" }}>
-            {isSpeaking ? '⏹ 読み上げ停止' : '🔊 質問を読み上げる'}
+            {isSpeaking ? '⏹ Stop audio' : '🔊 Read question'}
           </button>
           <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-light)' }}>
             <input type="checkbox" checked={autoReadEnabled} onChange={e => setAutoReadEnabled(e.target.checked)} style={{ width: '16px', height: '16px' }} />
-            質問が変わったら自動で読み上げる
+            Read each new question automatically
           </label>
         </div>
         <textarea
           value={answers[current + 1] || ''}
           onChange={e => setAnswers(prev => ({ ...prev, [current + 1]: e.target.value }))}
-          placeholder="ここに自由に書いてください。思い出した順番でも、箇条書きでも大丈夫です。"
+          placeholder="Write freely here. Notes, fragments, and bullet points are all fine."
           style={{ width: '100%', minHeight: '200px', padding: '20px', border: '2px solid var(--cream-dark)', borderRadius: 'var(--radius-sm)', fontSize: '1.05rem', lineHeight: 1.8, color: 'var(--text)', background: 'var(--cream)', resize: 'vertical', outline: 'none', fontFamily: "'Noto Sans JP',sans-serif" }}
           onFocus={e => e.target.style.borderColor = 'var(--brown-light)'}
           onBlur={e => e.target.style.borderColor = 'var(--cream-dark)'} />
@@ -496,25 +496,25 @@ export default function InterviewPage() {
           <div style={{ marginTop: '16px', textAlign: 'center' }}>
             <button onMouseDown={handleVoiceStart} onMouseUp={handleVoiceStop} onTouchStart={handleVoiceStart} onTouchEnd={handleVoiceStop}
               style={{ padding: '16px 40px', background: isListening ? 'linear-gradient(135deg,#e53935,#ef5350)' : 'linear-gradient(135deg,#1976D2,#42A5F5)', border: 'none', borderRadius: '50px', color: 'white', fontSize: '1.1rem', fontWeight: 700, cursor: 'pointer', fontFamily: "'Noto Sans JP',sans-serif", userSelect: 'none' }}>
-              {isListening ? '🔴 話してください...' : '🎤 押している間だけ録音'}
+              {isListening ? '🔴 Speak now...' : '🎤 Hold to record'}
             </button>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-light)', marginTop: '8px' }}>{isListening ? '※ ボタンを離すと録音が終わります' : '※ ボタンを押している間、話した内容が自動でテキストになります'}</p>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-light)', marginTop: '8px' }}>{isListening ? 'Release the button to stop recording.' : 'Hold the button and your speech will be transcribed automatically.'}</p>
           </div>
         )}
         <div style={{ marginTop: '12px', textAlign: 'right' }}>
           <button onClick={handleAiEdit} disabled={aiEditing || !answers[current + 1]?.trim()}
             style={{ padding: '10px 20px', background: aiEditing ? '#ccc' : 'linear-gradient(135deg,#7B5EA7,#9B7EC8)', border: 'none', borderRadius: 'var(--radius-sm)', color: 'white', fontSize: '0.9rem', fontWeight: 500, cursor: aiEditing ? 'not-allowed' : 'pointer', fontFamily: "'Noto Sans JP',sans-serif" }}>
-            {aiEditing ? '✨ AI編集中...' : '✨ この回答をAIで整える'}
+            {aiEditing ? '✨ Polishing...' : '✨ Polish this answer'}
           </button>
         </div>
         {saveError && <div style={{ background: '#FEE2DC', border: '1px solid #C0392B', borderRadius: '8px', padding: '10px 16px', marginTop: '12px', color: '#C0392B', fontSize: '0.9rem' }}>⚠️ {saveError}</div>}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', gap: '16px', flexWrap: 'wrap' }}>
-          <button onClick={() => setCurrent(Math.max(0, current - 1))} disabled={current === 0} style={secBtn}>← 前の質問</button>
+          <button onClick={() => setCurrent(Math.max(0, current - 1))} disabled={current === 0} style={secBtn}>← Previous</button>
           <div style={{ display: 'flex', gap: '12px' }}>
-            <button onClick={handleSave} disabled={saving || !answers[current + 1]?.trim()} style={saveBtn}>{saving ? '保存中...' : '保存'}</button>
+            <button onClick={handleSave} disabled={saving || !answers[current + 1]?.trim()} style={saveBtn}>{saving ? 'Saving...' : 'Save'}</button>
             {current < 14
-              ? <button onClick={handleSaveAndNext} disabled={saving} style={priBtn}>保存して次へ →</button>
-              : <button onClick={handleSave} disabled={saving} style={priBtn}>✓ 完了</button>}
+              ? <button onClick={handleSaveAndNext} disabled={saving} style={priBtn}>Saveして次へ →</button>
+              : <button onClick={handleSave} disabled={saving} style={priBtn}>✓ Finish</button>}
           </div>
         </div>
       </div>

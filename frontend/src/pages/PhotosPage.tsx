@@ -6,10 +6,10 @@ import { photoApi, Photo } from '../api';
 const API_BASE = import.meta.env.VITE_API_URL?.replace('/api', '') || '';
 
 const fieldTitles: Record<string, string> = {
-  jibunshi: '思い出の写真',
-  kaishashi: '会社の写真',
-  shukatsu: '大切な写真',
-  other: '写真',
+  jibunshi: 'Memory Photos',
+  kaishashi: 'Company Photos',
+  shukatsu: 'Important Photos',
+  other: 'Photos',
 };
 
 export default function PhotosPage() {
@@ -67,7 +67,7 @@ export default function PhotosPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('この写真を削除しますか？')) return;
+    if (!confirm('Delete this photo?')) return;
     try {
       await photoApi.delete(id);
       fetchPhotos();
@@ -76,7 +76,7 @@ export default function PhotosPage() {
     }
   };
 
-  const title = fieldTitles[fieldType] || '写真';
+  const title = fieldTitles[fieldType] || 'Photos';
 
   return (
     <Layout title={`🖼 ${title}`}>
@@ -85,7 +85,7 @@ export default function PhotosPage() {
         marginBottom: '40px', boxShadow: 'var(--shadow)', border: '1px solid var(--cream-dark)',
       }}>
         <h3 style={{ fontFamily: "'Noto Serif JP', serif", fontSize: '1.1rem', marginBottom: '24px', color: 'var(--brown-dark)' }}>
-          写真をアップロード
+          Upload Photos
         </h3>
         <div onClick={() => fileRef.current?.click()} style={{
           border: `3px dashed ${preview ? 'var(--accent)' : 'var(--brown-light)'}`,
@@ -95,14 +95,14 @@ export default function PhotosPage() {
         }}>
           {preview ? (
             <div>
-              <img src={preview} alt="プレビュー" style={{ maxHeight: '200px', maxWidth: '100%', borderRadius: 'var(--radius-sm)', objectFit: 'cover' }} />
-              <p style={{ color: 'var(--accent)', marginTop: '12px', fontSize: '0.9rem' }}>クリックして別の写真を選ぶ</p>
+              <img src={preview} alt="Preview" style={{ maxHeight: '200px', maxWidth: '100%', borderRadius: 'var(--radius-sm)', objectFit: 'cover' }} />
+              <p style={{ color: 'var(--accent)', marginTop: '12px', fontSize: '0.9rem' }}>Click to choose another photo</p>
             </div>
           ) : (
             <>
               <div style={{ fontSize: '3rem', marginBottom: '12px' }}>📷</div>
-              <p style={{ color: 'var(--brown)', fontSize: '1rem', marginBottom: '8px' }}>クリックして写真を選ぶ</p>
-              <p style={{ color: 'var(--text-light)', fontSize: '0.85rem' }}>JPEG, PNG, GIF に対応</p>
+              <p style={{ color: 'var(--brown)', fontSize: '1rem', marginBottom: '8px' }}>Click to choose a photo</p>
+              <p style={{ color: 'var(--text-light)', fontSize: '0.85rem' }}>Supports JPEG, PNG, and GIF</p>
             </>
           )}
         </div>
@@ -112,10 +112,10 @@ export default function PhotosPage() {
           <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
             <div style={{ flex: 1 }}>
               <label style={{ display: 'block', marginBottom: '8px', color: 'var(--brown)', fontSize: '0.9rem' }}>
-                キャプション（任意）
+                Caption (optional)
               </label>
               <input type="text" value={caption} onChange={e => setCaption(e.target.value)}
-                placeholder="例: 家族旅行、昭和45年夏"
+                placeholder="Example: Family trip, summer 1970"
                 style={{ width: '100%', padding: '12px 16px', border: '2px solid var(--cream-dark)', borderRadius: 'var(--radius-sm)', fontSize: '1rem', background: 'var(--cream)', outline: 'none' }} />
             </div>
             <button onClick={handleUpload} disabled={uploading} style={{
@@ -123,7 +123,7 @@ export default function PhotosPage() {
               border: 'none', borderRadius: 'var(--radius-sm)', fontSize: '1rem', fontWeight: 500,
               cursor: 'pointer', fontFamily: "'Noto Sans JP', sans-serif", flexShrink: 0,
             }}>
-              {uploading ? 'アップロード中...' : 'アップロード'}
+              {uploading ? 'Uploading...' : 'Upload'}
             </button>
           </div>
         )}
@@ -135,7 +135,7 @@ export default function PhotosPage() {
         <div style={{ background: 'var(--white)', borderRadius: 'var(--radius)', padding: '60px', textAlign: 'center', border: '2px dashed var(--cream-dark)' }}>
           <div style={{ fontSize: '3rem', marginBottom: '16px' }}>🖼</div>
           <p style={{ color: 'var(--text-light)', fontSize: '1.1rem' }}>
-            まだ写真がありません。<br />上のエリアから写真をアップロードしましょう。
+            No photos yet.<br />Upload a photo using the area above.
           </p>
         </div>
       ) : (
@@ -148,15 +148,15 @@ export default function PhotosPage() {
             onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-4px)'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow-lg)'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'; (e.currentTarget as HTMLDivElement).style.boxShadow = 'var(--shadow)'; }}>
               <div style={{ cursor: 'pointer' }} onClick={() => setLightbox(photo)}>
-                <img src={photo.photo_url.startsWith('http') ? photo.photo_url : `${API_BASE}${photo.photo_url}`} alt={photo.caption || '写真'}
+                <img src={photo.photo_url.startsWith('http') ? photo.photo_url : `${API_BASE}${photo.photo_url}`} alt={photo.caption || 'Photo'}
                   style={{ width: '100%', height: '160px', objectFit: 'cover', display: 'block' }}
                   onError={e => { (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns%3D"http://www.w3.org/2000/svg" width%3D"200" height%3D"160" viewBox%3D"0 0 200 160"%3E%3Crect fill%3D"%23f2ebe0" width%3D"200" height%3D"160"/%3E%3Ctext fill%3D"%23c4a882" font-size%3D"40" text-anchor%3D"middle" x%3D"100" y%3D"90"%3E🖼%3C/text%3E%3C/svg%3E'; }} />
               </div>
               <div style={{ padding: '12px 14px' }}>
                 {photo.caption && <p style={{ fontSize: '0.85rem', color: 'var(--text-light)', lineHeight: 1.4, marginBottom: '8px' }}>{photo.caption}</p>}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--brown-light)' }}>{new Date(photo.uploaded_at).toLocaleDateString('ja-JP')}</span>
-                  <button onClick={() => handleDelete(photo.id)} style={{ background: 'transparent', border: 'none', color: '#C0392B', fontSize: '0.75rem', cursor: 'pointer', padding: '4px 8px' }}>削除</button>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--brown-light)' }}>{new Date(photo.uploaded_at).toLocaleDateString('en-US')}</span>
+                  <button onClick={() => handleDelete(photo.id)} style={{ background: 'transparent', border: 'none', color: '#C0392B', fontSize: '0.75rem', cursor: 'pointer', padding: '4px 8px' }}>Delete</button>
                 </div>
               </div>
             </div>
@@ -171,14 +171,14 @@ export default function PhotosPage() {
           zIndex: 1000, padding: '24px', cursor: 'pointer',
         }}>
           <div onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
-            <img src={lightbox.photo_url.startsWith('http') ? lightbox.photo_url : `${API_BASE}${lightbox.photo_url}`} alt={lightbox.caption || '写真'}
+            <img src={lightbox.photo_url.startsWith('http') ? lightbox.photo_url : `${API_BASE}${lightbox.photo_url}`} alt={lightbox.caption || 'Photo'}
               style={{ maxWidth: '90vw', maxHeight: '80vh', borderRadius: 'var(--radius)', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }} />
             {lightbox.caption && <p style={{ color: 'white', marginTop: '16px', fontSize: '1rem' }}>{lightbox.caption}</p>}
             <button onClick={() => setLightbox(null)} style={{
               display: 'block', margin: '20px auto 0', padding: '10px 24px',
               background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
               borderRadius: '20px', color: 'white', cursor: 'pointer', fontFamily: "'Noto Sans JP', sans-serif",
-            }}>閉じる</button>
+            }}>Close</button>
           </div>
         </div>
       )}
