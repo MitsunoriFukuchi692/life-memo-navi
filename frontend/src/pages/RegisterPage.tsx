@@ -6,17 +6,23 @@ const API_BASE = (import.meta.env.VITE_API_URL || 'https://life-memo-navi-backen
 
 // ↑ API_BASEは団体コード参加(/api/org/join)で使用
 
-const PROJECT_TYPES = [
+const PROJECT_TYPES_JA = [
   { value: 'jibunshi', label: '自分史' },
   { value: 'kaishashi', label: '会社史' },
   { value: 'shukatsu', label: '終活ノート' },
   { value: 'other', label: '日記帳・営業日報作成' },
 ];
 
+const PROJECT_TYPES_EN = [
+  { value: 'jibunshi', label: 'Life Story' },
+  { value: 'kaishashi', label: 'Company History' },
+];
+
 export default function RegisterPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const planFromUrl = searchParams.get('plan') || 'standard'; // URLパラメータからplanを取得
+  const isEnglish = searchParams.get('lang') === 'en' || localStorage.getItem('lm_lang') === 'en';
   const isPublisherMode = planFromUrl === 'publisher';
 
   const [form, setForm] = useState({ name: '', age: '', email: '', password: '', project_type: 'jibunshi' });
@@ -36,6 +42,7 @@ export default function RegisterPage() {
     setError('');
     setLoading(true);
     try {
+      localStorage.setItem('lm_lang', isEnglish ? 'en' : 'ja');
       const res = await authApi.register({ ...form, age: Number(form.age), plan: planFromUrl });
       // バックエンドはメール認証後にログイン可能になるため、tokenは返さない
       // → 確認メール送信画面を表示する
@@ -102,25 +109,30 @@ export default function RegisterPage() {
         <div style={{ background: 'var(--white)', borderRadius: '24px', padding: '48px', width: '100%', maxWidth: '500px', boxShadow: 'var(--shadow-lg)', textAlign: 'center' }}>
           <div style={{ fontSize: '64px', marginBottom: '20px' }}>📧</div>
           <h2 style={{ fontFamily: "'Noto Serif JP', serif", fontSize: '1.4rem', marginBottom: '16px' }}>
-            確認メールをお送りしました
+            {isEnglish ? 'Verification email sent' : '確認メールをお送りしました'}
           </h2>
           <p style={{ color: 'var(--text-light)', lineHeight: '1.8', marginBottom: '24px' }}>
-            <strong>{form.email}</strong> に確認メールを送りました。<br />
-            メール内のリンクをクリックして、<br />
-            登録を完了してください。
+            {isEnglish ? (
+              <>We sent a verification email to <strong>{form.email}</strong>.<br />Click the link in the email to complete registration.</>
+            ) : (
+              <><strong>{form.email}</strong> に確認メールを送りました。<br />メール内のリンクをクリックして、<br />登録を完了してください。</>
+            )}
           </p>
           <div style={{ background: '#FFF8E1', border: '1px solid #FFE082', borderRadius: '8px', padding: '14px 18px', marginBottom: '28px', fontSize: '0.88rem', color: '#7A5A00', textAlign: 'left' }}>
-            📌 メールが届かない場合は、迷惑メールフォルダもご確認ください。<br />
-            それでも届かない場合は、下のボタンから再送できます。
+            {isEnglish ? (
+              <>📌 If you do not receive the email, please check your spam folder.<br />You can resend it from the login screen.</>
+            ) : (
+              <>📌 メールが届かない場合は、迷惑メールフォルダもご確認ください。<br />それでも届かない場合は、下のボタンから再送できます。</>
+            )}
           </div>
           <button
-            onClick={() => navigate('/login')}
+            onClick={() => navigate(isEnglish ? '/login?lang=en' : '/login')}
             style={{ width: '100%', padding: '16px', background: 'var(--brown-dark)', color: 'var(--cream)', border: 'none', borderRadius: '8px', fontSize: '1.05rem', fontWeight: 500, cursor: 'pointer', marginBottom: '12px' }}
           >
-            ログイン画面へ
+            {isEnglish ? 'Go to login' : 'ログイン画面へ'}
           </button>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-light)' }}>
-            メールが届かない場合はログイン画面から再送できます
+            {isEnglish ? 'If the email does not arrive, you can resend it from the login screen.' : 'メールが届かない場合はログイン画面から再送できます'}
           </p>
         </div>
       </div>
@@ -200,17 +212,22 @@ export default function RegisterPage() {
         <div style={{ textAlign: 'center', marginBottom: '36px' }}>
           {isPublisherMode && (
             <div style={{ background: '#fff8e1', border: '1px solid #ffe082', borderRadius: '8px', padding: '10px 16px', marginBottom: '20px', fontSize: '0.85rem', color: '#a06020' }}>
-              📖 自分史アプリ 出版社プラン
+              {isEnglish ? '📖 Life Story App Publisher Plan' : '📖 自分史アプリ 出版社プラン'}
             </div>
           )}
-          <h1 style={{ fontFamily: "'Noto Serif JP', serif", fontSize: '1.6rem' }}>新規登録</h1>
+          <h1 style={{ fontFamily: "'Noto Serif JP', serif", fontSize: '1.6rem' }}>{isEnglish ? 'Create an account' : '新規登録'}</h1>
           <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', marginTop: '8px', lineHeight: '1.8' }}>
-            {isPublisherMode ? '自分史の記録を始めましょう' : (
+            {isPublisherMode ? (isEnglish ? 'Start your life story' : '自分史の記録を始めましょう') : (isEnglish ? (
+              <>
+                Start preserving a life story or company history.<br />
+                <span style={{ fontSize: '1rem' }}>Enter your name, age, email, and password.</span>
+              </>
+            ) : (
               <>
                 あなたの大切な物語を始めましょう<br />
                 <span style={{ fontSize: '1rem' }}>初めての方：お名前・年齢・Email・パスワードを入れてください。</span>
               </>
-            )}
+            ))}
           </p>
         </div>
         {error && (
@@ -222,8 +239,8 @@ export default function RegisterPage() {
           {/* 出版社モードでは記録の種類選択を非表示 */}
           {!isPublisherMode && (
             <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', marginBottom: '8px', color: 'var(--brown)', fontWeight: 500 }}>記録の種類</label>
-              {PROJECT_TYPES.map(pt => (
+              <label style={{ display: 'block', marginBottom: '8px', color: 'var(--brown)', fontWeight: 500 }}>{isEnglish ? 'Record type' : '記録の種類'}</label>
+              {(isEnglish ? PROJECT_TYPES_EN : PROJECT_TYPES_JA).map(pt => (
                 <label key={pt.value} style={{
                   display: 'flex', alignItems: 'center', gap: '10px',
                   padding: '10px 16px', marginBottom: '8px',
@@ -244,19 +261,19 @@ export default function RegisterPage() {
           )}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', color: 'var(--brown)', fontWeight: 500 }}>お名前</label>
+              <label style={{ display: 'block', marginBottom: '8px', color: 'var(--brown)', fontWeight: 500 }}>{isEnglish ? 'Name' : 'お名前'}</label>
               <input
                 type="text" value={form.name}
                 onChange={e => setForm({ ...form, name: e.target.value })}
-                required style={inp} placeholder="福地三則"
+                required style={inp} placeholder={isEnglish ? 'Jane Smith' : '福地三則'}
               />
             </div>
             <div>
-              <label style={{ display: 'block', marginBottom: '8px', color: 'var(--brown)', fontWeight: 500 }}>年齢</label>
+              <label style={{ display: 'block', marginBottom: '8px', color: 'var(--brown)', fontWeight: 500 }}>{isEnglish ? 'Age' : '年齢'}</label>
               <input
                 type="number" value={form.age}
                 onChange={e => setForm({ ...form, age: e.target.value })}
-                required min="1" max="120" style={inp} placeholder="75"
+                required min="1" max="120" style={inp} placeholder={isEnglish ? '68' : '75'}
               />
             </div>
           </div>
@@ -269,7 +286,7 @@ export default function RegisterPage() {
             />
           </div>
           <div style={{ marginBottom: '32px' }}>
-            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--brown)', fontWeight: 500 }}>パスワード（6文字以上）</label>
+            <label style={{ display: 'block', marginBottom: '8px', color: 'var(--brown)', fontWeight: 500 }}>{isEnglish ? 'Password (6+ characters)' : 'パスワード（6文字以上）'}</label>
             <input
               type="password" value={form.password}
               onChange={e => setForm({ ...form, password: e.target.value })}
@@ -280,12 +297,12 @@ export default function RegisterPage() {
             type="submit" disabled={loading}
             style={{ width: '100%', padding: '16px', background: 'var(--brown-dark)', color: 'var(--cream)', border: 'none', borderRadius: '8px', fontSize: '1.05rem', fontWeight: 500, cursor: 'pointer' }}
           >
-            {loading ? '登録中...' : '登録する'}
+            {loading ? (isEnglish ? 'Creating...' : '登録中...') : (isEnglish ? 'Create account' : '登録する')}
           </button>
         </form>
         <p style={{ textAlign: 'center', marginTop: '24px', color: 'var(--text-light)', fontSize: '1.2rem' }}>
-          2回目以降の方はこちらで{' '}
-          <Link to="/login" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>ログイン</Link>
+          {isEnglish ? 'Already have an account?' : '2回目以降の方はこちらで'}{' '}
+          <Link to={isEnglish ? '/login?lang=en' : '/login'} style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>{isEnglish ? 'Log in' : 'ログイン'}</Link>
         </p>
       </div>
     </div>
