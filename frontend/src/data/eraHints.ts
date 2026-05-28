@@ -154,8 +154,114 @@ export const SHUKATSU_QUESTION_HINTS: Record<number, string[]> = {
   15: ['🌟 最期まで大切にしたい生き方はどんなものですか？', '😊 幸せだと感じる瞬間はどんな時ですか？', '🕊️ あなたにとって良い人生とはどんな人生でしたか？'],
 };
 
-export function getQuestionHints(fieldType: string, questionId: number): string[] {
+export function getQuestionHints(fieldType: string, questionId: number, lang?: string): string[] {
+  if (lang === 'en') {
+    if (fieldType === 'kaishaishi') return KAISHAISHI_QUESTION_HINTS_EN[questionId] || [];
+    return JIBUNSHI_QUESTION_HINTS_EN[questionId] || [];
+  }
   if (fieldType === 'kaishaishi') return KAISHAISHI_QUESTION_HINTS[questionId] || [];
   if (fieldType === 'shukatsu') return SHUKATSU_QUESTION_HINTS[questionId] || [];
   return JIBUNSHI_QUESTION_HINTS[questionId] || [];
 }
+
+// ============================================================
+// English question hints (Life Story)
+// ============================================================
+export const JIBUNSHI_QUESTION_HINTS_EN: Record<number, string[]> = {
+  1: [
+    '🌍 When you were born, the world was changing fast. What do you remember about everyday life back then?',
+    '📻 Entertainment looked very different — radio, early TV, live music. What did your family enjoy?',
+    '🍽️ Food and daily routines were quite different. What meals or family traditions stand out from your early years?',
+  ],
+  2: [
+    '🏠 What was your home like growing up — a house, a farm, an apartment?',
+    '👶 What games or activities did children enjoy in your neighborhood?',
+    '🌿 Is there a season memory from childhood that stands out — a holiday, a snowstorm, a harvest?',
+  ],
+  3: [
+    '👨‍👩‍👧‍👦 Did you have brothers or sisters? What was family life like at home?',
+    '👴 Were grandparents part of your household or nearby? Do you have memories of them?',
+    '🏡 What did your parents do for work, and how did that shape your childhood?',
+  ],
+  4: [
+    '🏫 Was there a teacher who left a strong impression on you?',
+    '⚾ What activities, sports, or clubs did you pursue after school?',
+    '📚 Were there subjects you loved or struggled with? How did school shape you?',
+  ],
+  5: [
+    '🚂 How did you find your first job — through connections, an ad, or luck?',
+    '💼 Do you remember your first paycheck? What did you do with it?',
+    '🏢 What was your first boss or mentor like?',
+  ],
+  6: [
+    '💍 What led you to make the most important commitment of your life?',
+    '🏠 Did you ever move somewhere new, or build or buy a home?',
+    '💼 Did you ever change careers or start something completely new?',
+  ],
+  7: [
+    '🏆 Was there a moment at work when you felt truly proud?',
+    '👥 Can you recall a time when a customer or colleague expressed real gratitude?',
+    '💡 What is one thing you accomplished that you would like people to remember?',
+  ],
+  8: [
+    '👫 Who has had the greatest influence on your life?',
+    '🤝 Is there a friend or colleague you stayed close to for many years?',
+    '💕 How did you meet that person, and what made the relationship special?',
+  ],
+  9: [
+    '🎣 When did you develop your main hobby or interest? What drew you to it?',
+    '📺 What TV shows, films, or books have stayed with you?',
+    '✈️ What travel memory stands out most?',
+  ],
+  10: [
+    '😓 What was the hardest period of your life — at work or at home?',
+    '🌧️ Was there someone who helped you through that time?',
+    '💪 How did you find the strength to get through it?',
+  ],
+  11: [
+    '📖 What is a lesson from a failure that changed how you lived afterward?',
+    '🌱 How has your thinking changed from when you were young?',
+    '💬 Is there a phrase, a person, or an experience that helped you grow?',
+  ],
+  12: [
+    '🌅 What do you look forward to each day?',
+    '👨‍👩‍👧 What do you cherish most about your time with family or friends?',
+    '🙏 What habits or practices help you stay well and grounded?',
+  ],
+  13: [
+    '📜 What is the most important lesson you would pass on to younger people?',
+    '🌸 What values have guided your life most deeply?',
+    '💌 If you could write a letter to the next generation, what would you say?',
+  ],
+  14: [
+    '😊 When did you feel the most joy or contentment in your life?',
+    '🎉 What celebrations — a wedding, a graduation, a birth — do you remember most?',
+    '🌈 What moment, when you look back, makes you think "that was really good"?',
+  ],
+  15: [
+    '🌟 Is there something you still want to do or try?',
+    '💌 Is there something you have been meaning to say to someone you love?',
+    '🕊️ What does a life well lived mean to you?',
+  ],
+};
+
+// ============================================================
+// English question hints (Company History)
+// ============================================================
+export const KAISHAISHI_QUESTION_HINTS_EN: Record<number, string[]> = {
+  1: ['💡 When did the idea of starting a business first come to you?', '👥 Who was the first person you talked to about it?', '🌍 What was the economic climate like at the time?'],
+  2: ['🏢 What did your first office or workspace look like?', '💼 Is the core business still the same as at the start?', '💰 How did you fund the early days?'],
+  3: ['😓 What was the hardest moment in those first years?', '🌙 Do you remember working through the night? What kept you going?', '💪 Why did you keep pushing when things were difficult?'],
+  4: ['🤝 Tell me how you found your very first customer.', '📞 How did it feel to get that first order?', '🏆 What did you do to earn trust in the early days?'],
+  5: ['📈 When did you first feel the business was really gaining momentum?', '👨‍💼 What was the atmosphere like as the team grew?', '🎉 What was your first big contract or milestone?'],
+  6: ['👥 Who was the colleague or team member who made the biggest difference?', '🌱 How did you approach developing people in the business?', '🤝 What would you most like your team to know about your gratitude?'],
+  7: ['🔄 Was there a moment when you had to change direction significantly?', '🌏 How did shifts in the market or industry force you to adapt?', '💡 What prompted you to launch a new product or service?'],
+  8: ['🌊 Was there a time when the business faced a serious crisis?', '💴 Were there periods when cash flow was truly difficult?', '🤝 Who or what came to the rescue in the tough times?'],
+  9: ['🏅 What achievement or story best captures what your company stands for?', '📰 Did you ever receive notable recognition from press or industry?', '😊 What customer thank-you has meant the most to you?'],
+  10: ['📖 What guiding principle has shaped how you run the business?', '🙏 Was there a mentor or admired leader who influenced your approach?', '⚖️ When facing a hard decision, what was your compass?'],
+  11: ['🌧️ When was the company most at risk?', '💪 How did you manage to survive and recover?', '🌈 What did that experience teach you?'],
+  12: ['🏘️ How has your company contributed to the local community?', '🤝 Were there causes or organizations you actively supported?', '🌱 Is there something the company has kept doing to give back?'],
+  13: ['🌟 How would you describe the culture of your company?', '🎉 What are some favorite memories of time with the team?', '💬 What unwritten rules or values shaped the way things got done?'],
+  14: ['👶 What do you hope the next generation of leadership will carry forward?', '📜 What business wisdom do you most want to pass on?', '🌸 What is your deepest wish for the company\'s future?'],
+  15: ['🚀 Where would you like to see the company go from here?', '💌 What message would you leave for your team, customers, and community?', '🌈 What would you like the company\'s legacy to be?'],
+};

@@ -164,7 +164,7 @@ export default function AIInterview() {
     fetch(`${API_BASE}/api/tts`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: cleanText }),
+      body: JSON.stringify({ text: cleanText, lang: localStorage.getItem('lm_lang') === 'en' ? 'en' : 'ja' }),
     })
       .then(res => res.blob())
       .then(blob => {

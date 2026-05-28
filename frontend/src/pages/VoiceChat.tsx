@@ -7,6 +7,8 @@ import {
   ERA_HINTS,
 } from '../data/eraHints';
 
+const isEnglishMode = () => localStorage.getItem('lm_lang') === 'en';
+
 // ============================================================
 // 型定義
 // ============================================================
@@ -149,7 +151,7 @@ function useTTS() {
     fetch(`${API_BASE}/api/tts`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: cleanText }),
+      body: JSON.stringify({ text: cleanText, lang: isEnglishMode() ? 'en' : 'ja' }),
     })
       .then(res => res.blob())
       .then(blob => {
@@ -288,7 +290,7 @@ export default function VoiceChat() {
   // ============================================================
   const startQuestion = (qId: number, byBirthYear?: number) => {
     const usedBirthYear = byBirthYear ?? birthYear;
-    const hints = getQuestionHints(fieldType, qId);
+    const hints = getQuestionHints(fieldType, qId, localStorage.getItem('lm_lang') || 'ja');
 
     // 自分史1問目のみ時代背景ヒントを追加
     let eraText = '';
@@ -296,7 +298,7 @@ export default function VoiceChat() {
       const decade = Math.floor(usedBirthYear / 10) * 10;
       const eraHint = ERA_HINTS[decade];
       if (eraHint) {
-        eraText = `${eraHint.decade}のできごとをご紹介しますね。\n` +
+        eraText = `Here are some highlights from ${eraHint.decade}.\n` +
           eraHint.topics.slice(0, 3).join('\n');
       }
       // 生まれた頃の時代ヒントを全問で使えるよう保持
@@ -315,11 +317,11 @@ export default function VoiceChat() {
 
     // Memo-chanのイントロ発話
     const introText = fieldType === 'jibunshi'
-      ? (JIBUNSHI_INTRO[qId] || `第${qId}問です。`)
-      : `第${qId}問です。`;
+      ? (JIBUNSHI_INTRO[qId] || `Question ${qId}.`)
+      : `Question ${qId}.`;
 
     const fullIntro = eraText
-      ? `${introText}\n\n${eraText}\n\nいかがでしょうか？何か思い出しましたか？`
+      ? `${introText}\n\n${eraText}\n\nDoes any of this spark a memory?`
       : `${introText}\n\n${hints.slice(0, 2).join('\n')}\n\nWhen you are ready, press the microphone and speak freely.`;
 
     memoChanSay(fullIntro);
@@ -394,7 +396,7 @@ export default function VoiceChat() {
     } catch {
       setSaveError('Could not save. Please try again.');
       setPhase('confirm');
-      memoChanSay('申し訳ありません、Could not save. Please try again.');
+      memoChanSay('Could not save. Please try again.');
     }
   };
 
@@ -509,11 +511,11 @@ export default function VoiceChat() {
                 setPhase('birthYear');
                 setTimeout(() => memoChanSay('What year were you born?'), 200);
               }}>
-                🎤 Talk with Memo-chanをはじめる
+                🎤 Begin talking with Memo-chan
               </button>
             ) : (
               <button style={s.startBtn} onClick={() => { stop(); startQuestion(1); }}>
-                🎤 Talk with Memo-chanをはじめる
+                🎤 Begin talking with Memo-chan
               </button>
             )}
             <p style={s.hint}>Press the button to start the guided conversation.</p>
@@ -647,8 +649,8 @@ export default function VoiceChat() {
             <div style={s.completeEmoji}>🎉</div>
             <h2 style={s.completeTitle}>All questions complete!</h2>
             <p style={s.completeText}>
-              すてきな{fieldLabel}が完成しました。<br />
-              Memo-chanとのおしゃべり、ありがとうございました！
+              Your {fieldLabel} is now complete.<br />
+              Thank you for sharing your story with Memo-chan!
             </p>
             <button style={s.startBtn} onClick={() => navigate(-1)}>
               Back to dashboard
