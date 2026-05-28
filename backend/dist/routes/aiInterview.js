@@ -3,6 +3,169 @@ import OpenAI from 'openai';
 const router = Router();
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 // ============================================================
+// English questions
+// ============================================================
+const JIBUNSHI_QUESTIONS_EN = [
+    "What was the world like when you were born?",
+    "Where did you grow up, and what are your earliest memories?",
+    "Tell me about your family.",
+    "What do you remember from your school days?",
+    "What was your first job like?",
+    "What were the big decisions in your life?",
+    "When did you feel most fulfilled in your work?",
+    "Who are the most important people you have met in your life?",
+    "What hobbies or passions have you enjoyed?",
+    "What were the hardest challenges or failures you faced?",
+    "What did you learn from those difficult times?",
+    "What matters most to you today?",
+    "What would you like to pass on to the next generation?",
+    "When were you happiest in your life?",
+    "What message would you like to leave for the future?",
+];
+const KAISHAISHI_QUESTIONS_EN = [
+    "What inspired you to start your company?",
+    "What did your business look like in the beginning?",
+    "What were the hardest challenges in the early days?",
+    "Tell me about your first customers or clients.",
+    "When did you feel the business had found its footing?",
+    "Who were the people that helped your company grow?",
+    "Were there any major turning points or pivots in your business?",
+    "How did you adapt to changes in the industry or market?",
+    "What achievements or stories are you most proud of?",
+    "What principles or values have guided your leadership?",
+    "Can you share a time when the business faced serious difficulty?",
+    "What has your company contributed to the community or society?",
+    "How did your company culture develop over time?",
+    "What are your hopes for the next generation of leadership?",
+    "What do you hope for your company's future?",
+];
+// ============================================================
+// English era hints (universal, not Japan-specific)
+// ============================================================
+const getEraHintEN = (questionId, birthYear) => {
+    const age10 = birthYear + 10;
+    const age20 = birthYear + 20;
+    const age35 = birthYear + 35;
+    const getEventsEN = (year) => {
+        if (year < 1940)
+            return 'the prewar era — economic hardship and rising global tensions';
+        if (year < 1950)
+            return 'the World War II years and the immediate postwar period';
+        if (year < 1960)
+            return 'the 1950s — postwar recovery, the dawn of television, and the baby boom';
+        if (year < 1970)
+            return 'the 1960s — the space race, civil rights movements, rock and roll, and rapid social change';
+        if (year < 1980)
+            return 'the 1970s — oil crises, the end of the Vietnam War, and shifting cultural values';
+        if (year < 1990)
+            return 'the 1980s — the personal computer revolution, pop culture, and the Cold War winding down';
+        if (year < 2000)
+            return 'the 1990s — the early internet, globalization, and rapid change';
+        if (year < 2010)
+            return 'the 2000s — smartphones, social media, and global uncertainty';
+        return 'the 2010s — digital life, social media, and a world in rapid transformation';
+    };
+    switch (questionId) {
+        case 1:
+            return ` (Born in ${birthYear}, during ${getEventsEN(birthYear)}. Weave this historical context naturally into the conversation to spark memories.)`;
+        case 2:
+            return ` (Childhood years were around ${birthYear}–${age10}, during ${getEventsEN(birthYear + 5)}.)`;
+        case 4:
+            return ` (School years were around ${age10}–${age20}, during ${getEventsEN(age10 + 5)}. Reference cultural events and trends of that era.)`;
+        case 5:
+        case 6:
+        case 7:
+            return ` (Working years were around ${age20}–${age35}, during ${getEventsEN(age20 + 5)}. Reference the social and economic climate of the time.)`;
+        default:
+            return '';
+    }
+};
+const getCompanyEraHintEN = (questionId, foundingYear) => {
+    const plus10 = foundingYear + 10;
+    const plus20 = foundingYear + 20;
+    const getEventsEN = (year) => {
+        if (year < 1940)
+            return 'the prewar era — controlled economies and wartime mobilization';
+        if (year < 1950)
+            return 'the postwar recovery — reconstruction, pent-up demand, and new opportunities';
+        if (year < 1960)
+            return 'the 1950s boom — rising consumer demand, industrial growth, and suburbanization';
+        if (year < 1970)
+            return 'the 1960s — rapid economic expansion, labor shortages, and social upheaval';
+        if (year < 1980)
+            return 'the 1970s — oil shocks, stagflation, and the rise of small business';
+        if (year < 1990)
+            return 'the 1980s — deregulation, globalization, and the personal computer era';
+        if (year < 2000)
+            return 'the 1990s — the dot-com boom, internet adoption, and global competition';
+        if (year < 2010)
+            return 'the 2000s — digital disruption, the financial crisis, and e-commerce growth';
+        return 'the 2010s — platform economy, remote work, and digital-first business models';
+    };
+    switch (questionId) {
+        case 1:
+        case 2:
+            return ` (Founded in ${foundingYear}, during ${getEventsEN(foundingYear)}. Weave this business climate naturally into the conversation.)`;
+        case 3:
+        case 4:
+            return ` (The early years were around ${foundingYear}–${foundingYear + 5}, during ${getEventsEN(foundingYear + 3)}.)`;
+        case 5:
+        case 6:
+        case 7:
+            return ` (The growth period was around ${foundingYear}–${plus10}, during ${getEventsEN(foundingYear + 7)}.)`;
+        case 8:
+        case 9:
+        case 10:
+            return ` (The expansion period was around ${plus10}–${plus20}, during ${getEventsEN(foundingYear + 15)}.)`;
+        default:
+            return '';
+    }
+};
+const buildSystemPromptEN = (questionId, fieldType, birthYear, foundingYear) => {
+    const isKaisha = fieldType === '会社史' || fieldType === 'kaishaishi';
+    const questions = isKaisha ? KAISHAISHI_QUESTIONS_EN : JIBUNSHI_QUESTIONS_EN;
+    const question = questions[questionId - 1];
+    const eraHint = isKaisha
+        ? (foundingYear ? getCompanyEraHintEN(questionId, foundingYear) : '')
+        : (birthYear ? getEraHintEN(questionId, birthYear) : '');
+    const characterDescription = isKaisha
+        ? `You are Memo-chan, a warm and curious interviewer helping to document a company's history for future generations.`
+        : `You are Memo-chan, a warm and caring interviewer helping someone document their life story for family and future generations.`;
+    const toneDescription = isKaisha
+        ? `- Speak with warmth and genuine curiosity, respecting the founder's experience
+- Use 1–2 emojis to keep the tone friendly
+- Ask only one question at a time
+- Always respond to their answer with a brief empathetic comment before asking the next question
+- Naturally reference historical business context to create vivid, engaged conversation`
+        : `- Speak warmly, like a caring friend or trusted companion — never clinical or formal
+- Use 1–2 emojis to keep the tone friendly
+- Ask only one question at a time
+- Always respond to their answer with a brief empathetic comment before asking the next question
+- Gently weave in the historical era to help memories surface`;
+    return `${characterDescription}
+
+## Character guidelines
+${toneDescription}
+
+## Today's topic
+"${question}"${eraHint}
+
+## Flow
+1. Ask about this topic in a warm, conversational way
+2. When they answer, add one brief empathetic comment, then ask one follow-up question
+3. After the follow-up answer, set moveToNext to true and move to the next topic
+
+## Response format (always return this exact JSON)
+{
+  "reaction": "Brief empathetic comment on their answer (1–2 sentences)",
+  "question": "The next question (one only)",
+  "isDeepDive": true or false,
+  "moveToNext": true or false
+}
+
+Return JSON only. No extra text outside the JSON object.`;
+};
+// ============================================================
 // 自分史の15問（固定）
 // ============================================================
 const JIBUNSHI_QUESTIONS = [
@@ -178,24 +341,42 @@ ${toneDescription}
 // ============================================================
 router.post('/', async (req, res) => {
     try {
-        const { messages, userAnswer, isFirst, questionId = 1, birthYear, foundingYear, fieldType = '自分史', // ← 追加：デフォルトは自分史
-         } = req.body;
+        const { messages, userAnswer, isFirst, questionId = 1, birthYear, foundingYear, fieldType = '自分史', lang = 'ja', } = req.body;
+        const isEnglish = lang === 'en';
         const isKaisha = fieldType === '会社史' || fieldType === 'kaishaishi';
-        const questions = isKaisha ? KAISHAISHI_QUESTIONS : JIBUNSHI_QUESTIONS;
+        const questions = isEnglish
+            ? (isKaisha ? KAISHAISHI_QUESTIONS_EN : JIBUNSHI_QUESTIONS_EN)
+            : (isKaisha ? KAISHAISHI_QUESTIONS : JIBUNSHI_QUESTIONS);
         // 最初の質問
         if (isFirst) {
             let openingMessage = '';
-            if (isKaisha) {
-                const eraHint = foundingYear
-                    ? `（${foundingYear}年創業ですね📖 その時代の業界状況も交えてお話しましょう）`
-                    : '';
-                openingMessage = `はじめまして！わたし、メモちゃんといいます🏢 貴社の大切な歴史を、いっしょに記録しましょうね。${eraHint}\n\nまず最初に、「会社を創業しようと思ったきっかけ」について聞かせてください。どのような想いから始まりましたか？`;
+            if (isEnglish) {
+                if (isKaisha) {
+                    const eraHint = foundingYear
+                        ? ` Founded in ${foundingYear} — I'll weave in some context from that era. 📖`
+                        : '';
+                    openingMessage = `Hello! I'm Memo-chan 🏢 I'm here to help preserve your company's story.${eraHint}\n\nLet's begin! What first inspired you to start your company?`;
+                }
+                else {
+                    const eraHint = birthYear
+                        ? ` Born in ${birthYear} — I'll bring in some history from that era to help memories surface. 😊`
+                        : '';
+                    openingMessage = `Hello! I'm Memo-chan 🌸 I'm here to help you preserve your life story for the people you love.${eraHint}\n\nLet's begin! Tell me about the world when you were born. What do you remember about life back then?`;
+                }
             }
             else {
-                const eraHint = birthYear
-                    ? `（${birthYear}年生まれの方ですね😊 その時代のことも交えてお話しましょう）`
-                    : '';
-                openingMessage = `はじめまして！わたし、メモちゃんといいます🌸 あなたの大切な人生の記録を、いっしょに残しましょうね。${eraHint}\n\nまず最初に、「あなたが生まれた時代」について聞かせてください。子どもの頃、どんな時代でしたか？`;
+                if (isKaisha) {
+                    const eraHint = foundingYear
+                        ? `（${foundingYear}年創業ですね📖 その時代の業界状況も交えてお話しましょう）`
+                        : '';
+                    openingMessage = `はじめまして！わたし、メモちゃんといいます🏢 貴社の大切な歴史を、いっしょに記録しましょうね。${eraHint}\n\nまず最初に、「会社を創業しようと思ったきっかけ」について聞かせてください。どのような想いから始まりましたか？`;
+                }
+                else {
+                    const eraHint = birthYear
+                        ? `（${birthYear}年生まれの方ですね😊 その時代のことも交えてお話しましょう）`
+                        : '';
+                    openingMessage = `はじめまして！わたし、メモちゃんといいます🌸 あなたの大切な人生の記録を、いっしょに残しましょうね。${eraHint}\n\nまず最初に、「あなたが生まれた時代」について聞かせてください。子どもの頃、どんな時代でしたか？`;
+                }
             }
             return res.json({
                 reaction: "",
@@ -213,11 +394,13 @@ router.post('/', async (req, res) => {
         ];
         if (conversationMessages.length > 0 && conversationMessages[0].role === 'assistant') {
             conversationMessages = [
-                { role: 'user', content: 'インタビューを始めてください' },
+                { role: 'user', content: isEnglish ? 'Please begin the interview.' : 'インタビューを始めてください' },
                 ...conversationMessages,
             ];
         }
-        const systemPrompt = buildSystemPrompt(questionId, fieldType, birthYear ? Number(birthYear) : undefined, foundingYear ? Number(foundingYear) : undefined);
+        const systemPrompt = isEnglish
+            ? buildSystemPromptEN(questionId, fieldType, birthYear ? Number(birthYear) : undefined, foundingYear ? Number(foundingYear) : undefined)
+            : buildSystemPrompt(questionId, fieldType, birthYear ? Number(birthYear) : undefined, foundingYear ? Number(foundingYear) : undefined);
         const response = await openai.chat.completions.create({
             model: 'gpt-4o',
             max_tokens: 1024,
