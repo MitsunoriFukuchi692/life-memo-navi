@@ -25,24 +25,6 @@ const JIBUNSHI_QUESTIONS = [
   "未来へのメッセージは？"
 ];
 
-const JIBUNSHI_QUESTIONS_EN = [
-  "What was the world like when you were born?",
-  "Where did you grow up, and what are your earliest memories?",
-  "Tell me about your family.",
-  "What do you remember from your school days?",
-  "What was your first job like?",
-  "What were the big decisions in your life?",
-  "When did you feel most fulfilled in your work?",
-  "Who are the most important people you have met in your life?",
-  "What hobbies or passions have you enjoyed?",
-  "What were the hardest challenges or failures you faced?",
-  "What did you learn from those difficult times?",
-  "What matters most to you today?",
-  "What would you like to pass on to the next generation?",
-  "When were you happiest in your life?",
-  "What message would you like to leave for the future?",
-];
-
 // ============================================================
 // 会社史の15問
 // ============================================================
@@ -62,24 +44,6 @@ const KAISHAISHI_QUESTIONS = [
   "会社の文化や雰囲気をどのように作ってきましたか？",
   "後継者や次世代への思いはありますか？",
   "これから会社をどのようにしていきたいですか？"
-];
-
-const KAISHAISHI_QUESTIONS_EN = [
-  "What inspired you to start your company?",
-  "What did your business look like in the beginning?",
-  "What were the hardest challenges in the early days?",
-  "Tell me about your first customers or clients.",
-  "When did you feel the business had found its footing?",
-  "Who were the people that helped your company grow?",
-  "Were there any major turning points or pivots in your business?",
-  "How did you adapt to changes in the industry or market?",
-  "What achievements or stories are you most proud of?",
-  "What principles or values have guided your leadership?",
-  "Can you share a time when the business faced serious difficulty?",
-  "What has your company contributed to the community or society?",
-  "How did your company culture develop over time?",
-  "What are your hopes for the next generation of leadership?",
-  "What do you hope for your company's future?",
 ];
 
 interface Message {
@@ -130,12 +94,9 @@ export default function AIInterview() {
   // fieldType：URLパラメータ ?fieldType=kaishaishi で切り替え
   // ============================================================
   const rawFieldType = searchParams.get('fieldType');
-  const isEnglish = localStorage.getItem('lm_lang') === 'en';
   const fieldType = rawFieldType === 'kaishaishi' ? '会社史' : '自分史';
   const isKaisha = fieldType === '会社史';
-  const QUESTIONS = isKaisha
-    ? (isEnglish ? KAISHAISHI_QUESTIONS_EN : KAISHAISHI_QUESTIONS)
-    : (isEnglish ? JIBUNSHI_QUESTIONS_EN : JIBUNSHI_QUESTIONS);
+  const QUESTIONS = isKaisha ? KAISHAISHI_QUESTIONS : JIBUNSHI_QUESTIONS;
   const FIELD_TYPE_KEY = isKaisha ? 'kaishaishi' : 'jibunshi';
 
   const [phase, setPhase] = useState<'loading' | 'intro' | 'resume' | 'birthYear' | 'question' | 'thinking' | 'answered' | 'complete'>('loading');
@@ -389,7 +350,6 @@ export default function AIInterview() {
     const useFoundingYear = byFoundingYear ?? foundingYear;
 
     try {
-      const lang = localStorage.getItem('lm_lang') === 'en' ? 'en' : 'ja';
       const body = userAnswer
         ? {
             messages,
@@ -399,7 +359,6 @@ export default function AIInterview() {
             fieldType,
             birthYear: useBirthYear,
             foundingYear: useFoundingYear,
-            lang,
           }
         : {
             isFirst: true,
@@ -407,7 +366,6 @@ export default function AIInterview() {
             fieldType,
             birthYear: useBirthYear,
             foundingYear: useFoundingYear,
-            lang,
           };
 
       const res = await fetch(`${API_BASE}/api/ai-interview`, {
