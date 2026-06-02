@@ -18,7 +18,7 @@ function createTTSClient() {
 }
 router.post('/', async (req, res) => {
     try {
-        const { text, lang } = req.body;
+        const { text } = req.body;
         if (!text || typeof text !== 'string') {
             return res.status(400).json({ error: 'textが必要です' });
         }
@@ -29,16 +29,17 @@ router.post('/', async (req, res) => {
         if (!cleanText) {
             return res.status(400).json({ error: 'テキストが空です' });
         }
-        const isEnglish = lang === 'en';
         const ttsClient = createTTSClient();
         const [response] = await ttsClient.synthesizeSpeech({
             input: { text: cleanText },
-            voice: isEnglish
-                ? { languageCode: 'en-US', name: 'en-US-Neural2-F', ssmlGender: 'FEMALE' }
-                : { languageCode: 'ja-JP', name: 'ja-JP-Neural2-B', ssmlGender: 'FEMALE' },
+            voice: {
+                languageCode: 'ja-JP',
+                name: 'ja-JP-Neural2-B',
+                ssmlGender: 'FEMALE',
+            },
             audioConfig: {
                 audioEncoding: 'MP3',
-                speakingRate: isEnglish ? 1.0 : 0.95,
+                speakingRate: 0.95,
                 pitch: 1.0,
                 volumeGainDb: 1.0,
             },
