@@ -4,10 +4,10 @@ import Layout from '../components/Layout';
 import { timelineApi, Timeline } from '../api';
 
 const fieldTitles: Record<string, string> = {
-  jibunshi: 'Life Timeline',
-  kaishashi: 'Company Timeline',
-  shukatsu: 'Legacy Timeline',
-  other: 'Timeline',
+  jibunshi: '人生年表',
+  kaishashi: '会社年表',
+  shukatsu: '終活年表',
+  other: '年表',
 };
 
 // Web Speech API の型定義
@@ -52,7 +52,7 @@ export default function TimelinePage() {
     if (SpeechRecognition) {
       setVoiceSupported(true);
       const recognition = new SpeechRecognition();
-      recognition.lang = 'en-US';
+      recognition.lang = 'ja-JP';
       recognition.continuous = true;
       recognition.interimResults = true;
 
@@ -148,7 +148,7 @@ export default function TimelinePage() {
       fetchTimelines();
     } catch (e) {
       console.error('保存エラー:', e);
-      setSaveError('Could not save. Please try again.');
+      setSaveError('保存に失敗しました。もう一度お試しください。');
     } finally {
       setSaving(false);
     }
@@ -173,7 +173,7 @@ export default function TimelinePage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm('この記録をDeleteしますか？')) return;
+    if (!confirm('この記録を削除しますか？')) return;
     try {
       await timelineApi.delete(id);
       fetchTimelines();
@@ -188,7 +188,7 @@ export default function TimelinePage() {
     grouped[tl.year].push(tl);
   });
   const sortedYears = Object.keys(grouped).map(Number).sort((a, b) => a - b);
-  const MONTHS = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const MONTHS = ['', '1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
   const title = fieldTitles[fieldType] || '年表';
 
   const handlePrintPdf = () => {
@@ -230,12 +230,12 @@ export default function TimelinePage() {
             gap: '8px',
           }}
         >
-          📄 Save / Print PDF
+          📄 PDFで保存・印刷
         </button>
 
         {/* ＋出来事を追加ボタン（右側） */}
         <button onClick={() => { resetForm(); setShowForm(!showForm); }} style={primaryButtonStyle} className="no-print">
-          + Add Event
+          ＋ 出来事を追加
         </button>
       </div>
 
@@ -245,21 +245,21 @@ export default function TimelinePage() {
           marginBottom: '32px', boxShadow: 'var(--shadow-lg)', border: '2px solid var(--brown-light)',
         }}>
           <h3 style={{ fontFamily: "'Noto Serif JP', serif", fontSize: '1.2rem', marginBottom: '24px', color: 'var(--brown-dark)' }}>
-            {editing ? 'Edit Event' : 'Add New Event'}
+            {editing ? '出来事を編集' : '新しい出来事を追加'}
           </h3>
           <form onSubmit={handleSubmit}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
               <div>
-                <label style={labelStyle}>Year *</label>
+                <label style={labelStyle}>年 ＊</label>
                 <input type="number" value={form.year} onChange={e => setForm({ ...form, year: e.target.value })}
                   required min="1900" max="2100" style={inputStyle} placeholder="1985" />
               </div>
               <div>
-                <label style={labelStyle}>Month (optional)</label>
+                <label style={labelStyle}>月（任意）</label>
                 <select value={form.month} onChange={e => setForm({ ...form, month: e.target.value })} style={inputStyle}>
-                  <option value="">Select month</option>
+                  <option value="">月を選択</option>
                   {Array.from({ length: 12 }, (_, i) => (
-                    <option key={i + 1} value={i + 1}>{MONTHS[i + 1]}</option>
+                    <option key={i + 1} value={i + 1}>{i + 1}月</option>
                   ))}
                 </select>
               </div>
@@ -267,9 +267,9 @@ export default function TimelinePage() {
 
             {/* 出来事タイトル + 音声入力 */}
             <div style={{ marginBottom: '16px' }}>
-              <label style={labelStyle}>Event title *</label>
+              <label style={labelStyle}>出来事のタイトル ＊</label>
               <input type="text" value={form.event_title} onChange={e => setForm({ ...form, event_title: e.target.value })}
-                required style={inputStyle} placeholder="Example: Graduated from high school" />
+                required style={inputStyle} placeholder="例: 〇〇高校を卒業" />
               {voiceSupported && (
                 <button
                   type="button"
@@ -292,17 +292,17 @@ export default function TimelinePage() {
                     userSelect: 'none',
                   }}
                 >
-                  {listeningField === 'event_title' ? '🔴 Speak now...' : '🎤 Hold to record'}
+                  {listeningField === 'event_title' ? '🔴 話してください...' : '🎤 押している間だけ録音'}
                 </button>
               )}
             </div>
 
             {/* 詳細 + 音声入力 */}
             <div style={{ marginBottom: '24px' }}>
-              <label style={labelStyle}>Details (optional)</label>
+              <label style={labelStyle}>詳細（任意）</label>
               <textarea value={form.event_description} onChange={e => setForm({ ...form, event_description: e.target.value })}
                 rows={3} style={{ ...inputStyle, resize: 'vertical' }}
-                placeholder="Add feelings, context, or a detailed episode" />
+                placeholder="その時の気持ちや詳しいエピソードを書いてください" />
               {voiceSupported && (
                 <button
                   type="button"
@@ -325,7 +325,7 @@ export default function TimelinePage() {
                     userSelect: 'none',
                   }}
                 >
-                  {listeningField === 'event_description' ? '🔴 Speak now...' : '🎤 Hold to record'}
+                  {listeningField === 'event_description' ? '🔴 話してください...' : '🎤 押している間だけ録音'}
                 </button>
               )}
             </div>
@@ -336,9 +336,9 @@ export default function TimelinePage() {
               </div>
             )}
             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-              <button type="button" onClick={resetForm} style={secondaryButtonStyle}>Cancel</button>
+              <button type="button" onClick={resetForm} style={secondaryButtonStyle}>キャンセル</button>
               <button type="submit" disabled={saving} style={primaryButtonStyle}>
-                {saving ? 'Saving...' : (editing ? 'Update' : 'Add')}
+                {saving ? '保存中...' : (editing ? '更新する' : '追加する')}
               </button>
             </div>
           </form>
@@ -362,7 +362,7 @@ export default function TimelinePage() {
         }}>
           <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>⚠️</div>
           <p style={{ color: '#C0392B', fontSize: '1rem', marginBottom: '16px' }}>
-            Could not load timeline data.<br />Please reload the page.
+            データの取得に失敗しました。<br />ページを再読み込みしてください。
           </p>
           <button onClick={fetchTimelines} style={{ padding: '10px 24px', background: '#C0392B', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '0.95rem' }}>
             再読み込み
@@ -375,7 +375,7 @@ export default function TimelinePage() {
         }}>
           <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📅</div>
           <p style={{ color: 'var(--text-light)', fontSize: '1.1rem' }}>
-            No events have been added yet.<br />Start with the Add Event button above.
+            まだ出来事が登録されていません。<br />「出来事を追加」ボタンから始めましょう。
           </p>
         </div>
       ) : (
@@ -394,7 +394,7 @@ export default function TimelinePage() {
                   padding: '4px 16px', borderRadius: '20px',
                   fontFamily: "'Noto Serif JP', serif", fontWeight: 600, fontSize: '1rem',
                 }}>
-                  {year}
+                  {year}年
                 </div>
               </div>
               {grouped[year].sort((a, b) => (a.month || 0) - (b.month || 0)).map(tl => (
@@ -424,8 +424,8 @@ export default function TimelinePage() {
                       )}
                     </div>
                     <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-                      <button onClick={() => handleEdit(tl)} style={iconButtonStyle}>Edit</button>
-                      <button onClick={() => handleDelete(tl.id)} style={{ ...iconButtonStyle, color: '#C0392B', borderColor: '#FADBD8' }}>Delete</button>
+                      <button onClick={() => handleEdit(tl)} style={iconButtonStyle}>編集</button>
+                      <button onClick={() => handleDelete(tl.id)} style={{ ...iconButtonStyle, color: '#C0392B', borderColor: '#FADBD8' }}>削除</button>
                     </div>
                   </div>
                 </div>

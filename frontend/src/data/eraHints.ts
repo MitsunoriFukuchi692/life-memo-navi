@@ -10,14 +10,92 @@ export interface EraHint {
 
 // 年代別の時代ヒント（西暦ベース）
 export const ERA_HINTS: Record<number, EraHint> = {
-  1930: { decade: 'The 1930s', topics: ['📻 Radio became a shared family experience.', '🏫 School and community life were very different from today.', '🌾 Many families were close to agriculture and local trades.'] },
-  1940: { decade: 'The 1940s', topics: ['🕊️ War, its end, and recovery shaped daily life.', '🍚 Food shortages and rationing affected many households.', '🏫 New education systems emerged after the war.'] },
-  1950: { decade: 'The 1950s', topics: ['📺 Television began to enter public life.', '🚂 Many young people moved for work and new opportunities.', '🌸 Economic recovery gradually changed everyday living.'] },
-  1960: { decade: 'The 1960s', topics: ['🏅 The Tokyo Olympics symbolized a new era.', '🚄 High-speed rail and household appliances changed daily life.', '🎓 More young people entered higher education.'] },
-  1970: { decade: 'The 1970s', topics: ['🌍 Expo 70 and global culture left strong impressions.', '🛢️ Oil shocks affected households and businesses.', '✈️ Travel and leisure became more common.'] },
-  1980: { decade: 'The 1980s', topics: ['💿 Portable music and consumer electronics spread quickly.', '🏠 The bubble economy changed work and lifestyles.', '🎮 Home games and new media became part of youth culture.'] },
-  1990: { decade: 'The 1990s', topics: ['💴 The bubble economy collapsed and work changed.', '📱 Mobile phones and the internet began spreading.', '🌍 Disasters and social change shaped public memory.'] },
-  2000: { decade: 'The 2000s', topics: ['📱 Mobile internet and smartphones transformed communication.', '💻 Online communities and video platforms became everyday tools.', '🌍 Global events were easier to follow in real time.'] },
+  1930: {
+    decade: '1930年代（昭和5〜15年頃）',
+    topics: [
+      '📻 ラジオ放送が全国に広まり、家族みんなで聴いていました',
+      '🎵 「東京音頭」「湯島の白梅」が大流行しました',
+      '🏫 尋常小学校から国民学校へと変わった時代です',
+      '⚾ 職業野球（プロ野球）がスタートしました（1936年）',
+      '🌾 農村では米や麦の作業が家族みんなの仕事でした',
+    ],
+  },
+  1940: {
+    decade: '1940年代（昭和15〜25年頃）',
+    topics: [
+      '🕊️ 戦争と終戦、そして復興へと向かった激動の時代です',
+      '🍚 食糧難で配給制が続き、芋やすいとんを食べていました',
+      '📻 玉音放送（1945年8月15日）で終戦を知った方も多いです',
+      '🏫 戦後、新しい教育制度（六・三・三制）がスタートしました',
+      '🎵 「リンゴの唄」「青い山脈」が人々を励ました歌でした',
+    ],
+  },
+  1950: {
+    decade: '1950年代（昭和25〜35年頃）',
+    topics: [
+      '📺 テレビ放送が始まり（1953年）、街頭テレビに人が集まりました',
+      '⚾ 長嶋茂雄がプロ野球デビュー、野球が大人気でした',
+      '🎵 美空ひばりが大スターに、「お祭りマンボ」が大ヒット',
+      '🚂 集団就職で地方から都会へ若者が移り住みました',
+      '🏫 中学・高校への進学率が急上昇した時代です',
+      '🌸 神武景気で経済が上向き、暮らしが少しずつ豊かになりました',
+    ],
+  },
+  1960: {
+    decade: '1960年代（昭和35〜45年頃）',
+    topics: [
+      '🏅 東京オリンピック（1964年）で日本中が沸きました',
+      '🚄 東海道新幹線が開業、東京〜大阪が4時間に',
+      '📺 カラーテレビ・冷蔵庫・洗濯機が「三種の神器」と呼ばれました',
+      '🎵 グループサウンズ（ザ・スパイダース、タイガース）が大人気',
+      '🚗 マイカーブームが到来、トヨタカローラが大ヒット',
+      '🎓 大学進学率が上がり、学生運動も盛んでした',
+    ],
+  },
+  1970: {
+    decade: '1970年代（昭和45〜55年頃）',
+    topics: [
+      '🌍 大阪万博（1970年）に6400万人以上が来場しました',
+      '📺 「8時だよ！全員集合」「刑事コロンボ」がテレビの人気番組',
+      '🎵 山口百恵・西城秀樹・郷ひろみ「新御三家」が大人気',
+      '🛢️ オイルショックでトイレットペーパーの買い占め騒動が起きました',
+      '🎮 インベーダーゲームが社会現象に（1978年）',
+      '✈️ 海外旅行ブームが始まり、ハワイが人気の行き先でした',
+    ],
+  },
+  1980: {
+    decade: '1980年代（昭和55〜平成2年頃）',
+    topics: [
+      '🎵 松田聖子・中森明菜・少年隊などアイドル全盛時代',
+      '💿 ウォークマンが登場し、音楽の聴き方が変わりました',
+      '🏠 バブル景気で地価・株価が急上昇した時代です',
+      '📺 「おしん」が記録的視聴率、「北の国から」も人気でした',
+      '🎮 ファミコンが大ブーム（1983年発売）',
+      '🚗 ドライブデート・ディスコが若者の定番でした',
+    ],
+  },
+  1990: {
+    decade: '1990年代（平成2〜12年頃）',
+    topics: [
+      '💴 バブル崩壊で景気が急に冷え込みました',
+      '📱 携帯電話（ポケベル→PHS→ケータイ）が普及し始めました',
+      '🎵 J-POPブーム、小室哲哉・B\'z・SMAPが大人気',
+      '🌍 阪神・淡路大震災（1995年）でボランティアが注目されました',
+      '💻 インターネットが一般家庭に広まり始めました',
+      '📺 「ロングバケーション」「ビューティフルライフ」などトレンディドラマが人気',
+    ],
+  },
+  2000: {
+    decade: '2000年代（平成12〜22年頃）',
+    topics: [
+      '📱 iモード・スマートフォンが普及し、ネット社会が到来',
+      '⚽ 日韓ワールドカップ（2002年）で日本中が熱狂しました',
+      '🎵 浜崎あゆみ・宇多田ヒカル・モーニング娘が大人気',
+      '📺 「冬のソナタ」など韓流ブームが到来しました',
+      '🌍 東日本大震災（2011年）は多くの人の記憶に刻まれています',
+      '💻 YouTube・SNS（mixi→Twitter→Facebook）が生活に入り込みました',
+    ],
+  },
 };
 
 // 生まれ年から関連する時代ヒントを取得する

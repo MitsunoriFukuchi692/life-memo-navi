@@ -2,13 +2,16 @@ import { useNavigate } from 'react-router-dom';
 
 // 通常プランのカテゴリー
 const standardFields = [
-  { key: 'jibunshi', label: 'Life Story', emoji: '📖', desc: 'Record the story of a persons life in a guided format', color: '#C8694A' },
-  { key: 'kaishashi', label: 'Company History', emoji: '🏢', desc: 'Preserve the founding story, milestones, and values of a company', color: '#6B9B6B' },
+  { key: 'jibunshi',   label: '自分史',     emoji: '📖', desc: 'あなたの人生の物語を記録しましょう',           color: '#C8694A' },
+  { key: 'kaishashi',  label: '会社史',     emoji: '🏢', desc: '会社の歩みと歴史を記録しましょう',             color: '#6B9B6B' },
+  { key: 'shukatsu',   label: '終活ノート', emoji: '🕊️', desc: '大切なことを整理して残しましょう',             color: '#7B8FBB' },
+  { key: 'diary',      label: '日記・メモ帳', emoji: '📓', desc: '日々の出来事やアイデアを自由に書き留めましょう', color: '#A07850' },
+  { key: 'salesreport',label: '営業報告',   emoji: '📊', desc: '訪問先・商談内容・次回アクションを記録・管理できます', color: '#2c7bb6' },
 ];
 
 // 出版社プランのカテゴリー（自分史のみ）
 const publisherFields = [
-  { key: 'jibunshi', label: 'Life Story', emoji: '📖', desc: 'Record the story of a persons life in a guided format', color: '#C8694A' },
+  { key: 'jibunshi', label: '自分史', emoji: '📖', desc: 'あなたの人生の物語を記録しましょう', color: '#C8694A' },
 ];
 
 export default function FieldSelectPage() {
@@ -33,14 +36,14 @@ export default function FieldSelectPage() {
         position: 'sticky', top: 0, zIndex: 100,
       }}>
         <h1 style={{ fontFamily: "'Noto Serif JP', serif", color: 'var(--cream)', fontSize: '1.2rem', fontWeight: 600 }}>
-          {isPublisher ? 'Life Story App' : 'Life Memo Navi'}
+          {isPublisher ? '自分史アプリ' : 'Life Memo Navi'}
         </h1>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <span style={{ color: 'var(--brown-light)', fontSize: '0.9rem' }}>{user.name}</span>
 
           {/* 設定ボタン（通常プランのみ） */}
           {!isPublisher && (
-            <button onClick={() => navigate('/settings')} title="Settings" style={{
+            <button onClick={() => navigate('/settings')} title="設定" style={{
               background: 'transparent', border: '1px solid var(--brown-light)',
               color: 'var(--brown-light)', padding: '6px 12px', borderRadius: '20px',
               fontSize: '1rem', cursor: 'pointer', lineHeight: 1,
@@ -60,15 +63,15 @@ export default function FieldSelectPage() {
       {/* メインコンテンツ */}
       <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 24px' }}>
         <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-          <p style={{ color: 'var(--text-light)', fontSize: '0.95rem', marginBottom: '8px' }}>Welcome</p>
+          <p style={{ color: 'var(--text-light)', fontSize: '0.95rem', marginBottom: '8px' }}>ようこそ</p>
           <h2 style={{
             fontFamily: "'Noto Serif JP', serif",
             fontSize: '2rem', color: 'var(--brown-dark)', marginBottom: '16px',
           }}>
-            {user.name}
+            {user.name}さん
           </h2>
           <p style={{ color: 'var(--text-light)', fontSize: '1rem', lineHeight: 1.8 }}>
-            {isPublisher ? 'Start your life story' : 'Choose what you want to preserve'}
+            {isPublisher ? '自分史の記録を始めましょう' : '記録する分野を選んでください'}
           </p>
         </div>
 
@@ -120,13 +123,13 @@ export default function FieldSelectPage() {
                 background: `${field.color}20`, color: field.color,
                 padding: '6px 20px', borderRadius: '20px', fontSize: '0.85rem', fontWeight: 500,
               }}>
-                Open →
+                開く →
               </div>
             </div>
           ))}
         </div>
 
-        {/* 出版社プラン：Mood Checkボタン */}
+        {/* 出版社プラン：顔幸福度チェックボタン */}
         {isPublisher && (
           <div
             onClick={() => navigate('/face-test')}
@@ -157,10 +160,10 @@ export default function FieldSelectPage() {
               fontFamily: "'Noto Serif JP', serif",
               fontSize: '1.3rem', color: '#a06020', marginBottom: '8px',
             }}>
-              Mood Check
+              顔幸福度チェック
             </h3>
             <p style={{ color: 'var(--text-light)', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '16px' }}>
-              Use the camera to check today`s expression on a five-step scale.
+              カメラで表情を撮影して、今の幸福度を5段階で判定します
             </p>
             <div style={{
               display: 'inline-block',
@@ -168,7 +171,7 @@ export default function FieldSelectPage() {
               color: 'white', padding: '10px 28px',
               borderRadius: '50px', fontWeight: 600, fontSize: '0.95rem',
             }}>
-              😊 Check →
+              😊 チェックする →
             </div>
           </div>
         )}

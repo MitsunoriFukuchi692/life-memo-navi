@@ -31,7 +31,6 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/en" element={<LandingPage forceLang="en" />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
