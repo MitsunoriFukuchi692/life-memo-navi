@@ -81,59 +81,16 @@ router.post('/register', async (req: Request, res: Response) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
       `INSERT INTO users (name, age, email, password_hash, project_type, plan, email_verified)
-       VALUES ($1, $2, $3, $4, $5, $6, false)
+       VALUES ($1, $2, $3, $4, $5, $6, true)
        RETURNING id, name, age, email, project_type, plan`,
       [name, age, email, hashedPassword, project_type || 'jibunshi', safePlan]
     );
     const user = result.rows[0];
 
-    // メール確認トークン生成・保存
-    const verifyToken = crypto.randomBytes(32).toString('hex');
-    const verifyExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24時間有効
-    await pool.query(
-      `INSERT INTO email_verification_tokens (user_id, token, expires_at)
-       VALUES ($1, $2, $3)
-       ON CONFLICT (user_id) DO UPDATE SET token = $2, expires_at = $3`,
-      [user.id, verifyToken, verifyExpires]
-    );
-
-    // 確認メール送信
-    const verifyUrl = `https://life-memo-navi-backend.onrender.com/api/auth/verify-email?token=${verifyToken}`;
-    try {
-      await transporter.sendMail({
-        from: process.env.GMAIL_USER,
-        to: email,
-        subject: '【ライフメモナビ】メールアドレスの確認をお願いします',
-        html: `
-          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #2E75B6;">メールアドレスの確認</h2>
-            <p>${name} 様、ライフメモナビにご登録いただきありがとうございます！</p>
-            <p>以下のボタンをクリックして、メールアドレスを確認してください。</p>
-            <p style="text-align: center; margin: 30px 0;">
-              <a href="${verifyUrl}"
-                 style="background-color: #2E75B6; color: white; padding: 14px 28px;
-                        text-decoration: none; border-radius: 6px; font-size: 16px;">
-                メールアドレスを確認する
-              </a>
-            </p>
-            <p style="color: #999; font-size: 13px;">
-              ※このリンクは24時間有効です。<br>
-              ※心当たりがない場合は、このメールを無視してください。
-            </p>
-            <hr>
-            <p style="color: #999; font-size: 12px;">ライフメモナビ運営事務局</p>
-          </div>
-        `,
-      });
-    } catch (mailErr) {
-      console.error('確認メール送信エラー:', mailErr);
-      // メール送信失敗でも登録自体は成功させる
-    }
-
     res.status(201).json({
       id: user.id, name: user.name, age: user.age,
       email: user.email, project_type: user.project_type, plan: user.plan,
-      message: '登録完了！確認メールを送信しました。メールのリンクをクリックしてログインできるようになります。'
+      message: '登録完了！すぐにログインできます。'
     });
   } catch (error: any) {
     console.error('Register error:', error);

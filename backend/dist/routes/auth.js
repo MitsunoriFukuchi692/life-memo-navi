@@ -26,20 +26,76 @@ function authMiddleware(req, res, next) {
         return res.status(401).json({ error: 'トークンが無効です' });
     }
 }
+// ========== planカラム・各種テーブル 自動作成 ==========
+export async function initPlanColumn() {
+    try {
+        await pool.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS plan VARCHAR(20) NOT NULL DEFAULT 'standard'
+    `);
+        console.log('✅ users.plan カラムを確認しました');
+    }
+    catch (e) {
+        console.error('planカラム追加エラー:', e);
+    }
+    try {
+        await pool.query(`
+      CREATE TABLE IF NOT EXISTS password_reset_tokens (
+        user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        token VARCHAR(255) NOT NULL,
+        expires_at TIMESTAMP NOT NULL
+      )
+    `);
+        console.log('✅ password_reset_tokens テーブルを確認しました');
+    }
+    catch (e) {
+        console.error('password_reset_tokensテーブル作成エラー:', e);
+    }
+    try {
+        // email_verified: NULL=既存ユーザー（確認済み扱い）、false=未確認、true=確認済み
+        await pool.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified BOOLEAN DEFAULT NULL
+    `);
+        console.log('✅ users.email_verified カラムを確認しました');
+    }
+    catch (e) {
+        console.error('email_verifiedカラム追加エラー:', e);
+    }
+    try {
+        await pool.query(`
+      CREATE TABLE IF NOT EXISTS email_verification_tokens (
+        user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        token VARCHAR(255) NOT NULL,
+        expires_at TIMESTAMP NOT NULL
+      )
+    `);
+        console.log('✅ email_verification_tokens テーブルを確認しました');
+    }
+    catch (e) {
+        console.error('email_verification_tokensテーブル作成エラー:', e);
+    }
+}
 // ========== ユーザー登録 ==========
 router.post('/register', async (req, res) => {
     try {
-        const { name, age, email, password, project_type } = req.body;
+        const { name, age, email, password, project_type, plan } = req.body;
+        const safePlan = plan === 'publisher' ? 'publisher' : 'standard';
         const hashedPassword = await bcrypt.hash(password, 10);
-        const result = await pool.query(`INSERT INTO users (name, age, email, password_hash, project_type, trial_expires_at)
-       VALUES ($1, $2, $3, $4, $5, NOW() + INTERVAL '30 days')
-       RETURNING id, name, age, email, project_type, trial_expires_at`, [name, age, email, hashedPassword, project_type || 'jibunshi']);
+        const result = await pool.query(`INSERT INTO users (name, age, email, password_hash, project_type, plan, email_verified)
+       VALUES ($1, $2, $3, $4, $5, $6, true)
+       RETURNING id, name, age, email, project_type, plan`, [name, age, email, hashedPassword, project_type || 'jibunshi', safePlan]);
         const user = result.rows[0];
-        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
-        res.status(201).json({ id: user.id, name: user.name, age: user.age, email: user.email, project_type: user.project_type, token });
+        res.status(201).json({
+            id: user.id, name: user.name, age: user.age,
+            email: user.email, project_type: user.project_type, plan: user.plan,
+            message: '登録完了！すぐにログインできます。'
+        });
     }
     catch (error) {
         console.error('Register error:', error);
+        // メールアドレス重複エラーを日本語で返す
+        if (error.code === '23505' && error.constraint === 'users_email_key') {
+            return res.status(409).json({ error: 'このメールアドレスはすでに登録されています。ログイン画面からログインしてください。' });
+        }
         res.status(500).json({ error: error.message });
     }
 });
@@ -56,21 +112,84 @@ router.post('/login', async (req, res) => {
         if (!passwordMatch) {
             return res.status(401).json({ error: 'メールアドレスまたはパスワードが正しくありません' });
         }
-        if (user.trial_expires_at) {
-            const now = new Date();
-            const expires = new Date(user.trial_expires_at);
-            if (now > expires) {
-                return res.status(403).json({
-                    error: 'トライアル期間が終了しました。ご利用を継続するには管理者までご連絡ください。\n\nmitsunorif@robostudy.jp'
-                });
-            }
+        // メール未確認チェック（既存ユーザーはNULLなのでスルー）
+        if (user.email_verified === false) {
+            return res.status(403).json({
+                error: 'メールアドレスが確認されていません。登録時に送信した確認メールのリンクをクリックしてください。',
+                email_unverified: true
+            });
         }
         const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
-        res.json({ id: user.id, name: user.name, age: user.age, email: user.email, project_type: user.project_type, token });
+        res.json({ id: user.id, name: user.name, age: user.age, email: user.email, project_type: user.project_type, plan: user.plan || 'standard', token });
     }
     catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ error: error.message });
+    }
+});
+// ========== メールアドレス確認 ==========
+router.get('/verify-email', async (req, res) => {
+    try {
+        const { token } = req.query;
+        const result = await pool.query('SELECT * FROM email_verification_tokens WHERE token = $1 AND expires_at > NOW()', [token]);
+        if (result.rows.length === 0) {
+            return res.status(400).json({ error: '確認リンクが無効または期限切れです。再度ご登録ください。' });
+        }
+        const userId = result.rows[0].user_id;
+        await pool.query('UPDATE users SET email_verified = true WHERE id = $1', [userId]);
+        await pool.query('DELETE FROM email_verification_tokens WHERE user_id = $1', [userId]);
+        // フロントエンドのログインページにリダイレクト
+        res.redirect('https://memo.robostudy.jp/login?verified=true');
+    }
+    catch (error) {
+        console.error('Verify email error:', error);
+        res.status(500).json({ error: 'メール確認に失敗しました' });
+    }
+});
+// ========== 確認メール再送信 ==========
+router.post('/resend-verification', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        if (result.rows.length === 0) {
+            return res.json({ message: '確認メールを送信しました。受信箱をご確認ください。' });
+        }
+        const user = result.rows[0];
+        if (user.email_verified === true || user.email_verified === null) {
+            return res.json({ message: 'このメールアドレスはすでに確認済みです。' });
+        }
+        const verifyToken = crypto.randomBytes(32).toString('hex');
+        const verifyExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        await pool.query(`INSERT INTO email_verification_tokens (user_id, token, expires_at)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (user_id) DO UPDATE SET token = $2, expires_at = $3`, [user.id, verifyToken, verifyExpires]);
+        const verifyUrl = `https://life-memo-navi-backend.onrender.com/api/auth/verify-email?token=${verifyToken}`;
+        await transporter.sendMail({
+            from: process.env.GMAIL_USER,
+            to: email,
+            subject: '【ライフメモナビ】メールアドレスの確認をお願いします',
+            html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #2E75B6;">メールアドレスの確認</h2>
+          <p>以下のボタンをクリックして、メールアドレスを確認してください。</p>
+          <p style="text-align: center; margin: 30px 0;">
+            <a href="${verifyUrl}"
+               style="background-color: #2E75B6; color: white; padding: 14px 28px;
+                      text-decoration: none; border-radius: 6px; font-size: 16px;">
+              メールアドレスを確認する
+            </a>
+          </p>
+          <p style="color: #999; font-size: 13px;">※このリンクは24時間有効です。</p>
+          <hr>
+          <p style="color: #999; font-size: 12px;">ライフメモナビ運営事務局</p>
+        </div>
+      `,
+        });
+        res.json({ message: '確認メールを再送信しました。受信箱をご確認ください。' });
+    }
+    catch (error) {
+        console.error('Resend verification error:', error);
+        res.status(500).json({ error: 'メール送信に失敗しました' });
     }
 });
 // ========== パスワードリセット申請 ==========
@@ -92,7 +211,7 @@ router.post('/forgot-password', async (req, res) => {
         // リセットメール送信
         const resetUrl = `https://memo.robostudy.jp/reset-password?token=${token}`;
         await transporter.sendMail({
-            from: 'mfukuchi6@gmail.com',
+            from: process.env.GMAIL_USER,
             to: email,
             subject: '【ライフメモナビ】パスワードリセットのご案内',
             html: `
@@ -168,7 +287,7 @@ router.delete('/delete-account', authMiddleware, async (req, res) => {
 // ========== ログインユーザー情報取得 ==========
 router.get('/me', authMiddleware, async (req, res) => {
     try {
-        const result = await pool.query('SELECT id, name, age, email, project_type, trial_expires_at FROM users WHERE id = $1', [req.user.id]);
+        const result = await pool.query('SELECT id, name, age, email, project_type, trial_expires_at, plan FROM users WHERE id = $1', [req.user.id]);
         if (result.rows.length === 0)
             return res.status(404).json({ error: 'ユーザーが見つかりません' });
         res.json(result.rows[0]);
