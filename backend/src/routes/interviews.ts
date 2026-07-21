@@ -136,9 +136,9 @@ router.post('/', async (req: Request, res: Response) => {
     if (!user_id || !question_id || question_id < 1) {
       return res.status(400).json({ error: 'Invalid question_id' });
     }
-    // 日記帳モード（other）では question_id が 15 超になる場合があるため上限チェックを緩和
+    // 日記帳モード（other・diary）では question_id が 15 超になる場合があるため上限チェックを緩和
     // 通常モードでは 1-15 チェック
-    if (field_type !== 'other' && (question_id < 1 || question_id > 15)) {
+    if (field_type !== 'other' && field_type !== 'diary' && (question_id < 1 || question_id > 15)) {
       return res.status(400).json({ error: 'Invalid question_id (1-15)' });
     }
     // question_text: 日記帳では customQuestionText を使用、通常は配列から取得
