@@ -185,14 +185,53 @@ export default function ShukatsuPage() {
     stopSpeaking();
     setLoading(true);
     try {
-      const res = await axios.post(`${API_URL}/shukatsu/chat`,
-        { category: categoryKey, messages: [], isFirst: true },
-        { headers }
-      );
-      const aiMsg = res.data.question;
-      setCurrentQuestion(aiMsg);
-      setMessages([{ role: 'assistant', content: aiMsg }]);
-      speakText(aiMsg);
+      // 保存済みの回答があれば復元して続きから
+      let saved: QAPair[] = [];
+      if (userId) {
+        try {
+          const notesRes = await axios.get(`${API_URL}/shukatsu/notes/${userId}`, { headers });
+          saved = ((notesRes.data?.notes?.[categoryKey] || []) as QAPair[]).filter(p => p.answer);
+        } catch {}
+      }
+
+      if (saved.length > 0) {
+        // これまでのQ&Aを会話履歴として復元
+        const restored: Message[] = [];
+        for (const p of saved) {
+          if (p.question) restored.push({ role: 'assistant', content: p.question });
+          if (p.answer) restored.push({ role: 'user', content: p.answer });
+        }
+        setQaPairs(saved);
+        setMessages(restored);
+        setCurrentQuestion(saved[saved.length - 1].question);
+
+        // 続きの質問をAIに取得
+        const res = await axios.post(`${API_URL}/shukatsu/chat`,
+          {
+            category: categoryKey,
+            messages: restored.map(m => ({ role: m.role, content: m.content })),
+            userAnswer: saved[saved.length - 1].answer,
+            isFirst: false,
+          },
+          { headers }
+        );
+        const { reaction, question, moveToNext } = res.data;
+        const aiContent = reaction ? `${reaction}\n\n${question}` : question;
+        setMessages([...restored, { role: 'assistant', content: aiContent }]);
+        setCurrentQuestion(question);
+        if (moveToNext) setFinished(true);
+        speakText(aiContent);
+      } else {
+        // 新規開始
+        const res = await axios.post(`${API_URL}/shukatsu/chat`,
+          { category: categoryKey, messages: [], isFirst: true },
+          { headers }
+        );
+        const aiMsg = res.data.question;
+        setCurrentQuestion(aiMsg);
+        setMessages([{ role: 'assistant', content: aiMsg }]);
+        speakText(aiMsg);
+      }
     } catch {
       setMessages([{ role: 'assistant', content: 'エラーが発生しました。もう一度お試しください。' }]);
     } finally {
@@ -242,26 +281,51 @@ export default function ShukatsuPage() {
     }
   };
 
-  // 保存
-  const saveNotes = async () => {
-    if (!userId) return;
-    setLoading(true);
+  // 保存（POSTのみ・成否を返す。UIは呼び出し側で）
+  const persistNotes = async (): Promise<boolean> => {
+    if (!userId || qaPairs.length === 0) return true;
     try {
       await axios.post(`${API_URL}/shukatsu/save`,
         { userId, category: selectedCategory, qa_pairs: qaPairs },
         { headers }
       );
-      setSaveMsg('✅ 保存しました！');
       await fetchSavedCategories();
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  // 保存ボタン
+  const saveNotes = async () => {
+    if (!userId) return;
+    setLoading(true);
+    const ok = await persistNotes();
+    setLoading(false);
+    if (ok) {
+      setSaveMsg('✅ 保存しました！');
       setTimeout(() => {
         setSaveMsg('');
         setSelectedCategory(null);
       }, 1500);
-    } catch {
+    } else {
       setSaveMsg('❌ 保存に失敗しました');
-    } finally {
-      setLoading(false);
     }
+  };
+
+  // チャットの「戻る」：途中でも自動保存してから戻る（回答が消えないように）
+  const handleBack = async () => {
+    stopSpeaking();
+    if (qaPairs.length > 0) {
+      setLoading(true);
+      const ok = await persistNotes();
+      setLoading(false);
+      if (!ok) {
+        alert('保存に失敗しました。通信環境を確認して、もう一度お試しください。');
+        return; // 保存できるまで留まる
+      }
+    }
+    setSelectedCategory(null);
   };
 
   const categoryInfo = CATEGORIES.find(c => c.key === selectedCategory);
@@ -343,7 +407,7 @@ export default function ShukatsuPage() {
           ...styles.chatHeader,
           background: categoryInfo?.color || '#4A90D9',
         }}>
-          <button onClick={() => { stopSpeaking(); setSelectedCategory(null); }} style={styles.chatBackBtn}>
+          <button onClick={handleBack} disabled={loading} style={styles.chatBackBtn}>
             ← 戻る
           </button>
           <div>
