@@ -53,6 +53,26 @@ export default function DashboardPage() {
 
   const completionPercent = Math.round((stats.interviews / 15) * 100);
   const fieldLabel = fieldLabels[fieldType] || fieldType;
+
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const handleDownloadPdf = async () => {
+    setPdfLoading(true);
+    try {
+      const res = await pdfApi.download(user.id, fieldType);
+      const url = URL.createObjectURL(res.data as Blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `life-memo-${fieldType}-${user.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      alert('PDFの生成に失敗しました。もう一度お試しください。');
+    } finally {
+      setPdfLoading(false);
+    }
+  };
   const fieldDesc = fieldDescriptions[fieldType] || '';
 
   // 「その他（旧）」のとき専用カード構成
@@ -423,23 +443,24 @@ export default function DashboardPage() {
             聞き取りと出来事をまとめたPDFを生成します。印刷して手元に残せます。
           </p>
         </div>
-        <a
-          href={pdfApi.generateUrl(user.id, fieldType)}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          onClick={handleDownloadPdf}
+          disabled={pdfLoading}
           style={{
             display: 'inline-block',
             background: 'var(--accent)',
             color: 'white',
             padding: '14px 32px',
             borderRadius: 'var(--radius-sm)',
-            textDecoration: 'none',
+            border: 'none',
+            cursor: pdfLoading ? 'wait' : 'pointer',
             fontWeight: 500,
             fontSize: '1rem',
+            opacity: pdfLoading ? 0.6 : 1,
           }}
         >
-          📄 PDFをダウンロード
-        </a>
+          {pdfLoading ? '📄 生成中…' : '📄 PDFをダウンロード'}
+        </button>
       </div>
 
     </Layout>

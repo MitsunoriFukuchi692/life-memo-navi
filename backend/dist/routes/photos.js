@@ -27,7 +27,8 @@ const uploadToCloudinary = (buffer, folder) => {
 // 写真アップロード（Cloudinary対応）
 router.post('/upload', upload.single('photo'), async (req, res) => {
     try {
-        const { user_id, caption, field_type = 'jibunshi' } = req.body;
+        const user_id = req.user.id; // bodyのuser_idは信用せず本人IDを使う
+        const { caption, field_type = 'jibunshi' } = req.body;
         if (!user_id || !req.file) {
             return res.status(400).json({ error: 'Missing user_id or photo file' });
         }
@@ -44,7 +45,7 @@ router.post('/upload', upload.single('photo'), async (req, res) => {
 // 写真一覧取得（field_type対応）
 router.get('/:user_id', async (req, res) => {
     try {
-        const { user_id } = req.params;
+        const user_id = req.user.id; // URLのuser_idは信用せず本人IDを使う
         const field_type = req.query.field_type || 'jibunshi';
         const result = await pool.query('SELECT * FROM photos WHERE user_id = $1 AND field_type = $2 ORDER BY uploaded_at DESC', [user_id, field_type]);
         res.json(result.rows);
@@ -57,20 +58,21 @@ router.get('/:user_id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params;
+        const userId = req.user.id; // 本人の写真のみ削除可
         // DBからphoto_urlを取得
-        const photoResult = await pool.query('SELECT photo_url FROM photos WHERE id = $1', [id]);
+        const photoResult = await pool.query('SELECT photo_url FROM photos WHERE id = $1 AND user_id = $2', [id, userId]);
         if (photoResult.rows.length === 0)
             return res.status(404).json({ error: 'Photo not found' });
         const photo_url = photoResult.rows[0].photo_url;
-        // CloudinaryのPublic IDを抽出して削除
+        // CloudinaryのPublic IDを抽出して削除（拡張子は大文字も許容）
         // URL例: https://res.cloudinary.com/dmq4ex6cd/image/upload/v123/life-memo-navi/1/abc.jpg
-        const matches = photo_url.match(/\/upload\/(?:v\d+\/)?(.+)\.[a-z]+$/);
+        const matches = photo_url.match(/\/upload\/(?:v\d+\/)?(.+)\.[a-zA-Z0-9]+$/);
         if (matches) {
             const publicId = matches[1];
             await cloudinary.uploader.destroy(publicId);
         }
         // DBから削除
-        await pool.query('DELETE FROM photos WHERE id = $1', [id]);
+        await pool.query('DELETE FROM photos WHERE id = $1 AND user_id = $2', [id, userId]);
         res.status(204).send();
     }
     catch (error) {

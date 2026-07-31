@@ -45,7 +45,8 @@ export const timelineApi = {
     api.get<Timeline[]>(`/timelines/user/${userId}?field_type=${fieldType}`),
   create: (data: { user_id: number; year: number; month?: number; event_title: string; event_description?: string; field_type: string }) =>
     api.post<Timeline>('/timelines', data),
-  update: (id: number, data: Partial<Timeline>) => api.put<Timeline>(`/timelines/${id}`, data),
+  update: (id: number, data: { year?: number; month?: number | null; event_title?: string; event_description?: string | null; photo_id?: number | null }) =>
+    api.put<Timeline>(`/timelines/${id}`, data),
   delete: (id: number) => api.delete(`/timelines/${id}`),
 };
 export const photoApi = {
@@ -66,5 +67,8 @@ export const photoApi = {
 export const pdfApi = {
   generateUrl: (userId: number, fieldType: string = 'jibunshi') =>
     `${API_BASE}/pdf/generate/${userId}?field_type=${fieldType}`,
+  // 認証必須になったため、直リンクではなく axios(トークン付与) で blob 取得してダウンロードする
+  download: (userId: number, fieldType: string = 'jibunshi') =>
+    api.get(`/pdf/generate/${userId}?field_type=${fieldType}`, { responseType: 'blob' }),
 };
 export default api;

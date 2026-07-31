@@ -319,11 +319,13 @@ router.post('/import-members', async (req: Request, res: Response) => {
           const tempPassword = generateTempPassword();
           const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
+          // register と同じ列に合わせる（旧コードは存在しない password 列を使い必ず失敗していた）。
+          // CSVには age 等が無いため必須列に安全な既定値を補う（本人が後で更新可能）。
           const newUser = await pool.query(
-            `INSERT INTO users (name, email, password, created_at, updated_at)
-             VALUES ($1, $2, $3, NOW(), NOW())
+            `INSERT INTO users (name, age, email, password_hash, project_type, plan, email_verified)
+             VALUES ($1, $2, $3, $4, $5, $6, true)
              RETURNING id`,
-            [name.trim(), email.trim().toLowerCase(), hashedPassword]
+            [name.trim(), 0, email.trim().toLowerCase(), hashedPassword, 'jibunshi', 'standard']
           );
 
           userId = newUser.rows[0].id;

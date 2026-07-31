@@ -14,6 +14,11 @@ import aiInterviewRoutes from './routes/aiInterview.js';
 import paymentRoutes, { initPaymentTables } from './routes/payment.js'; // ← 追加
 import shukatsuRoutes, { initShukatsuTables } from './routes/shukatsu.js'; // ← 追加
 import ttsRoutes from './routes/tts.js';
+import thesisRoutes from './routes/thesis.js'; // ← 博士論文AI
+import salesReportRoutes, { initSalesReportTable } from './routes/salesReports.js'; // ← 営業日報
+import faceHappinessRoutes from './routes/faceHappiness.js'; // ← 顔幸福度判定
+import { initPlanColumn } from './routes/auth.js'; // ← planカラム初期化
+import { requireAuth } from './middleware/requireAuth.js'; // ← 個人データ保護
 dotenv.config();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -27,6 +32,8 @@ app.use(cors({
     origin: process.env.FRONTEND_URL || '*',
     credentials: true
 }));
+// 博士論文APIはローカルHTMLファイル（origin: null）からも呼べるようにCORSを個別許可
+app.use('/api/thesis', cors({ origin: '*', credentials: false }));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // 静的ファイル（アップロード写真）
@@ -38,16 +45,20 @@ app.get('/health', (req, res) => {
 // API ルート
 app.use('/auth', authRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/interviews', interviewRoutes);
-app.use('/api/timelines', timelinesRoutes);
-app.use('/api/photos', photosRoutes);
-app.use('/api/pdf', pdfRoutes);
+// 個人データを扱うルートは認証必須（他人のIDでアクセスできないよう各ハンドラで req.user.id を owner に使用）
+app.use('/api/interviews', requireAuth, interviewRoutes);
+app.use('/api/timelines', requireAuth, timelinesRoutes);
+app.use('/api/photos', requireAuth, photosRoutes);
+app.use('/api/pdf', requireAuth, pdfRoutes);
 app.use('/api/ai-interview', aiInterviewRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/org', orgRoutes);
 app.use('/api/payment', paymentRoutes); // ← 追加
-app.use('/api/shukatsu', shukatsuRoutes); // ← 追加
+app.use('/api/shukatsu', requireAuth, shukatsuRoutes); // ← 追加
 app.use('/api/tts', ttsRoutes);
+app.use('/api/thesis', thesisRoutes); // ← 博士論文AI
+app.use('/api/sales-reports', requireAuth, salesReportRoutes); // ← 営業日報
+app.use('/api/face-happiness', faceHappinessRoutes); // ← 顔幸福度判定
 // ルートエンドポイント
 app.get('/', (req, res) => {
     res.json({
@@ -101,6 +112,8 @@ app.listen(PORT, async () => {
     await initOrganizationTables();
     await initPaymentTables(); // ← 追加
     await initShukatsuTables(); // ← 追加
+    await initSalesReportTable(); // ← 営業日報
+    await initPlanColumn(); // ← planカラム
     console.log(`
 ╔═════════════════════════════════════════╗
 ║   🌸 ライフメモナビ バックエンド       ║

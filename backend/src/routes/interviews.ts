@@ -90,7 +90,7 @@ const getQuestions = (fieldType: string): string[] => {
 // GET: user_id + field_type で取得（復号して返す）
 router.get('/:user_id', async (req: Request, res: Response) => {
   try {
-    const { user_id } = req.params;
+    const user_id = (req as any).user.id; // URLのuser_idは信用せず本人IDを使う
     const field_type = (req.query.field_type as string) || 'jibunshi';
     const result = await pool.query(
       'SELECT * FROM interviews WHERE user_id = $1 AND field_type = $2 ORDER BY question_id',
@@ -117,7 +117,8 @@ router.get('/:user_id', async (req: Request, res: Response) => {
 // DELETE: user_id + field_type + question_id でエントリ削除（日記帳用）
 router.delete('/entry/:user_id/:field_type/:question_id', async (req: Request, res: Response) => {
   try {
-    const { user_id, field_type, question_id } = req.params;
+    const { field_type, question_id } = req.params;
+    const user_id = (req as any).user.id; // 本人のデータのみ削除可
     const result = await pool.query(
       'DELETE FROM interviews WHERE user_id = $1 AND field_type = $2 AND question_id = $3 RETURNING id',
       [user_id, field_type, question_id]
@@ -132,7 +133,8 @@ router.delete('/entry/:user_id/:field_type/:question_id', async (req: Request, r
 // POST: field_type を含めて保存（暗号化して保存）
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { user_id, question_id, answer_text, field_type = 'jibunshi', question_text: customQuestionText } = req.body;
+    const user_id = (req as any).user.id; // bodyのuser_idは信用せず本人IDを使う
+    const { question_id, answer_text, field_type = 'jibunshi', question_text: customQuestionText } = req.body;
     if (!user_id || !question_id || question_id < 1) {
       return res.status(400).json({ error: 'Invalid question_id' });
     }
@@ -236,8 +238,8 @@ router.put('/:id', async (req: Request, res: Response) => {
     const encryptedAnswer = answer_text ? encrypt(answer_text) : answer_text;
 
     const result = await pool.query(
-      'UPDATE interviews SET answer_text = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
-      [encryptedAnswer, id]
+      'UPDATE interviews SET answer_text = $1, updated_at = NOW() WHERE id = $2 AND user_id = $3 RETURNING *',
+      [encryptedAnswer, id, (req as any).user.id]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Interview not found' });
     // 返すときは復号して返す

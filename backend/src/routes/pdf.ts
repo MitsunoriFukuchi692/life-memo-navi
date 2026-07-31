@@ -48,7 +48,7 @@ const FIELD_LABELS: Record<string, { main: string; story: string; interview: str
 
 router.get('/generate/:user_id', async (req: Request, res: Response) => {
   try {
-    const { user_id } = req.params;
+    const user_id = (req as any).user.id; // URLのuser_idは信用せず本人IDを使う
     const field_type = (req.query.field_type as string) || 'jibunshi';
     const labels = FIELD_LABELS[field_type] || FIELD_LABELS['jibunshi'];
 

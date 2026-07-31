@@ -475,7 +475,7 @@ export default function AIInterview() {
           }
         }
       }
-      navigate('/interview');
+      navigate(`/field/${FIELD_TYPE_KEY}/interview`);
     } catch (e: any) {
       setSaveError(e.message || '保存に失敗しました。もう一度お試しください。');
     } finally {

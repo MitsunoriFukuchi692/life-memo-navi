@@ -53,7 +53,7 @@ const decryptReport = (row: Record<string, any>) => {
 // GET: ユーザーの全日報を取得（日付降順）
 router.get('/user/:user_id', async (req: Request, res: Response) => {
   try {
-    const { user_id } = req.params;
+    const user_id = (req as any).user.id; // URLのuser_idは信用せず本人IDを使う
     const result = await pool.query(
       `SELECT * FROM sales_reports WHERE user_id = $1 ORDER BY report_date DESC, created_at DESC`,
       [user_id]
@@ -68,7 +68,7 @@ router.get('/user/:user_id', async (req: Request, res: Response) => {
 router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const result = await pool.query('SELECT * FROM sales_reports WHERE id = $1', [id]);
+    const result = await pool.query('SELECT * FROM sales_reports WHERE id = $1 AND user_id = $2', [id, (req as any).user.id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' });
     res.json(decryptReport(result.rows[0]));
   } catch (error: any) {
@@ -79,8 +79,9 @@ router.get('/:id', async (req: Request, res: Response) => {
 // POST: 新規日報を作成
 router.post('/', async (req: Request, res: Response) => {
   try {
+    const user_id = (req as any).user.id; // bodyのuser_idは信用せず本人IDを使う
     const {
-      user_id, report_date, visit_company, contact_person,
+      report_date, visit_company, contact_person,
       purpose, content, next_action, impression,
     } = req.body;
 
@@ -121,11 +122,11 @@ router.put('/:id', async (req: Request, res: Response) => {
        SET report_date = $1, visit_company = $2, contact_person = $3,
            purpose = $4, content = $5, next_action = $6, impression = $7,
            updated_at = NOW()
-       WHERE id = $8
+       WHERE id = $8 AND user_id = $9
        RETURNING *`,
       [report_date, visit_company || '', contact_person || '',
        purpose || '', enc.content || '', enc.next_action || '', enc.impression || '',
-       id]
+       id, (req as any).user.id]
     );
     if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' });
     res.json(decryptReport(result.rows[0]));
@@ -138,7 +139,7 @@ router.put('/:id', async (req: Request, res: Response) => {
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const result = await pool.query('DELETE FROM sales_reports WHERE id = $1 RETURNING id', [id]);
+    const result = await pool.query('DELETE FROM sales_reports WHERE id = $1 AND user_id = $2 RETURNING id', [id, (req as any).user.id]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Not found' });
     res.json({ success: true, deleted_id: result.rows[0].id });
   } catch (error: any) {

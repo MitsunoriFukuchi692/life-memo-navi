@@ -44,7 +44,7 @@ const FIELD_LABELS = {
 };
 router.get('/generate/:user_id', async (req, res) => {
     try {
-        const { user_id } = req.params;
+        const user_id = req.user.id; // URLのuser_idは信用せず本人IDを使う
         const field_type = req.query.field_type || 'jibunshi';
         const labels = FIELD_LABELS[field_type] || FIELD_LABELS['jibunshi'];
         const userResult = await pool.query('SELECT * FROM users WHERE id = $1', [user_id]);

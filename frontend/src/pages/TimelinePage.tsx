@@ -129,9 +129,9 @@ export default function TimelinePage() {
       if (editing) {
         await timelineApi.update(editing.id, {
           year: Number(form.year),
-          month: form.month ? Number(form.month) : undefined,
+          month: form.month ? Number(form.month) : null,      // 空欄はnullで明示クリア
           event_title: form.event_title,
-          event_description: form.event_description || undefined,
+          event_description: form.event_description || '',      // 空文字→バックでクリア
         });
       } else {
         await timelineApi.create({

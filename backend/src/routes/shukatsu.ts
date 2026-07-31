@@ -217,7 +217,8 @@ router.post('/chat', async (req: Request, res: Response) => {
 // ========================================
 router.post('/save', async (req: Request, res: Response) => {
   try {
-    const { userId, category, qa_pairs } = req.body;
+    const userId = (req as any).user.id; // bodyのuserIdは信用せず本人IDを使う
+    const { category, qa_pairs } = req.body;
 
     if (!userId || !category || !qa_pairs) {
       return res.status(400).json({ error: '必須パラメータが不足しています' });
@@ -252,7 +253,7 @@ router.post('/save', async (req: Request, res: Response) => {
 // ========================================
 router.get('/notes/:userId', async (req: Request, res: Response) => {
   try {
-    const { userId } = req.params;
+    const userId = (req as any).user.id; // URLのuserIdは信用せず本人IDを使う
 
     const result = await pool.query(
       `SELECT category, question, answer, display_order

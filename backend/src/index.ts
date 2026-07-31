@@ -19,6 +19,7 @@ import thesisRoutes from './routes/thesis.js'; // ← 博士論文AI
 import salesReportRoutes, { initSalesReportTable } from './routes/salesReports.js'; // ← 営業日報
 import faceHappinessRoutes from './routes/faceHappiness.js'; // ← 顔幸福度判定
 import authRoutesFull, { initPlanColumn } from './routes/auth.js'; // ← planカラム初期化
+import { requireAuth } from './middleware/requireAuth.js'; // ← 個人データ保護
 
 dotenv.config();
 
@@ -54,18 +55,19 @@ app.get('/health', (req: Request, res: Response) => {
 // API ルート
 app.use('/auth', authRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/interviews', interviewRoutes);
-app.use('/api/timelines', timelinesRoutes);
-app.use('/api/photos', photosRoutes);
-app.use('/api/pdf', pdfRoutes);
+// 個人データを扱うルートは認証必須（他人のIDでアクセスできないよう各ハンドラで req.user.id を owner に使用）
+app.use('/api/interviews', requireAuth, interviewRoutes);
+app.use('/api/timelines', requireAuth, timelinesRoutes);
+app.use('/api/photos', requireAuth, photosRoutes);
+app.use('/api/pdf', requireAuth, pdfRoutes);
 app.use('/api/ai-interview', aiInterviewRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/org', orgRoutes);
 app.use('/api/payment', paymentRoutes); // ← 追加
-app.use('/api/shukatsu', shukatsuRoutes); // ← 追加
+app.use('/api/shukatsu', requireAuth, shukatsuRoutes); // ← 追加
 app.use('/api/tts', ttsRoutes);
 app.use('/api/thesis', thesisRoutes); // ← 博士論文AI
-app.use('/api/sales-reports', salesReportRoutes); // ← 営業日報
+app.use('/api/sales-reports', requireAuth, salesReportRoutes); // ← 営業日報
 app.use('/api/face-happiness', faceHappinessRoutes); // ← 顔幸福度判定
 
 // ルートエンドポイント

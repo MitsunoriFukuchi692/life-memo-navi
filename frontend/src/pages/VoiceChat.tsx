@@ -218,8 +218,9 @@ export default function VoiceChat() {
 
   // ユーザー情報
   const token = localStorage.getItem('token');
-  const payload = token ? JSON.parse(atob(token.split('.')[1])) : null;
-  const userId = payload?.userId || payload?.id;
+  // JWTのatob復号はbase64url(-/_)で例外を投げ、レンダリング本体だと白画面になり得る。
+  // userId は localStorage の user から取得する（他ページと同様・復号不要）。
+  const userId = JSON.parse(localStorage.getItem('user') || '{}')?.id;
 
   // スクロール
   useEffect(() => {
