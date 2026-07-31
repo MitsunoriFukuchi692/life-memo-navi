@@ -489,6 +489,8 @@ export default function AIInterview() {
       return;
     }
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const base = answer; // マイク開始時点の既存テキストを固定
+    const sep = base ? '　' : '';
     const recognition = new SR();
     recognition.lang = 'ja-JP';
     recognition.continuous = false;
@@ -496,8 +498,13 @@ export default function AIInterview() {
     recognition.onstart = () => setListening(true);
     recognition.onend = () => setListening(false);
     recognition.onresult = (event: any) => {
-      const t = event.results[0][0].transcript;
-      setAnswer((a) => a + (a ? '　' : '') + t);
+      // onresult が複数回発火しても重複しないよう、毎回全結果を
+      // 作り直して base に置き換える（継ぎ足さない）。
+      let full = '';
+      for (let i = 0; i < event.results.length; i++) {
+        full += event.results[i][0].transcript;
+      }
+      setAnswer(base + sep + full);
     };
     recognition.start();
   };

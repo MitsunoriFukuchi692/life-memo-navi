@@ -95,13 +95,20 @@ export default function ShukatsuPage() {
       setIsListening(false);
       return;
     }
+    const base = input; // マイク開始時点の既存テキストを固定
     const recognition = new SpeechRecognition();
     recognition.lang = "ja-JP";
     recognition.continuous = false;
     recognition.interimResults = false;
     recognition.onresult = (e: any) => {
-      const transcript = e.results[0][0].transcript;
-      setInput(prev => prev + transcript);
+      // onresult は環境により複数回発火し、そのたびに results[0][0] が
+      // 伸びていく。prev に継ぎ足すと「自然な形で自然な形で…」のように
+      // 重複するため、毎回「全結果を作り直して base に置き換える」。
+      let full = '';
+      for (let i = 0; i < e.results.length; i++) {
+        full += e.results[i][0].transcript;
+      }
+      setInput(base + full);
     };
     recognition.onend = () => setIsListening(false);
     recognition.onerror = () => setIsListening(false);
