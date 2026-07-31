@@ -343,10 +343,13 @@ export default function VoiceChat() {
     recognition.onstart = () => setListening(true);
     recognition.onend = () => setListening(false);
     recognition.onresult = (event: any) => {
-      const transcript = Array.from(event.results)
-        .map((r: any) => r[0].transcript)
-        .join('');
-      setUserAnswer(prev => prev + (prev ? '　' : '') + transcript);
+      // 新しく確定した分だけを追加（event.results は開始以降の全結果が累積するため
+      // resultIndex 以降・isFinal のみを拾わないと重複して増殖する）
+      let chunk = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) chunk += event.results[i][0].transcript;
+      }
+      if (chunk) setUserAnswer(prev => prev + chunk);
     };
     recognition.onerror = () => setListening(false);
     setPhase('listening');

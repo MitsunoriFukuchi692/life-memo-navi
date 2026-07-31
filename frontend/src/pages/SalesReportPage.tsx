@@ -44,10 +44,15 @@ export default function SalesReportPage() {
     const r = new SR();
     r.lang = 'ja-JP'; r.continuous = true; r.interimResults = false;
     r.onresult = (e: any) => {
-      const t = Array.from(e.results).map((x: any) => x[0].transcript).join('');
-      if (voiceTargetRef.current === 'content')          setFormContent(p => p + t);
-      else if (voiceTargetRef.current === 'next_action') setFormNextAction(p => p + t);
-      else                                               setFormImpression(p => p + t);
+      // 新しく確定した分だけを追加（累積結果の再連結で重複するのを防ぐ）
+      let chunk = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) chunk += e.results[i][0].transcript;
+      }
+      if (!chunk) return;
+      if (voiceTargetRef.current === 'content')          setFormContent(p => p + chunk);
+      else if (voiceTargetRef.current === 'next_action') setFormNextAction(p => p + chunk);
+      else                                               setFormImpression(p => p + chunk);
     };
     const stop = () => {
       setIsListeningContent(false);

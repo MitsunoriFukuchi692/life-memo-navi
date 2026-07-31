@@ -39,8 +39,12 @@ function DiaryPage({ userId, fieldType = 'other' }: { userId: number; fieldType?
     const r = new SR();
     r.lang = 'ja-JP'; r.continuous = true; r.interimResults = false;
     r.onresult = (e: any) => {
-      const t = Array.from(e.results).map((x: any) => x[0].transcript).join('');
-      setFormBody((prev: string) => prev + t);
+      // 新しく確定した分だけを追加（累積結果の再連結で重複するのを防ぐ）
+      let chunk = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        if (e.results[i].isFinal) chunk += e.results[i][0].transcript;
+      }
+      if (chunk) setFormBody((prev: string) => prev + chunk);
     };
     r.onerror = () => setIsListening(false);
     r.onend   = () => setIsListening(false);
@@ -362,9 +366,14 @@ export default function InterviewPage() {
     const recognition = new SR();
     recognition.lang = 'ja-JP'; recognition.continuous = true; recognition.interimResults = false;
     recognition.onresult = (event: any) => {
-      const transcript = Array.from(event.results).map((r: any) => r[0].transcript).join('');
+      // 新しく確定した分だけを追加（累積結果の再連結で重複するのを防ぐ）
+      let chunk = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) chunk += event.results[i][0].transcript;
+      }
+      if (!chunk) return;
       const qId = currentRef.current + 1;
-      setAnswers(prev => ({ ...prev, [qId]: (prev[qId] || '') + transcript }));
+      setAnswers(prev => ({ ...prev, [qId]: (prev[qId] || '') + chunk }));
       setSaved(prev => ({ ...prev, [qId]: false }));
     };
     recognition.onerror = () => setIsListening(false);
