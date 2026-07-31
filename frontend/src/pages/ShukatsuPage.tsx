@@ -69,6 +69,10 @@ export default function ShukatsuPage() {
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [autoRead, setAutoRead] = useState(true);
+  const ttsAudioRef = useRef<HTMLAudioElement | null>(null);
+  const ttsFetchingRef = useRef(false);
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userId = user.id ? String(user.id) : null;
@@ -126,6 +130,50 @@ export default function ShukatsuPage() {
     } catch {}
   };
 
+  // ============================================================
+  // 読み上げ（他ページと同じ OpenAI TTS: /api/tts）
+  // ============================================================
+  const speakText = (text: string) => {
+    if (!autoRead) return;
+    // 進行中の再生・取得をリセット
+    ttsAudioRef.current?.pause();
+    ttsAudioRef.current = null;
+    ttsFetchingRef.current = false;
+    const cleanText = text
+      .replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\u{FE00}-\u{FEFF}]/gu, '')
+      .trim();
+    if (!cleanText) return;
+    ttsFetchingRef.current = true;
+    setIsSpeaking(true);
+    fetch(`${API_URL}/tts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: cleanText }),
+    })
+      .then(res => res.blob())
+      .then(blob => {
+        if (!ttsFetchingRef.current) return;
+        ttsFetchingRef.current = false;
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        ttsAudioRef.current = audio;
+        audio.onended = () => { setIsSpeaking(false); URL.revokeObjectURL(url); };
+        audio.onerror = () => setIsSpeaking(false);
+        audio.play();
+      })
+      .catch(() => { ttsFetchingRef.current = false; setIsSpeaking(false); });
+  };
+
+  const stopSpeaking = () => {
+    ttsAudioRef.current?.pause();
+    ttsAudioRef.current = null;
+    ttsFetchingRef.current = false;
+    setIsSpeaking(false);
+  };
+
+  // アンマウント時に読み上げを停止
+  useEffect(() => () => { ttsAudioRef.current?.pause(); }, []);
+
   // カテゴリ選択→AIに最初のメッセージを取得
   const startCategory = async (categoryKey: string) => {
     setSelectedCategory(categoryKey);
@@ -134,6 +182,7 @@ export default function ShukatsuPage() {
     setInput('');
     setFinished(false);
     setCurrentQuestion('');
+    stopSpeaking();
     setLoading(true);
     try {
       const res = await axios.post(`${API_URL}/shukatsu/chat`,
@@ -143,6 +192,7 @@ export default function ShukatsuPage() {
       const aiMsg = res.data.question;
       setCurrentQuestion(aiMsg);
       setMessages([{ role: 'assistant', content: aiMsg }]);
+      speakText(aiMsg);
     } catch {
       setMessages([{ role: 'assistant', content: 'エラーが発生しました。もう一度お試しください。' }]);
     } finally {
@@ -180,6 +230,7 @@ export default function ShukatsuPage() {
 
       setMessages([...newMessages, { role: 'assistant', content: aiContent }]);
       setCurrentQuestion(question);
+      speakText(aiContent);
 
       if (moveToNext) {
         setFinished(true);
@@ -292,14 +343,20 @@ export default function ShukatsuPage() {
           ...styles.chatHeader,
           background: categoryInfo?.color || '#4A90D9',
         }}>
-          <button onClick={() => setSelectedCategory(null)} style={styles.chatBackBtn}>
+          <button onClick={() => { stopSpeaking(); setSelectedCategory(null); }} style={styles.chatBackBtn}>
             ← 戻る
           </button>
           <div>
             <p style={styles.chatHeaderIcon}>{categoryInfo?.icon}</p>
             <p style={styles.chatHeaderLabel}>{categoryInfo?.label}</p>
           </div>
-          <div style={{ width: 60 }} />
+          <button
+            onClick={() => { if (autoRead) { setAutoRead(false); stopSpeaking(); } else { setAutoRead(true); } }}
+            style={styles.chatBackBtn}
+            title={autoRead ? '読み上げをオフにする' : '読み上げをオンにする'}
+          >
+            {autoRead ? (isSpeaking ? '🔊' : '🔈') : '🔇'}
+          </button>
         </div>
 
         {/* メッセージ一覧 */}
