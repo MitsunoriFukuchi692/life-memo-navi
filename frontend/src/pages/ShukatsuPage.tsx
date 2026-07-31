@@ -195,7 +195,8 @@ export default function ShukatsuPage() {
       }
 
       if (saved.length > 0) {
-        // これまでのQ&Aを会話履歴として復元
+        // これまでのQ&Aを会話履歴として復元（AIは呼ばず表示のみ）。
+        // 追記したい場合はそのまま入力→送信で会話を続けられる。
         const restored: Message[] = [];
         for (const p of saved) {
           if (p.question) restored.push({ role: 'assistant', content: p.question });
@@ -204,23 +205,6 @@ export default function ShukatsuPage() {
         setQaPairs(saved);
         setMessages(restored);
         setCurrentQuestion(saved[saved.length - 1].question);
-
-        // 続きの質問をAIに取得
-        const res = await axios.post(`${API_URL}/shukatsu/chat`,
-          {
-            category: categoryKey,
-            messages: restored.map(m => ({ role: m.role, content: m.content })),
-            userAnswer: saved[saved.length - 1].answer,
-            isFirst: false,
-          },
-          { headers }
-        );
-        const { reaction, question, moveToNext } = res.data;
-        const aiContent = reaction ? `${reaction}\n\n${question}` : question;
-        setMessages([...restored, { role: 'assistant', content: aiContent }]);
-        setCurrentQuestion(question);
-        if (moveToNext) setFinished(true);
-        speakText(aiContent);
       } else {
         // 新規開始
         const res = await axios.post(`${API_URL}/shukatsu/chat`,
