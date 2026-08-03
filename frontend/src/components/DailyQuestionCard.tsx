@@ -7,7 +7,8 @@ import { getDailyContent } from '../data/dailyQuestions';
 export default function DailyQuestionCard() {
   const navigate = useNavigate();
   const [offset, setOffset] = useState(0);
-  const content = getDailyContent(offset);
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const content = getDailyContent(offset, Number(user.age) || undefined);
 
   const handleWrite = () => {
     // 日記フォームに今日の質問をタイトルとして引き渡す（InterviewPage側で拾う）
@@ -56,6 +57,16 @@ export default function DailyQuestionCard() {
         }}>
           {content.question}
         </p>
+
+        {/* その頃の出来事（年齢が分かる時だけ・思い出の呼び水） */}
+        {content.eraTopic && (
+          <div style={{
+            background: '#EEF3F7', borderRadius: '10px', padding: '11px 14px',
+            margin: '0 0 22px', fontSize: '0.95rem', lineHeight: 1.6, color: '#3a5a72',
+          }}>
+            <span style={{ fontWeight: 600 }}>その頃の出来事：</span>{content.eraTopic}
+          </div>
+        )}
 
         {/* ボタン */}
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>

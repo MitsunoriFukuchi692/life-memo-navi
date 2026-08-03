@@ -101,10 +101,13 @@ export const SPECIAL_DAYS: Record<string, string> = {
   '12-31':'大みそか。今年、一番うれしかったことは何でしたか？',
 };
 
+import { getEraHintsByBirthYear } from './eraHints';
+
 export interface DailyContent {
   question: string;
   word: string;
   special: string | null; // 今日は何の日（無ければ null）
+  eraTopic: string | null; // その頃の出来事（年齢が分かる時だけ・日替わり）
   greeting: string;       // 時間帯のあいさつ
   dateLabel: string;      // 「8月3日（月）」
 }
@@ -117,8 +120,17 @@ function dayOfYear(d: Date): number {
 
 const mod = (n: number, m: number): number => ((n % m) + m) % m;
 
-// offset=0 が「今日」。「別の質問」で +1 ずつずらす
-export function getDailyContent(offset = 0): DailyContent {
+// 年齢から「その頃の出来事」を日替わりで1つ返す（年齢不明なら null）
+function eraTopicForAge(age: number | undefined, idx: number): string | null {
+  if (!age || age < 1 || age > 120) return null;
+  const birthYear = new Date().getFullYear() - age; // 年齢からの概算（±1年）
+  const topics = getEraHintsByBirthYear(birthYear).flatMap(h => h.topics);
+  return topics.length ? topics[mod(idx, topics.length)] : null;
+}
+
+// offset=0 が「今日」。「別の質問」で +1 ずつずらす。
+// age を渡すと、その人の年代に合わせた「その頃の出来事」も返す。
+export function getDailyContent(offset = 0, age?: number): DailyContent {
   const now = new Date();
   const idx = dayOfYear(now) + offset;
   const hour = now.getHours();
@@ -127,6 +139,7 @@ export function getDailyContent(offset = 0): DailyContent {
     question: DAILY_QUESTIONS[mod(idx, DAILY_QUESTIONS.length)],
     word: DAILY_WORDS[mod(idx, DAILY_WORDS.length)],
     special: offset === 0 ? SPECIAL_DAYS[key] ?? null : null,
+    eraTopic: eraTopicForAge(age, idx),
     greeting: hour < 11 ? 'おはようございます' : hour < 18 ? 'こんにちは' : 'こんばんは',
     dateLabel: `${now.getMonth() + 1}月${now.getDate()}日（${'日月火水木金土'[now.getDay()]}）`,
   };
