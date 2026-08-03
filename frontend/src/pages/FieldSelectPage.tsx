@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import DailyQuestionCard from '../components/DailyQuestionCard';
 
 // 通常プランのカテゴリー
 const standardFields = [
@@ -61,7 +62,10 @@ export default function FieldSelectPage() {
       </header>
 
       {/* メインコンテンツ */}
-      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 24px' }}>
+      <main style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 24px 60px' }}>
+        {/* 今日の質問（毎日立ち上げたくなる仕掛け） */}
+        <DailyQuestionCard />
+
         <div style={{ textAlign: 'center', marginBottom: '48px' }}>
           <p style={{ color: 'var(--text-light)', fontSize: '0.95rem', marginBottom: '8px' }}>ようこそ</p>
           <h2 style={{

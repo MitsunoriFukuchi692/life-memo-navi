@@ -69,6 +69,20 @@ function DiaryPage({ userId, fieldType = 'other' }: { userId: number; fieldType?
   };
   useEffect(() => { fetchEntries(); }, []);
 
+  // 「今日の質問」から遷移してきた場合は、その質問をタイトルにして新規フォームを開く
+  useEffect(() => {
+    const q = localStorage.getItem('todayQuestion');
+    if (q) {
+      localStorage.removeItem('todayQuestion');
+      setEditingId(null);
+      setFormDate(new Date().toISOString().slice(0, 10));
+      setFormTitle(q);
+      setFormBody('');
+      setSaveError('');
+      setShowForm(true);
+    }
+  }, []);
+
   const openNew = () => {
     setEditingId(null); setFormDate(new Date().toISOString().slice(0, 10));
     setFormTitle(''); setFormBody(''); setSaveError(''); setShowForm(true);
