@@ -23,7 +23,8 @@ router.get('/users', adminAuth, async (req: Request, res: Response) => {
   try {
     const countResult = await pool.query('SELECT COUNT(*) as total FROM users');
     const usersResult = await pool.query(
-      'SELECT id, name, email, created_at FROM users ORDER BY created_at DESC'
+      `SELECT id, name, email, age, TO_CHAR(birthdate, 'YYYY-MM-DD') AS birthdate, created_at
+       FROM users ORDER BY created_at DESC`
     );
 
     res.json({
