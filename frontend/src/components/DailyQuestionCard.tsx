@@ -8,7 +8,11 @@ export default function DailyQuestionCard() {
   const navigate = useNavigate();
   const [offset, setOffset] = useState(0);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const content = getDailyContent(offset, Number(user.age) || undefined);
+  // 生年月日があれば正確な年齢を使い、無ければ従来の age を使う（既存ユーザー互換）
+  const age = user.birthdate
+    ? Math.floor((Date.now() - new Date(user.birthdate).getTime()) / (365.25 * 24 * 3600 * 1000))
+    : Number(user.age) || undefined;
+  const content = getDailyContent(offset, age);
 
   const handleWrite = () => {
     // 日記フォームに今日の質問をタイトルとして引き渡す（InterviewPage側で拾う）

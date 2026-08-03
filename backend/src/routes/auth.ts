@@ -28,6 +28,17 @@ function authMiddleware(req: any, res: Response, next: Function) {
   }
 }
 
+// 生年月日(YYYY-MM-DD)から満年齢を計算する
+function ageFromBirthdate(birthdate: string): number | null {
+  const b = new Date(birthdate);
+  if (isNaN(b.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - b.getFullYear();
+  const m = now.getMonth() - b.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age--;
+  return age >= 0 && age <= 130 ? age : null;
+}
+
 // ========== planカラム・各種テーブル 自動作成 ==========
 export async function initPlanColumn() {
   try {
@@ -37,6 +48,14 @@ export async function initPlanColumn() {
     console.log('✅ users.plan カラムを確認しました');
   } catch (e) {
     console.error('planカラム追加エラー:', e);
+  }
+  try {
+    await pool.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS birthdate DATE
+    `);
+    console.log('✅ users.birthdate カラムを確認しました');
+  } catch (e) {
+    console.error('birthdateカラム追加エラー:', e);
   }
   try {
     await pool.query(`
@@ -76,19 +95,25 @@ export async function initPlanColumn() {
 // ========== ユーザー登録 ==========
 router.post('/register', async (req: Request, res: Response) => {
   try {
-    const { name, age, email, password, project_type, plan } = req.body;
+    const { name, age, birthdate, email, password, project_type, plan } = req.body;
     const safePlan = plan === 'publisher' ? 'publisher' : 'standard';
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 生年月日があれば年齢は自動計算する（ageカラムは既存ロジック互換のため温存）。
+    // 古いクライアント（生年月日なし）は従来どおり age をそのまま使う。
+    const normalizedBirthdate = birthdate || null;
+    const computedAge = normalizedBirthdate ? ageFromBirthdate(normalizedBirthdate) : (age ?? null);
+
     const result = await pool.query(
-      `INSERT INTO users (name, age, email, password_hash, project_type, plan, email_verified)
-       VALUES ($1, $2, $3, $4, $5, $6, true)
-       RETURNING id, name, age, email, project_type, plan`,
-      [name, age, email, hashedPassword, project_type || 'jibunshi', safePlan]
+      `INSERT INTO users (name, age, birthdate, email, password_hash, project_type, plan, email_verified)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, true)
+       RETURNING id, name, age, birthdate, email, project_type, plan`,
+      [name, computedAge, normalizedBirthdate, email, hashedPassword, project_type || 'jibunshi', safePlan]
     );
     const user = result.rows[0];
 
     res.status(201).json({
-      id: user.id, name: user.name, age: user.age,
+      id: user.id, name: user.name, age: user.age, birthdate: user.birthdate,
       email: user.email, project_type: user.project_type, plan: user.plan,
       message: '登録完了！すぐにログインできます。'
     });
@@ -123,7 +148,7 @@ router.post('/login', async (req: Request, res: Response) => {
       });
     }
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
-    res.json({ id: user.id, name: user.name, age: user.age, email: user.email, project_type: user.project_type, plan: user.plan || 'standard', token });
+    res.json({ id: user.id, name: user.name, age: user.age, birthdate: user.birthdate, email: user.email, project_type: user.project_type, plan: user.plan || 'standard', token });
   } catch (error: any) {
     console.error('Login error:', error);
     res.status(500).json({ error: error.message });

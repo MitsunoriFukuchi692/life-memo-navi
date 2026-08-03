@@ -20,12 +20,12 @@ api.interceptors.response.use(
     return Promise.reject(err);
   }
 );
-export interface User { id: number; name: string; age: number; email: string; token: string; }
+export interface User { id: number; name: string; age: number; birthdate?: string; email: string; token: string; }
 export interface Interview { id: number; user_id: number; question_id: number; question_text: string; answer_text: string; field_type: string; updated_at: string; }
 export interface Timeline { id: number; user_id: number; year: number; month?: number; event_title: string; event_description?: string; }
 export interface Photo { id: number; user_id: number; photo_url: string; caption?: string; uploaded_at: string; }
 export const authApi = {
-  register: (data: { name: string; age: number; email: string; password: string; project_type?: string; plan?: string }) =>
+  register: (data: { name: string; birthdate: string; age?: number; email: string; password: string; project_type?: string; plan?: string }) =>
     api.post<User>('/auth/register', data),
   login: (data: { email: string; password: string }) =>
     api.post<User>('/auth/login', data),
