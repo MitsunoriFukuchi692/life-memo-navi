@@ -22,9 +22,20 @@ const adminAuth = (req: Request, res: Response, next: Function) => {
 router.get('/users', adminAuth, async (req: Request, res: Response) => {
   try {
     const countResult = await pool.query('SELECT COUNT(*) as total FROM users');
+    // 各ユーザーの記録数・最終利用日を interviews から集計して結合する
+    // （記録0＝登録だけで未利用、の判別用）
     const usersResult = await pool.query(
-      `SELECT id, name, email, age, TO_CHAR(birthdate, 'YYYY-MM-DD') AS birthdate, created_at
-       FROM users ORDER BY created_at DESC`
+      `SELECT u.id, u.name, u.email, u.age,
+              TO_CHAR(u.birthdate, 'YYYY-MM-DD') AS birthdate,
+              u.created_at,
+              COALESCE(r.cnt, 0)::int AS record_count,
+              r.last_active
+       FROM users u
+       LEFT JOIN (
+         SELECT user_id, COUNT(*) AS cnt, MAX(updated_at) AS last_active
+         FROM interviews GROUP BY user_id
+       ) r ON r.user_id = u.id
+       ORDER BY u.created_at DESC`
     );
 
     res.json({
