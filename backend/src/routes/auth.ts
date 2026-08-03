@@ -28,6 +28,15 @@ function authMiddleware(req: any, res: Response, next: Function) {
   }
 }
 
+// DATE型（Date or 文字列）を "YYYY-MM-DD" に整形する（タイムゾーンずれを避ける）
+function fmtDate(v: any): string | null {
+  if (!v) return null;
+  const d = v instanceof Date ? v : new Date(v);
+  if (isNaN(d.getTime())) return null;
+  const p = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
+
 // 生年月日(YYYY-MM-DD)から満年齢を計算する
 function ageFromBirthdate(birthdate: string): number | null {
   const b = new Date(birthdate);
@@ -113,7 +122,7 @@ router.post('/register', async (req: Request, res: Response) => {
     const user = result.rows[0];
 
     res.status(201).json({
-      id: user.id, name: user.name, age: user.age, birthdate: user.birthdate,
+      id: user.id, name: user.name, age: user.age, birthdate: fmtDate(user.birthdate),
       email: user.email, project_type: user.project_type, plan: user.plan,
       message: '登録完了！すぐにログインできます。'
     });
@@ -148,9 +157,40 @@ router.post('/login', async (req: Request, res: Response) => {
       });
     }
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET || 'secret', { expiresIn: '7d' });
-    res.json({ id: user.id, name: user.name, age: user.age, birthdate: user.birthdate, email: user.email, project_type: user.project_type, plan: user.plan || 'standard', token });
+    res.json({ id: user.id, name: user.name, age: user.age, birthdate: fmtDate(user.birthdate), email: user.email, project_type: user.project_type, plan: user.plan || 'standard', token });
   } catch (error: any) {
     console.error('Login error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ========== 生年月日の更新（既存ユーザーが後から登録する用） ==========
+router.patch('/birthdate', authMiddleware, async (req: any, res: Response) => {
+  try {
+    const userId = req.user.id;
+    const { birthdate } = req.body;
+    if (!birthdate || !/^\d{4}-\d{2}-\d{2}$/.test(birthdate)) {
+      return res.status(400).json({ error: '生年月日の形式が正しくありません' });
+    }
+    const age = ageFromBirthdate(birthdate);
+    if (age === null) {
+      return res.status(400).json({ error: '生年月日が正しくありません' });
+    }
+    const result = await pool.query(
+      `UPDATE users SET birthdate = $1, age = $2 WHERE id = $3
+       RETURNING id, name, age, birthdate, email, project_type, plan`,
+      [birthdate, age, userId]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'ユーザーが見つかりません' });
+    }
+    const user = result.rows[0];
+    res.json({
+      id: user.id, name: user.name, age: user.age, birthdate: fmtDate(user.birthdate),
+      email: user.email, project_type: user.project_type, plan: user.plan,
+    });
+  } catch (error: any) {
+    console.error('Birthdate update error:', error);
     res.status(500).json({ error: error.message });
   }
 });

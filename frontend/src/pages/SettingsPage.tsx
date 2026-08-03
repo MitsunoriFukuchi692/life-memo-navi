@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { wareki, BIRTH_YEARS, daysInMonth, parseBirthdate, formatBirthdateLabel } from '../utils/birthdate';
 
 const API = import.meta.env.VITE_API_URL || 'https://life-memo-navi-backend.onrender.com/api';
 
@@ -13,6 +14,46 @@ export default function SettingsPage() {
 
   const [subStatus, setSubStatus] = useState<any>(null);
   const [subLoading, setSubLoading] = useState(false);
+
+  // 生年月日の編集
+  const [editBirth, setEditBirth] = useState(false);
+  const [by, setBy] = useState('');
+  const [bm, setBm] = useState('');
+  const [bd, setBd] = useState('');
+  const [savingBirth, setSavingBirth] = useState(false);
+  const [birthError, setBirthError] = useState('');
+
+  const openBirthEditor = () => {
+    const p = parseBirthdate(user?.birthdate);
+    setBy(p.y); setBm(p.m); setBd(p.d);
+    setBirthError('');
+    setEditBirth(true);
+  };
+
+  const saveBirthdate = async () => {
+    if (!by || !bm || !bd) { setBirthError('生年月日を選んでください。'); return; }
+    setSavingBirth(true);
+    setBirthError('');
+    try {
+      const token = localStorage.getItem('token');
+      const birthdate = `${by}-${String(bm).padStart(2, '0')}-${String(bd).padStart(2, '0')}`;
+      const res = await fetch(`${API}/auth/birthdate`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ birthdate }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || '保存に失敗しました');
+      const updated = { ...user, birthdate: data.birthdate, age: data.age };
+      localStorage.setItem('user', JSON.stringify(updated));
+      setUser(updated);
+      setEditBirth(false);
+    } catch (e: any) {
+      setBirthError(e.message || '保存に失敗しました');
+    } finally {
+      setSavingBirth(false);
+    }
+  };
 
   useEffect(() => {
     const stored = localStorage.getItem('user');
@@ -91,6 +132,11 @@ export default function SettingsPage() {
   if (!user) return null;
   const days = trialDaysLeft();
 
+  const selStyle: React.CSSProperties = {
+    width: '100%', padding: '10px 8px', border: '2px solid #F0E8D8',
+    borderRadius: 8, fontSize: 15, background: '#FAF6F0', color: '#2C2C2C',
+  };
+
   return (
     <div style={{
       minHeight: '100vh', background: '#FAF6F0',
@@ -129,7 +175,6 @@ export default function SettingsPage() {
             {[
               { label: 'お名前', value: user.name },
               { label: 'メールアドレス', value: user.email },
-              { label: '年齢', value: user.age ? `${user.age}歳` : '未設定' },
             ].map((item) => (
               <div key={item.label} style={{
                 display: 'flex', justifyContent: 'space-between',
@@ -139,6 +184,69 @@ export default function SettingsPage() {
                 <span style={{ color: '#2C2C2C', fontSize: 14, fontWeight: 500 }}>{item.value}</span>
               </div>
             ))}
+
+            {/* 生年月日（編集可能） */}
+            <div style={{ padding: '10px 0', borderBottom: '1px solid #F0E8D8' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: '#8B7355', fontSize: 14 }}>生年月日</span>
+                {!editBirth && (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ color: '#2C2C2C', fontSize: 14, fontWeight: 500 }}>
+                      {formatBirthdateLabel(user.birthdate)}
+                    </span>
+                    <button onClick={openBirthEditor} style={{
+                      background: 'none', border: '1px solid #C4A882', color: '#8B7355',
+                      borderRadius: 6, padding: '4px 12px', fontSize: 13, cursor: 'pointer',
+                    }}>
+                      {user.birthdate ? '変更' : '設定する'}
+                    </button>
+                  </span>
+                )}
+              </div>
+
+              {editBirth && (
+                <div style={{ marginTop: 12 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 8 }}>
+                    <select value={by} aria-label="生まれた年"
+                      onChange={e => { setBy(e.target.value); setBd(''); }}
+                      style={selStyle}>
+                      <option value="">年</option>
+                      {BIRTH_YEARS.map(y => <option key={y} value={y}>{y}年（{wareki(y)}）</option>)}
+                    </select>
+                    <select value={bm} aria-label="生まれた月"
+                      onChange={e => { setBm(e.target.value); setBd(''); }}
+                      style={selStyle}>
+                      <option value="">月</option>
+                      {Array.from({ length: 12 }, (_, i) => i + 1).map(m => <option key={m} value={m}>{m}月</option>)}
+                    </select>
+                    <select value={bd} aria-label="生まれた日"
+                      onChange={e => setBd(e.target.value)}
+                      style={selStyle}>
+                      <option value="">日</option>
+                      {Array.from({ length: daysInMonth(by, bm) }, (_, i) => i + 1).map(d => <option key={d} value={d}>{d}日</option>)}
+                    </select>
+                  </div>
+                  {birthError && <p style={{ color: '#C62828', fontSize: 13, margin: '10px 0 0' }}>{birthError}</p>}
+                  <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
+                    <button onClick={() => setEditBirth(false)} disabled={savingBirth} style={{
+                      flex: 1, background: '#fff', color: '#5C4033', border: '2px solid #C4A882',
+                      borderRadius: 8, padding: '10px', fontSize: 14, cursor: 'pointer',
+                    }}>キャンセル</button>
+                    <button onClick={saveBirthdate} disabled={savingBirth} style={{
+                      flex: 1, background: savingBirth ? '#ccc' : '#5C4033', color: '#FAF6F0',
+                      border: 'none', borderRadius: 8, padding: '10px', fontSize: 14, fontWeight: 600,
+                      cursor: savingBirth ? 'not-allowed' : 'pointer',
+                    }}>{savingBirth ? '保存中...' : '保存する'}</button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 年齢（生年月日から自動） */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #F0E8D8' }}>
+              <span style={{ color: '#8B7355', fontSize: 14 }}>年齢</span>
+              <span style={{ color: '#2C2C2C', fontSize: 14, fontWeight: 500 }}>{user.age ? `${user.age}歳` : '未設定'}</span>
+            </div>
           </div>
         </section>
 

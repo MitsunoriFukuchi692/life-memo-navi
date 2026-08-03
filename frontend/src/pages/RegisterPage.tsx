@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { authApi } from '../api';
+import { wareki, BIRTH_YEARS, daysInMonth, ageFromBirthdate, toBirthdate } from '../utils/birthdate';
 
 const API_BASE = (import.meta.env.VITE_API_URL || 'https://life-memo-navi-backend.onrender.com/api').replace('/api', '');
 
@@ -12,44 +13,6 @@ const PROJECT_TYPES = [
   { value: 'shukatsu', label: '終活ノート' },
   { value: 'other', label: '日記帳・営業日報作成' },
 ];
-
-// 西暦→和暦の表記（生年の目安。年単位のため境界年は近似）
-function wareki(year: number): string {
-  const eras: { name: string; start: number }[] = [
-    { name: '令和', start: 2019 },
-    { name: '平成', start: 1989 },
-    { name: '昭和', start: 1926 },
-    { name: '大正', start: 1912 },
-    { name: '明治', start: 1868 },
-  ];
-  for (const e of eras) {
-    if (year >= e.start) {
-      const n = year - e.start + 1;
-      return `${e.name}${n === 1 ? '元' : n}年`;
-    }
-  }
-  return '';
-}
-
-// 生年の選択肢（新しい順）。シニア利用が中心なので110年分
-const CURRENT_YEAR = new Date().getFullYear();
-const BIRTH_YEARS = Array.from({ length: 111 }, (_, i) => CURRENT_YEAR - i);
-
-// 年・月からその月の日数を返す（未選択時は31）
-function daysInMonth(year: string, month: string): number {
-  if (!year || !month) return 31;
-  return new Date(Number(year), Number(month), 0).getDate();
-}
-
-// 生年月日(YYYY-MM-DD)から満年齢を計算する
-function ageFromBirthdate(y: string, m: string, d: string): number {
-  const b = new Date(Number(y), Number(m) - 1, Number(d));
-  let age = CURRENT_YEAR - b.getFullYear();
-  const now = new Date();
-  const md = now.getMonth() - b.getMonth();
-  if (md < 0 || (md === 0 && now.getDate() < b.getDate())) age--;
-  return age;
-}
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -78,7 +41,7 @@ export default function RegisterPage() {
     }
     setLoading(true);
     try {
-      const birthdate = `${form.birthYear}-${String(form.birthMonth).padStart(2, '0')}-${String(form.birthDay).padStart(2, '0')}`;
+      const birthdate = toBirthdate(form.birthYear, form.birthMonth, form.birthDay);
       const res = await authApi.register({
         name: form.name,
         email: form.email,
